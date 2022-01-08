@@ -100,8 +100,8 @@ Bus_StopOfRoute=function(app_id, app_key, county){
     }
     rm(bus_info, bus_stop_temp, sec_head, sec_tail, num_of_route)
 
-    return(bus_stop)
     print(paste0("#---", county, " Stop of Route Downloaded---#"))
+    return(bus_stop)
   }
 }
 
