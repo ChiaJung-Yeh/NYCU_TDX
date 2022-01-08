@@ -4,8 +4,9 @@ library(httr)
 library(sf)
 
 # TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
-# TDX_County=data.frame(CityName=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
-#                       City=xml_text(xml_find_all(TDX_County, xpath = "//City")))
+# TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
+#                       EnglishName=xml_text(xml_find_all(TDX_County, xpath = "//City")))
+# TDX_County=rbind(TDX_County, cbind(County="公路客運", EnglishName="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
 # PTX api (copy from TDX website)
