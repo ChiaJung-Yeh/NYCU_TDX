@@ -1,11 +1,12 @@
 Package: TDX
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Connecting transportation data from TDX, Taiwan.
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Author: Chia Jung, Yeh
+Maintainer: Chia Jung, Yeh <1328robert@gmail.com>
+Description: This package provides a neat and efficient way to connect the transportation data from TDX, Taiwan.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Depends: 
+    R (>= 2.10)

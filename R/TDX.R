@@ -3,6 +3,11 @@ library(xml2)
 library(httr)
 library(sf)
 
+# TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
+# TDX_County=data.frame(CityName=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
+#                       City=xml_text(xml_find_all(TDX_County, xpath = "//City")))
+# usethis::use_data(TDX_County, overwrite=T)
+
 # PTX api (copy from TDX website)
 # https://github.com/ptxmotc/Sample-code/blob/master/R/get_ptx_data.R
 get_ptx_data <- function (app_id, app_key, url){
