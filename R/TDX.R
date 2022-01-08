@@ -1,27 +1,14 @@
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Install Package:           'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
-
-
 library(dplyr)
 library(xml2)
 library(httr)
 library(sf)
 
-
-# PTX api
+# PTX api (copy from TDX website)
+# https://github.com/ptxmotc/Sample-code/blob/master/R/get_ptx_data.R
 get_ptx_data <- function (app_id, app_key, url){
-  # Set the locale of Liniux
   Sys.setlocale("LC_ALL","C")
-
-  # "Tue, 21 Aug 2018 01:18:42 GMT"
   xdate <- format(as.POSIXlt(Sys.time(), tz = "GMT"), "%a, %d %b %Y %H:%M:%S GMT")
   sig <- hmac_sha1(app_key, paste("x-date:", xdate))
-
-  # hmac username="APP ID", algorithm="hmac-sha1", headers="x-date",
-  # signature="Base64(HMAC-SHA1("x-date: " + x-date , APP Key))"
 
   authorization <- paste0(
     'hmac username="', app_id, '", ',
@@ -38,11 +25,7 @@ get_ptx_data <- function (app_id, app_key, url){
              add_headers(.headers = auth_header))
 
   print(http_status(dat)$message)
-
-  # Set back to origin locale
   Sys.setlocale(category = "LC_ALL", locale = "cht")
-
-  # return(dat)
   return(content(dat))
 }
 
@@ -54,7 +37,11 @@ Bus_StopOfRoute=function(app_id, app_key, county){
   if (!require(sf)) install.packages("sf")
 
   Sys.setlocale(category = "LC_ALL", locale = "cht")
-  url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bus/StopOfRoute/City/", county, "?&$format=XML")
+  if (county=="Intercity"){
+    url="https://ptx.transportdata.tw/MOTC/v2/Bus/StopOfRoute/InterCity?&$format=XML"
+  }else{
+    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bus/StopOfRoute/City/", county, "?&$format=XML")
+  }
   x=get_ptx_data(app_id, app_key, url)
 
   if (substr(xml_text(x), 1, 4)=="City"){
@@ -71,22 +58,21 @@ Bus_StopOfRoute=function(app_id, app_key, county){
     print(paste0(length(num_of_route), " Routes"))
 
     if (county %in% c("Keelung","LienchiangCounty")){
-      bus_stop_temp=data.frame(StopUID=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StopUID")),
-                               StopID=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StopID")),
-                               StopName=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StopName//d1:Zh_tw")),
-                               # StationID=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StationID")),
-                               StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StopSequence")),
-                               PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:PositionLat")),
-                               PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:PositionLon")))
+      bus_stop_temp=data.frame(StopUID=xml_text(xml_find_all(x, xpath = ".//d1:StopUID")),
+                               StopID=xml_text(xml_find_all(x, xpath = ".//d1:StopID")),
+                               StopName=xml_text(xml_find_all(x, xpath = ".//d1:StopName//d1:Zh_tw")),
+                               # StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
+                               StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:StopSequence")),
+                               PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
+                               PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")))
     }else{
-
-      bus_stop_temp=data.frame(StopUID=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StopUID")),
-                               StopID=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StopID")),
-                               StopName=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StopName//d1:Zh_tw")),
-                               StationID=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StationID")),
-                               StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:StopSequence")),
-                               PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:PositionLat")),
-                               PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops//d1:Stop//d1:PositionLon")))
+      bus_stop_temp=data.frame(StopUID=xml_text(xml_find_all(x, xpath = ".//d1:StopUID")),
+                               StopID=xml_text(xml_find_all(x, xpath = ".//d1:StopID")),
+                               StopName=xml_text(xml_find_all(x, xpath = ".//d1:StopName//d1:Zh_tw")),
+                               StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
+                               StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:StopSequence")),
+                               PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
+                               PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")))
     }
 
     bus_stop=data.frame()
@@ -106,7 +92,30 @@ Bus_StopOfRoute=function(app_id, app_key, county){
 }
 
 
+Bus_Shape=function(app_id, app_key, county){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
 
+  Sys.setlocale(category = "LC_ALL", locale = "cht")
+  if (county=="Intercity"){
+    url="https://ptx.transportdata.tw/MOTC/v2/Bus/Shape/InterCity?&$format=XML"
+  }else{
+    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bus/Shape/City/", county, "?&$format=XML")
+  }
+  x = get_ptx_data(app_id, app_key, url)
+
+  bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+                       RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName")),
+                       SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
+                       SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName")),
+                       Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
+                       Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
+
+  print(paste0("#---", county, " Bus Route Downloaded---#"))
+  return(bus_shape)
+}
 
 
 
