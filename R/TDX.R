@@ -6,12 +6,12 @@ library(sf)
 # TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
 # TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
 #                       EnglishName=xml_text(xml_find_all(TDX_County, xpath = "//City")))
-# TDX_County=rbind(TDX_County, cbind(County="公路客運", EnglishName="Intercity"))
+# TDX_County=rbind(TDX_County, cbind(County="?????�運", EnglishName="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
 # PTX api (copy from TDX website)
 # https://github.com/ptxmotc/Sample-code/blob/master/R/get_ptx_data.R
-get_ptx_data <- function (app_id, app_key, url){
+.get_ptx_data <- function (app_id, app_key, url){
   Sys.setlocale("LC_ALL","C")
   xdate <- format(as.POSIXlt(Sys.time(), tz = "GMT"), "%a, %d %b %Y %H:%M:%S GMT")
   sig <- hmac_sha1(app_key, paste("x-date:", xdate))
@@ -48,7 +48,7 @@ Bus_StopOfRoute=function(app_id, app_key, county){
   }else{
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bus/StopOfRoute/City/", county, "?&$format=XML")
   }
-  x=get_ptx_data(app_id, app_key, url)
+  x=.get_ptx_data(app_id, app_key, url)
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(paste0("City: '", county, "' is not accepted but Taipei, NewTaipei, Taoyuan, Taichung, Tainan, Kaohsiung, Keelung, Hsinchu, HsinchuCounty, MiaoliCounty, ChanghuaCounty, NantouCounty, YunlinCounty, ChiayiCounty, Chiayi, PingtungCounty, YilanCounty, HualienCounty, TaitungCounty, KinmenCounty, PenghuCounty, LienchiangCounty"))
@@ -110,7 +110,7 @@ Bus_Shape=function(app_id, app_key, county){
   }else{
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bus/Shape/City/", county, "?&$format=XML")
   }
-  x = get_ptx_data(app_id, app_key, url)
+  x = .get_ptx_data(app_id, app_key, url)
 
   bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                        RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName")),
@@ -122,6 +122,4 @@ Bus_Shape=function(app_id, app_key, county){
   print(paste0("#---", county, " Bus Route Downloaded---#"))
   return(bus_shape)
 }
-
-
 
