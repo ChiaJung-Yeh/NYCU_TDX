@@ -1,14 +1,14 @@
-\name{Bus_StopOfRoute}
-\alias{Bus_StopOfRoute}
+\name{Bus_Schedule}
+\alias{Bus_Schedule}
 \docType{data}
 \title{
-Retrieve the stops of each bus routes
+Retrieve the schedule of each bus routes
 }
 \description{
-The function is used to download the bus stop of route. And it supports to download data of city buses and intercity buses.
+The function is used to download the bus schedule. And it supports to download data of city buses and intercity buses. Note that the schedule is recorded in two forms, including timetable and frequency. Some cities (e.g., Taipei) record in both two methods, and they wold be merged together in this function. Most of the citiess only record in the schedule form.
 }
 \usage{
-Bus_StopOfRoute(app_id, app_key, county)
+Bus_Schedule(app_id, app_key, county)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
@@ -31,7 +31,7 @@ Maintainer: Chia Jung, Yeh  \email{1328robert@gmail.com}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-Bus_StopOfRoute(app_id , app_key, "Hsinchu")
+Bus_Schedule(app_id , app_key, "Taipei")
 }
 \keyword{datasets}
 
