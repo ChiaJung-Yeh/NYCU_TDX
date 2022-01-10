@@ -3,10 +3,10 @@ library(xml2)
 library(httr)
 library(sf)
 
-# TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
-# TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
-#                       EnglishName=xml_text(xml_find_all(TDX_County, xpath = "//City")))
-# TDX_County=rbind(TDX_County, cbind(County="?????ȹB", EnglishName="Intercity"))
+TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
+TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
+                      EnglishName=xml_text(xml_find_all(TDX_County, xpath = "//City")))
+TDX_County=rbind(TDX_County, cbind(County="公路客運", EnglishName="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
 # PTX api (copy from TDX website)
@@ -51,7 +51,8 @@ Bus_StopOfRoute=function(app_id, app_key, county){
   x=.get_ptx_data(app_id, app_key, url)
 
   if (substr(xml_text(x), 1, 4)=="City"){
-    print(paste0("City: '", county, "' is not accepted but Taipei, NewTaipei, Taoyuan, Taichung, Tainan, Kaohsiung, Keelung, Hsinchu, HsinchuCounty, MiaoliCounty, ChanghuaCounty, NantouCounty, YunlinCounty, ChiayiCounty, Chiayi, PingtungCounty, YilanCounty, HualienCounty, TaitungCounty, KinmenCounty, PenghuCounty, LienchiangCounty"))
+    warning(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+    print(TDX_County)
   }else{
     bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                         RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
@@ -112,15 +113,20 @@ Bus_Shape=function(app_id, app_key, county){
   }
   x=.get_ptx_data(app_id, app_key, url)
 
-  bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
-                       RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName")),
-                       SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
-                       SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName")),
-                       Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
-                       Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
+  if (substr(xml_text(x), 1, 4)=="City"){
+    warning(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+    print(TDX_County)
+  }else{
+    bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+                         RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName")),
+                         SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
+                         SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName")),
+                         Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
+                         Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
-  print(paste0("#---", county, " Bus Route Downloaded---#"))
-  return(bus_shape)
+    print(paste0("#---", county, " Bus Route Downloaded---#"))
+    return(bus_shape)
+  }
 }
 
 
@@ -138,70 +144,75 @@ Bus_Schedule=function(app_id, app_key, county){
   }
   x=.get_ptx_data(app_id, app_key, url)
 
-  bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
-                      RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
-                      SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
-                      SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
-                      Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
+  if (substr(xml_text(x), 1, 4)=="City"){
+    warning(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+    print(TDX_County)
+  }else{
+    bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+                        RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
+                        SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
+                        SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
+                        Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
 
-  # check whether the schedule is in timetable form or frequency form
-  tt=as.character(xml_children(x))
-  bus_info1=bus_info[grepl("Timetables", tt),]
-  bus_info2=bus_info[grepl("Frequency", tt),]
+    # check whether the schedule is in timetable form or frequency form
+    tt=as.character(xml_children(x))
+    bus_info1=bus_info[grepl("Timetables", tt),]
+    bus_info2=bus_info[grepl("Frequency", tt),]
 
-  if (nrow(bus_info1)!=0){
-    timetable=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
-    print(paste0("#---Timetables Downloading---#"))
-    print(paste0(length(timetable), " Routes"))
-    bus_schedule_1=data.frame(TripID=xml_text(xml_find_all(x, xpath = ".//d1:TripID")),
-                              Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Sunday")),
-                              Monday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Monday")),
-                              Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Tuesday")),
-                              Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Wednesday")),
-                              Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Thursday")),
-                              Friday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Friday")),
-                              Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Saturday")),
-                              StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:StopSequence")),
-                              StopUID=xml_text(xml_find_all(x, xpath = ".//d1:StopTimes//d1:StopTime//d1:StopUID")),
-                              StopName=xml_text(xml_find_all(x, xpath = ".//d1:StopTimes//d1:StopTime//d1:StopName//d1:Zh_tw")),
-                              ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
-                              DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")))
+    if (nrow(bus_info1)!=0){
+      timetable=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
+      print(paste0("#---Timetables Downloading---#"))
+      print(paste0(length(timetable), " Routes"))
+      bus_schedule_1=data.frame(TripID=xml_text(xml_find_all(x, xpath = ".//d1:TripID")),
+                                Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Sunday")),
+                                Monday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Monday")),
+                                Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Tuesday")),
+                                Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Wednesday")),
+                                Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Thursday")),
+                                Friday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Friday")),
+                                Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Timetable//d1:ServiceDay//d1:Saturday")),
+                                StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:StopSequence")),
+                                StopUID=xml_text(xml_find_all(x, xpath = ".//d1:StopTimes//d1:StopTime//d1:StopUID")),
+                                StopName=xml_text(xml_find_all(x, xpath = ".//d1:StopTimes//d1:StopTime//d1:StopName//d1:Zh_tw")),
+                                ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
+                                DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")))
 
-    bus_schedule_timetable=data.frame()
-    for (i in c(1:length(timetable))){
-      sec_head=sum(timetable[0:(i-1)])+1
-      sec_tail=sum(timetable[0:i])
-      bus_schedule_timetable=rbind(bus_schedule_timetable, cbind(bus_info1[i,], bus_schedule_1[c(sec_head:sec_tail),]))
-      print(if((i %% 10==0 | i==length(timetable))){
-        paste0(i, "/", length(timetable))
-      }else{next})
+      bus_schedule_timetable=data.frame()
+      for (i in c(1:length(timetable))){
+        sec_head=sum(timetable[0:(i-1)])+1
+        sec_tail=sum(timetable[0:i])
+        bus_schedule_timetable=rbind(bus_schedule_timetable, cbind(bus_info1[i,], bus_schedule_1[c(sec_head:sec_tail),]))
+        print(if((i %% 10==0 | i==length(timetable))){
+          paste0(i, "/", length(timetable))
+        }else{next})
+      }
     }
-  }
 
-  if (nrow(bus_info2)!=0){
-    freq=xml_length(xml_find_all(x, xpath = ".//d1:Frequencys"))
-    print(paste0("#---Frequencys Downloading---#"))
-    print(paste0(length(freq), " Routes"))
-    bus_schedule_2=data.frame(StartTime=xml_text(xml_find_all(x, xpath = ".//d1:StartTime")),
-                              EndTime=xml_text(xml_find_all(x, xpath = ".//d1:EndTime")),
-                              MinHeadwayMins=xml_text(xml_find_all(x, xpath = ".//d1:MinHeadwayMins")),
-                              MaxHeadwayMins=xml_text(xml_find_all(x, xpath = ".//d1:MaxHeadwayMins")),
-                              Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Sunday")),
-                              Monday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Monday")),
-                              Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Tuesday")),
-                              Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Wednesday")),
-                              Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Thursday")),
-                              Friday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Friday")),
-                              Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Saturday")))
+    if (nrow(bus_info2)!=0){
+      freq=xml_length(xml_find_all(x, xpath = ".//d1:Frequencys"))
+      print(paste0("#---Frequencys Downloading---#"))
+      print(paste0(length(freq), " Routes"))
+      bus_schedule_2=data.frame(StartTime=xml_text(xml_find_all(x, xpath = ".//d1:StartTime")),
+                                EndTime=xml_text(xml_find_all(x, xpath = ".//d1:EndTime")),
+                                MinHeadwayMins=xml_text(xml_find_all(x, xpath = ".//d1:MinHeadwayMins")),
+                                MaxHeadwayMins=xml_text(xml_find_all(x, xpath = ".//d1:MaxHeadwayMins")),
+                                Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Sunday")),
+                                Monday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Monday")),
+                                Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Tuesday")),
+                                Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Wednesday")),
+                                Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Thursday")),
+                                Friday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Friday")),
+                                Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Frequency//d1:ServiceDay//d1:Saturday")))
 
-    bus_schedule_frequency=data.frame()
-    for (i in c(1:length(freq))){
-      sec_head=sum(freq[0:(i-1)])+1
-      sec_tail=sum(freq[0:i])
-      bus_schedule_frequency=rbind(bus_schedule_frequency, cbind(bus_info2[i,], bus_schedule_2[c(sec_head:sec_tail),]))
-      print(if((i %% 10==0 | i==length(freq))){
-        paste0(i, "/", length(freq))
-      }else{next})
+      bus_schedule_frequency=data.frame()
+      for (i in c(1:length(freq))){
+        sec_head=sum(freq[0:(i-1)])+1
+        sec_tail=sum(freq[0:i])
+        bus_schedule_frequency=rbind(bus_schedule_frequency, cbind(bus_info2[i,], bus_schedule_2[c(sec_head:sec_tail),]))
+        print(if((i %% 10==0 | i==length(freq))){
+          paste0(i, "/", length(freq))
+        }else{next})
+      }
     }
   }
 
