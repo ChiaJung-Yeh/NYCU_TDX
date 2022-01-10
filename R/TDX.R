@@ -168,7 +168,7 @@ Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
 }
 
 
-Bus_Schedule=function(app_id, app_key, county){
+Bus_Schedule=function(app_id, app_key, county, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
@@ -257,12 +257,16 @@ Bus_Schedule=function(app_id, app_key, county){
   print(paste0("#---", county, " Bus Schedule Downloaded---#"))
   if (nrow(bus_info1)!=0 & nrow(bus_info2)!=0){
     bus_schedule=bind_rows(bus_schedule_timetable, bus_schedule_frequency)
-    return(bus_schedule)
   }else if (nrow(bus_info1)!=0){
-    return(bus_schedule_timetable)
+    bus_schedule=bus_schedule_timetable
   }else if (nrow(bus_info2)!=0){
-    return(bus_schedule_frequency)
+    bus_schedule=bus_schedule_frequency
   }
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(bus_schedule, out, row.names=F)
+  }
+  return(bus_schedule)
 }
 
 
