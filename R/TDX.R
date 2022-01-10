@@ -36,7 +36,7 @@ TDX_County=rbind(TDX_County, cbind(County="公路客運", EnglishName="Intercity
 }
 
 
-Bus_StopOfRoute=function(app_id, app_key, county){
+Bus_StopOfRoute=function(app_id, app_key, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
@@ -94,12 +94,31 @@ Bus_StopOfRoute=function(app_id, app_key, county){
     rm(bus_info, bus_stop_temp, sec_head, sec_tail, num_of_route)
 
     print(paste0("#---", county, " Stop of Route Downloaded---#"))
-    return(bus_stop)
+
+    if (dtype=="text"){
+      if (nchar(out)!=0 & out!=F){
+        write.csv(bus_stop, out, row.names=F)
+      }
+      return(bus_stop)
+    }else if (dtype=="sf"){
+      bus_stop$Geometry=st_as_sfc(paste0("POINT(", bus_stop$PositionLon, " ", bus_stop$PositionLat, ")"))
+      bus_stop=st_sf(bus_stop, crs=4326)
+
+      if (grepl(".shp", out) & out!=F){
+        write_sf(bus_stop, out, layer_options="ENCODING=UTF-8")
+      }else if (!(grepl(".shp", out)) & out!=F){
+        warning("The file name must contain '.shp'")
+      }
+
+      return(bus_stop)
+    }else{
+      warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+    }
   }
 }
 
 
-Bus_Shape=function(app_id, app_key, county){
+Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
@@ -125,7 +144,26 @@ Bus_Shape=function(app_id, app_key, county){
                          Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
     print(paste0("#---", county, " Bus Route Downloaded---#"))
-    return(bus_shape)
+
+    if (dtype=="text"){
+      if (nchar(out)!=0 & out!=F){
+        write.csv(bus_shape, out, row.names=F)
+      }
+      return(bus_shape)
+    }else if (dtype=="sf"){
+      bus_shape$Geometry=st_as_sfc(bus_shape$Geometry)
+      bus_shape=st_sf(bus_shape, crs=4326)
+
+      if (grepl(".shp", out) & out!=F){
+        write_sf(bus_shape, out, layer_options="ENCODING=UTF-8")
+      }else if (!(grepl(".shp", out)) & out!=F){
+        warning("The file name must contain '.shp'")
+      }
+
+      return(bus_shape)
+    }else{
+      warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+    }
   }
 }
 
