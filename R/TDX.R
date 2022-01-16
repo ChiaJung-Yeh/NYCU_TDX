@@ -6,7 +6,7 @@ library(sf)
 TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
 TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
                       EnglishName=xml_text(xml_find_all(TDX_County, xpath = "//City")))
-TDX_County=rbind(TDX_County, cbind(County="公路總局", EnglishName="Intercity"))
+TDX_County=rbind(TDX_County, cbind(County="公路客運", EnglishName="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
 # PTX api (copy from TDX website)
@@ -271,7 +271,7 @@ Bus_Schedule=function(app_id, app_key, county, out=F){
   return(bus_schedule)
 }
 
-TRA_StationOfLine(app_id, app_key, "KRTC")
+
 TRA_StationOfLine=function(app_id, app_key, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
