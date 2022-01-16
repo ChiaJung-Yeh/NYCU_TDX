@@ -5,9 +5,13 @@ library(sf)
 
 TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
 TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
-                      EnglishName=xml_text(xml_find_all(TDX_County, xpath = "//City")))
-TDX_County=rbind(TDX_County, cbind(County="公路客運", EnglishName="Intercity"))
+                      Code=xml_text(xml_find_all(TDX_County, xpath = "//City")))
+TDX_County=rbind(TDX_County, cbind(County="公路客運", Code="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
+
+TDX_Railway=data.frame(Operator=c("臺鐵","高鐵","臺北捷運","高雄捷運","桃園捷運","新北捷運","臺中捷運","高雄輕軌"),
+                       Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT"))
+# usethis::use_data(TDX_Railway, overwrite=T)
 
 # PTX api (copy from TDX website)
 # https://github.com/ptxmotc/Sample-code/blob/master/R/get_ptx_data.R
@@ -288,7 +292,8 @@ Rail_StationOfLine=function(app_id, app_key, operator, out=F){
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=XML")
   }else{
-    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of metro parameter."))
+    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+    print(TDX_Railway)
   }
 
   x=.get_ptx_data(app_id, app_key, url)
@@ -342,7 +347,7 @@ Rail_StationOfLine=function(app_id, app_key, operator, out=F){
 
 
 
-Rail_Station=function(app_id, app_key, dtype="text", out=F){
+Rail_Station=function(app_id, app_key, operator, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
@@ -356,7 +361,8 @@ Rail_Station=function(app_id, app_key, dtype="text", out=F){
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Station/", operator, "?&%24format=XML")
   }else{
-    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of metro parameter."))
+    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+    print(TDX_Railway)
   }
 
   x=.get_ptx_data(app_id, app_key, url)
@@ -422,7 +428,8 @@ Rail_Shape=function(app_id, app_key, operator, dtype="text", out=F){
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Shape/", operator, "?&%24format=XML")
   }else{
-    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of metro parameter."))
+    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+    print(TDX_Railway)
   }
 
   x=.get_ptx_data(app_id, app_key, url)
