@@ -36,6 +36,7 @@ TDX_County=rbind(TDX_County, cbind(County="公路客運", EnglishName="Intercity
 }
 
 
+
 Bus_StopOfRoute=function(app_id, app_key, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
@@ -118,6 +119,7 @@ Bus_StopOfRoute=function(app_id, app_key, county, dtype="text", out=F){
 }
 
 
+
 Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
@@ -166,6 +168,7 @@ Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
     }
   }
 }
+
 
 
 Bus_Schedule=function(app_id, app_key, county, out=F){
@@ -263,13 +266,12 @@ Bus_Schedule=function(app_id, app_key, county, out=F){
     bus_schedule=bus_schedule_frequency
   }
 
-
-
   if (nchar(out)!=0 & out!=F){
     write.csv(bus_schedule, out, row.names=F)
   }
   return(bus_schedule)
 }
+
 
 
 Rail_StationOfLine=function(app_id, app_key, operator, out=F){
@@ -282,7 +284,7 @@ Rail_StationOfLine=function(app_id, app_key, operator, out=F){
   if (operator=="TRA"){
     url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/StationOfLine?&%24format=XML"
   }else if (operator=="THSR"){
-    warning("Please use function 'TRA_Station' to retrieve the station of high speed rail (THSR).")
+    warning("Please use function 'Rail_Station' to retrieve the station of high speed rail (THSR).")
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=XML")
   }else{
@@ -330,7 +332,7 @@ Rail_StationOfLine=function(app_id, app_key, operator, out=F){
       select(LineID, LineName, Sequence, StationID, StationName)
   }
 
-  print("#---Station of Line Downloaded---#")
+  print(paste0("#---", operator, " Station of Line Downloaded---#"))
 
   if (nchar(out)!=0 & out!=F){
     write.csv(rail_station_line, out, row.names=F)
@@ -339,39 +341,60 @@ Rail_StationOfLine=function(app_id, app_key, operator, out=F){
 }
 
 
-TRA_Station=function(app_id, app_key, dtype="text", out=F){
+
+Rail_Station=function(app_id, app_key, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
   Sys.setlocale(category = "LC_ALL", locale = "cht")
-  url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?&%24format=XML"
+  if (operator=="TRA"){
+    url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?&%24format=XML"
+  }else if (operator=="THSR"){
+    url="https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/Station?&%24format=XML"
+  }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
+    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Station/", operator, "?&%24format=XML")
+  }else{
+    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of metro parameter."))
+  }
+
   x=.get_ptx_data(app_id, app_key, url)
 
-  tra_station=data.frame(StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
-                         StationUID=xml_text(xml_find_all(x, xpath = ".//d1:StationUID")),
-                         StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                         LocationCity=xml_text(xml_find_all(x, xpath = ".//d1:LocationCity")),
-                         LocationTown=xml_text(xml_find_all(x, xpath = ".//d1:LocationTown")),
-                         LocationTownCode=xml_text(xml_find_all(x, xpath = ".//d1:LocationTownCode")),
-                         PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
-                         PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
-                         StationClass=xml_text(xml_find_all(x, xpath = ".//d1:StationClass")))
+  if (operator=="TRA"){
+    rail_station=data.frame(StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
+                            StationUID=xml_text(xml_find_all(x, xpath = ".//d1:StationUID")),
+                            StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
+                            LocationCity=xml_text(xml_find_all(x, xpath = ".//d1:LocationCity")),
+                            LocationTown=xml_text(xml_find_all(x, xpath = ".//d1:LocationTown")),
+                            LocationTownCode=xml_text(xml_find_all(x, xpath = ".//d1:LocationTownCode")),
+                            PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
+                            PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
+                            StationClass=xml_text(xml_find_all(x, xpath = ".//d1:StationClass")))
+  }else{
+    rail_station=data.frame(StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
+                            StationUID=xml_text(xml_find_all(x, xpath = ".//d1:StationUID")),
+                            StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
+                            LocationCity=xml_text(xml_find_all(x, xpath = ".//d1:LocationCity")),
+                            LocationTown=xml_text(xml_find_all(x, xpath = ".//d1:LocationTown")),
+                            LocationTownCode=xml_text(xml_find_all(x, xpath = ".//d1:LocationTownCode")),
+                            PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
+                            PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")))
+  }
 
-  print("#---TRA Station Downloaded---#")
+  print(paste0("#---", operator, " Station Downloaded---#"))
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
-      write.csv(tra_station, out, row.names=F)
+      write.csv(rail_station, out, row.names=F)
     }
-    return(tra_station)
+    return(rail_station)
   }else if (dtype=="sf"){
-    tra_station$Geometry=st_as_sfc(paste0("POINT(", tra_station$PositionLon, " ", tra_station$PositionLat, ")"))
-    tra_station=st_sf(tra_station, crs=4326)
+    rail_station$Geometry=st_as_sfc(paste0("POINT(", rail_station$PositionLon, " ", rail_station$PositionLat, ")"))
+    rail_station=st_sf(rail_station, crs=4326)
 
     if (grepl(".shp", out) & out!=F){
-      write_sf(tra_station, out, layer_options="ENCODING=UTF-8")
+      write_sf(rail_station, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
       warning("The file name must contain '.shp'")
     }
@@ -381,6 +404,7 @@ TRA_Station=function(app_id, app_key, dtype="text", out=F){
     warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
   }
 }
+
 
 
 Rail_Shape=function(app_id, app_key, operator, dtype="text", out=F){
