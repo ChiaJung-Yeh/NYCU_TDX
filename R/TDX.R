@@ -405,7 +405,7 @@ Rail_Station=function(app_id, app_key, operator, dtype="text", out=F){
       warning("The file name must contain '.shp'")
     }
 
-    return(tra_station)
+    return(rail_station)
   }else{
     warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
   }
