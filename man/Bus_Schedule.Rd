@@ -5,7 +5,7 @@
 Retrieve the schedule of each bus routes
 }
 \description{
-The function is used to download the bus schedule. And it supports to download data of city buses and intercity buses. Note that the schedule is recorded in two forms, including timetable and frequency. Some cities (e.g., Taipei) record in both two methods, and they would be merged together in this function. Most of the citiess only record in the schedule form.
+The function is used to download the bus schedule. And it supports to download data of city buses and intercity buses. Note that the schedule is recorded in two forms, including timetable and frequency. Some cities (e.g., Taipei) record in both two methods, and they would be merged together in this function. Most of the cities only record in the schedule form.
 }
 \usage{
 Bus_Schedule(app_id, app_key, county, out=F)
