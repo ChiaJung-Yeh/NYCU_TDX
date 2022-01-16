@@ -8,7 +8,7 @@ Retrieve the geometry of bus routes
 The function is used to download the geometry of bus routes. And it supports to download data of city buses and intercity buses.
 }
 \usage{
-Bus_Shape(app_id, app_key, county)
+Bus_Shape(app_id, app_key, county, dtype="text", out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
