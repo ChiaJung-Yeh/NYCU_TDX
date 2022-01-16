@@ -272,7 +272,7 @@ Bus_Schedule=function(app_id, app_key, county, out=F){
 }
 
 
-TRA_StationOfLine=function(app_id, app_key, operator, out=F){
+Rail_StationOfLine=function(app_id, app_key, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
