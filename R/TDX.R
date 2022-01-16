@@ -437,7 +437,7 @@ Rail_Shape=function(app_id, app_key, operator, dtype="text", out=F){
                         LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName")),
                         Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
-  print("#---TRA Shape Downloaded---#")
+  print(paste0("#---", operator, " Shape Downloaded---#"))
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
@@ -462,6 +462,45 @@ Rail_Shape=function(app_id, app_key, operator, dtype="text", out=F){
 
 
 
+Bike_Station=function(app_id, app_key, county, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
 
+  Sys.setlocale(category = "LC_ALL", locale = "cht")
+  url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bike/Station/", county, "?&$format=XML")
+  x=.get_ptx_data(app_id, app_key, url)
+  if (substr(xml_text(x), 1, 4)=="City"){
+    warning(paste0("City: '", county, "' is not accepted. Please check out the parameter table above. And please ensure that '", county, "' has bike sharing system."))
+    TDX_County
+  }
+  bike_station=data.frame(StationUID=xml_text(xml_find_all(x, xpath = ".//d1:StationUID")),
+                          StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
+                          PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
+                          PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
+                          BikesCapacity=xml_text(xml_find_all(x, xpath = ".//d1:BikesCapacity")),
+                          ServiceType=xml_text(xml_find_all(x, xpath = ".//d1:ServiceType")))
 
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(bike_station, out, row.names=F)
+    }
+    return(bike_station)
+  }else if (dtype=="sf"){
+    bike_station$Geometry=paste0("POINT(", bike_station$PositionLon, " ", bike_station$PositionLat, ")")
+    bike_station$Geometry=st_as_sfc(bike_station$Geometry)
+    bike_station=st_sf(bike_station, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(bike_station, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      warning("The file name must contain '.shp'")
+    }
+
+    return(bike_station)
+  }else{
+    warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+  }
+}
 
