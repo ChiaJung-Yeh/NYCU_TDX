@@ -6,7 +6,7 @@ library(sf)
 TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
 TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
                       EnglishName=xml_text(xml_find_all(TDX_County, xpath = "//City")))
-TDX_County=rbind(TDX_County, cbind(County="公路客運", EnglishName="Intercity"))
+TDX_County=rbind(TDX_County, cbind(County="?????ȹB", EnglishName="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
 # PTX api (copy from TDX website)
@@ -263,55 +263,79 @@ Bus_Schedule=function(app_id, app_key, county, out=F){
     bus_schedule=bus_schedule_frequency
   }
 
+
+
   if (nchar(out)!=0 & out!=F){
     write.csv(bus_schedule, out, row.names=F)
   }
   return(bus_schedule)
 }
 
-
-TRA_StationOfLine=function(app_id, app_key, dtype="text", out=F){
+TRA_StationOfLine(app_id, app_key, "KRTC")
+TRA_StationOfLine=function(app_id, app_key, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
   Sys.setlocale(category = "LC_ALL", locale = "cht")
-  url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/StationOfLine?&%24format=XML"
+  if (operator=="TRA"){
+    url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/StationOfLine?&%24format=XML"
+  }else if (operator=="THSR"){
+    warning("Please use function 'TRA_Station' to retrieve the station of high speed rail (THSR).")
+  }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
+    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=XML")
+  }else{
+    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of metro parameter."))
+  }
+
   x=.get_ptx_data(app_id, app_key, url)
 
-  tra_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")))
+  rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")))
 
   num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:Stations"))
 
-  tra_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
-                              StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                              StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")),
-                              TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:TraveledDistance")))
+  if (operator=="TRA"){
+    rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
+                                 StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
+                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")),
+                                 TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:TraveledDistance")))
+  }else{
+    rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
+                                 StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
+                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")))
+  }
 
-  tra_station_line=data.frame()
+  rail_station_line=data.frame()
   for (i in c(1:length(num_of_station))){
     sec_head=sum(num_of_station[0:(i-1)])+1
     sec_tail=sum(num_of_station[0:i])
-    tra_station_line=rbind(tra_station_line, cbind(LineID=tra_line[i,], tra_station_temp[c(sec_head:sec_tail),]))
+    rail_station_line=rbind(rail_station_line, cbind(LineID=rail_line[i,], rail_station_temp[c(sec_head:sec_tail),]))
   }
 
-  url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Line?&%24format=XML"
-  x=.get_ptx_data(app_id, app_key, url)
-
-  tra_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
-                      LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineNameZh")),
-                      LineSectionName=xml_text(xml_find_all(x, xpath = ".//d1:LineSectionNameZh")))
-
-  tra_station_line=left_join(tra_station_line, tra_line)%>%
-    select(LineID, LineName, LineSectionName, Sequence, StationID, StationName, TraveledDistance)
+  if (operator=="TRA"){
+    url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Line?&%24format=XML"
+    x=.get_ptx_data(app_id, app_key, url)
+    rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
+                         LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineNameZh")),
+                         LineSectionName=xml_text(xml_find_all(x, xpath = ".//d1:LineSectionNameZh")))
+    rail_station_line=left_join(rail_station_line, rail_line)%>%
+      select(LineID, LineName, LineSectionName, Sequence, StationID, StationName, TraveledDistance)
+  }else{
+    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Line/", operator,"?&%24format=XML")
+    x=.get_ptx_data(app_id, app_key, url)
+    rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
+                         LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName//d1:Zh_tw")))
+    rail_station_line=left_join(rail_station_line, rail_line)%>%
+      select(LineID, LineName, Sequence, StationID, StationName)
+  }
 
   print("#---Station of Line Downloaded---#")
 
   if (nchar(out)!=0 & out!=F){
-    write.csv(tra_station_line, out, row.names=F)
+    write.csv(rail_station_line, out, row.names=F)
   }
-  return(tra_station_line)
+  return(rail_station_line)
 }
 
 
