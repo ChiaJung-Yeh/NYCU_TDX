@@ -2,6 +2,7 @@ library(dplyr)
 library(xml2)
 library(httr)
 library(sf)
+library(urltools)
 
 TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
 TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
@@ -503,4 +504,55 @@ Bike_Station=function(app_id, app_key, county, dtype="text", out=F){
     warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
   }
 }
+
+
+
+Geocoding=function(address, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(sf)) install.packages("sf")
+  if (!require(sf)) install.packages("urltools")
+
+  temp_cou=0
+  address_record=data.frame()
+  for (i in c(1:length(address))){
+    tryCatch({
+      if (i-temp_cou==2){
+        i=i-1
+      }
+      add_temp=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/GeoCode/Coordinate/Address/", url_encode(address[i]), "?&$format=xml"))
+      add_temp=data.frame(AddressOriginal=address[i],
+                          AddressNew=xml_text(xml_find_all(add_temp, xpath=".//Address")),
+                          Geometry=xml_text(xml_find_all(add_temp, xpath=".//Geometry")))
+      address_record=rbind(address_record, add_temp)
+
+      print(if((i %% 10==0 | i==length(address))){
+        paste0(i, "/", length(address))
+      }else{next})
+
+      temp_cou=i
+    }, error=function(e){})
+  }
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(address_record, out, row.names=F)
+    }
+    return(address_record)
+  }else if (dtype=="sf"){
+    address_record$Geometry=st_as_sfc(address_record$Geometry)
+    address_record=st_sf(address_record, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(address_record, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      warning("The file name must contain '.shp'")
+    }
+
+    return(address_record)
+  }else{
+    warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+  }
+}
+
 
