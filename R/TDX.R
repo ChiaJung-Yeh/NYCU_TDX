@@ -511,7 +511,7 @@ Geocoding=function(address, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(sf)) install.packages("sf")
-  if (!require(sf)) install.packages("urltools")
+  if (!require(urltools)) install.packages("urltools")
 
   temp_cou=0
   address_record=data.frame()
