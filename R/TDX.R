@@ -513,7 +513,7 @@ Geocoding=function(address, dtype="text", out=F){
   if (!require(sf)) install.packages("sf")
   if (!require(urltools)) install.packages("urltools")
 
-  temp_cou=0
+  temp_cou=-2
   address_record=data.frame()
   for (i in c(1:length(address))){
     tryCatch({
