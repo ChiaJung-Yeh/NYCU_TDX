@@ -526,9 +526,9 @@ Geocoding=function(address, dtype="text", out=F){
                           Geometry=xml_text(xml_find_all(add_temp, xpath=".//Geometry")))
       address_record=rbind(address_record, add_temp)
 
-      print(if((i %% 10==0 | i==length(address))){
-        paste0(i, "/", length(address))
-      }else{next})
+      if((i %% 10==0 | i==length(address))){
+        print(paste0(i, "/", length(address)))
+      }
 
       temp_cou=i
     }, error=function(e){})
@@ -554,5 +554,4 @@ Geocoding=function(address, dtype="text", out=F){
     warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
   }
 }
-
 
