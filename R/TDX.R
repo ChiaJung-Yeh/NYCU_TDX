@@ -14,6 +14,9 @@ TDX_Railway=data.frame(Operator=c("臺鐵","高鐵","臺北捷運","高雄捷運
                        Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
+Road_Class=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
+                      RoadClass=c(0,1,3,"ALL"))
+
 # PTX api (copy from TDX website)
 # https://github.com/ptxmotc/Sample-code/blob/master/R/get_ptx_data.R
 .get_ptx_data <- function (app_id, app_key, url){
@@ -118,7 +121,7 @@ Bus_StopOfRoute=function(app_id, app_key, county, dtype="text", out=F){
 
       return(bus_stop)
     }else{
-      warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+      warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
     }
   }
 }
@@ -169,7 +172,7 @@ Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
 
       return(bus_shape)
     }else{
-      warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+      warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
     }
   }
 }
@@ -362,7 +365,7 @@ Rail_Station=function(app_id, app_key, operator, dtype="text", out=F){
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Station/", operator, "?&%24format=XML")
   }else{
-    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
     print(TDX_Railway)
   }
 
@@ -408,7 +411,7 @@ Rail_Station=function(app_id, app_key, operator, dtype="text", out=F){
 
     return(rail_station)
   }else{
-    warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
@@ -457,7 +460,7 @@ Rail_Shape=function(app_id, app_key, operator, dtype="text", out=F){
 
     return(rail_shape)
   }else{
-    warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
@@ -501,7 +504,7 @@ Bike_Station=function(app_id, app_key, county, dtype="text", out=F){
 
     return(bike_station)
   }else{
-    warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
@@ -551,7 +554,81 @@ Geocoding=function(address, dtype="text", out=F){
 
     return(address_record)
   }else{
-    warning(paste0(dtype, " is not allowed format. Please use 'text' or 'sf'."))
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
+
+
+Road_Network=function(county, roadclass, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(sf)) install.packages("sf")
+
+  if (county %in% c(TDX_County$Code[1:22], "ALL") & roadclass %in% c(0,1,3,"ALL")){
+    if (county!="ALL" & roadclass=="ALL"){
+      road=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/Road/Network/City/", county, "?&$format=xml"))
+      road=data.frame(RoadClass=xml_text(xml_find_all(road, xpath=".//RoadClass")),
+                      RoadClassName=xml_text(xml_find_all(road, xpath=".//RoadClassName")),
+                      RoadID=xml_text(xml_find_all(road, xpath=".//RoadID")),
+                      RoadName=xml_text(xml_find_all(road, xpath=".//RoadName")),
+                      RoadNameID=xml_text(xml_find_all(road, xpath=".//RoadNameID")),
+                      Geometry=xml_text(xml_find_all(road, xpath=".//Geometry")))
+    }else if (county!="ALL" & roadclass %in% c(0,1,3)){
+      road=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", roadclass, "'&$format=xml"))
+      road=data.frame(RoadClass=xml_text(xml_find_all(road, xpath=".//RoadClass")),
+                      RoadClassName=xml_text(xml_find_all(road, xpath=".//RoadClassName")),
+                      RoadID=xml_text(xml_find_all(road, xpath=".//RoadID")),
+                      RoadName=xml_text(xml_find_all(road, xpath=".//RoadName")),
+                      RoadNameID=xml_text(xml_find_all(road, xpath=".//RoadNameID")),
+                      Geometry=xml_text(xml_find_all(road, xpath=".//Geometry")))
+    }else if (county=="ALL" & roadclass %in% c(0,1,3)){
+      road=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/Road/Network/RoadClass/", roadclass, "?&$format=XML"))
+      road=data.frame(RoadClass=xml_text(xml_find_all(road, xpath=".//RoadClass")),
+                      RoadClassName=xml_text(xml_find_all(road, xpath=".//RoadClassName")),
+                      RoadID=xml_text(xml_find_all(road, xpath=".//RoadID")),
+                      RoadName=xml_text(xml_find_all(road, xpath=".//RoadName")),
+                      RoadNameID=xml_text(xml_find_all(road, xpath=".//RoadNameID")),
+                      Geometry=xml_text(xml_find_all(road, xpath=".//Geometry")))
+    }else if (county=="ALL" & roadclass=="ALL"){
+      road=data.frame()
+      for (i in c(0,1,3)){
+        temp=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/Road/Network/RoadClass/", i, "?&$format=XML"))
+        temp=data.frame(RoadClass=xml_text(xml_find_all(temp, xpath=".//RoadClass")),
+                        RoadClassName=xml_text(xml_find_all(temp, xpath=".//RoadClassName")),
+                        RoadID=xml_text(xml_find_all(temp, xpath=".//RoadID")),
+                        RoadName=xml_text(xml_find_all(temp, xpath=".//RoadName")),
+                        RoadNameID=xml_text(xml_find_all(temp, xpath=".//RoadNameID")),
+                        Geometry=xml_text(xml_find_all(temp, xpath=".//Geometry")))
+        road=rbind(road, temp)
+        print(paste0("Road Class ", i, " Downloaded"))
+      }
+    }
+  }else if(!(county %in% c(TDX_County$Code[1:22], "ALL"))){
+    print(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
+    print(c(TDX_County$Code[1:22], "ALL"))
+  }else if(!(RoadClass %in% c(0,1,3,"ALL"))){
+    print(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
+    print(Road_Class)
+  }
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(road, out, row.names=F)
+    }
+    return(road)
+  }else if (dtype=="sf"){
+    road$Geometry=st_as_sfc(road$Geometry)
+    road=st_sf(road, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(road, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      warning("The file name must contain '.shp'")
+    }
+
+    return(road)
+  }else{
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+  }
+}
