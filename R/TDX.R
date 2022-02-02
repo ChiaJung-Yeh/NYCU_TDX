@@ -14,7 +14,7 @@ TDX_Railway=data.frame(Operator=c("臺鐵","高鐵","臺北捷運","高雄捷運
                        Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
-Road_Class=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
+TDX_RoadClass=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
                       RoadClass=c(0,1,3,"ALL"))
 
 # PTX api (copy from TDX website)
@@ -609,7 +609,7 @@ Road_Network=function(county, roadclass, dtype="text", out=F){
     print(c(TDX_County$Code[1:22], "ALL"))
   }else if(!(RoadClass %in% c(0,1,3,"ALL"))){
     print(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
-    print(Road_Class)
+    print(TDX_RoadClass)
   }
 
   if (dtype=="text"){
