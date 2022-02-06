@@ -60,8 +60,8 @@ Bus_StopOfRoute=function(app_id, app_key, county, dtype="text", out=F){
   x=.get_ptx_data(app_id, app_key, url)
 
   if (substr(xml_text(x), 1, 4)=="City"){
+    warning(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
     print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
   }else{
     bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                         RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
@@ -116,12 +116,12 @@ Bus_StopOfRoute=function(app_id, app_key, county, dtype="text", out=F){
       if (grepl(".shp", out) & out!=F){
         write_sf(bus_stop, out, layer_options="ENCODING=UTF-8")
       }else if (!(grepl(".shp", out)) & out!=F){
-        stop("The file name must contain '.shp'")
+        warning("The file name must contain '.shp'")
       }
 
       return(bus_stop)
     }else{
-      stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+      warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
     }
   }
 }
@@ -143,8 +143,8 @@ Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
   x=.get_ptx_data(app_id, app_key, url)
 
   if (substr(xml_text(x), 1, 4)=="City"){
+    warning(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
     print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
   }else{
     bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                          RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName")),
@@ -167,12 +167,12 @@ Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
       if (grepl(".shp", out) & out!=F){
         write_sf(bus_shape, out, layer_options="ENCODING=UTF-8")
       }else if (!(grepl(".shp", out)) & out!=F){
-        stop("The file name must contain '.shp'")
+        warning("The file name must contain '.shp'")
       }
 
       return(bus_shape)
     }else{
-      stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+      warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
     }
   }
 }
@@ -194,8 +194,8 @@ Bus_Schedule=function(app_id, app_key, county, out=F){
   x=.get_ptx_data(app_id, app_key, url)
 
   if (substr(xml_text(x), 1, 4)=="City"){
+    warning(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
     print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
   }else{
     bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                         RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
@@ -292,12 +292,12 @@ Rail_StationOfLine=function(app_id, app_key, operator, out=F){
   if (operator=="TRA"){
     url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/StationOfLine?&%24format=XML"
   }else if (operator=="THSR"){
-    stop("Please use function 'Rail_Station' to retrieve the station of high speed rail (THSR).")
+    warning("Please use function 'Rail_Station' to retrieve the station of high speed rail (THSR).")
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=XML")
   }else{
+    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
     print(TDX_Railway)
-    stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
   }
 
   x=.get_ptx_data(app_id, app_key, url)
@@ -365,8 +365,8 @@ Rail_Station=function(app_id, app_key, operator, dtype="text", out=F){
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Station/", operator, "?&%24format=XML")
   }else{
+    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
     print(TDX_Railway)
-    stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
   }
 
   x=.get_ptx_data(app_id, app_key, url)
@@ -406,12 +406,12 @@ Rail_Station=function(app_id, app_key, operator, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(rail_station, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      warning("The file name must contain '.shp'")
     }
 
     return(rail_station)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
@@ -432,8 +432,8 @@ Rail_Shape=function(app_id, app_key, operator, dtype="text", out=F){
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Shape/", operator, "?&%24format=XML")
   }else{
+    warning(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
     print(TDX_Railway)
-    stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
   }
 
   x=.get_ptx_data(app_id, app_key, url)
@@ -455,12 +455,12 @@ Rail_Shape=function(app_id, app_key, operator, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(rail_shape, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      warning("The file name must contain '.shp'")
     }
 
     return(rail_shape)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
@@ -476,8 +476,8 @@ Bike_Station=function(app_id, app_key, county, dtype="text", out=F){
   url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bike/Station/", county, "?&$format=XML")
   x=.get_ptx_data(app_id, app_key, url)
   if (substr(xml_text(x), 1, 4)=="City"){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above. And please ensure that '", county, "' has bike sharing system."))
+    warning(paste0("City: '", county, "' is not accepted. Please check out the parameter table above. And please ensure that '", county, "' has bike sharing system."))
+    TDX_County
   }
   bike_station=data.frame(StationUID=xml_text(xml_find_all(x, xpath = ".//d1:StationUID")),
                           StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
@@ -499,12 +499,12 @@ Bike_Station=function(app_id, app_key, county, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(bike_station, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      warning("The file name must contain '.shp'")
     }
 
     return(bike_station)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
@@ -549,12 +549,12 @@ Geocoding=function(address, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(address_record, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      warning("The file name must contain '.shp'")
     }
 
     return(address_record)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
@@ -605,11 +605,11 @@ Road_Network=function(county, roadclass, dtype="text", out=F){
       }
     }
   }else if(!(county %in% c(TDX_County$Code[1:22], "ALL"))){
+    print(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
     print(c(TDX_County$Code[1:22], "ALL"))
-    stop(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
   }else if(!(RoadClass %in% c(0,1,3,"ALL"))){
+    print(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
     print(TDX_RoadClass)
-    stop(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
   }
 
   if (dtype=="text"){
@@ -624,180 +624,56 @@ Road_Network=function(county, roadclass, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(road, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      warning("The file name must contain '.shp'")
     }
 
     return(road)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
 
 
-Rail_TimeTable=function(app_id, app_key, operator, record, out=F){
+Rail_Timetable=function(app_id, app_key, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
 
   Sys.setlocale(category = "LC_ALL", locale = "cht")
+  url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bike/Station/", county, "?&$format=XML")
+  x=.get_ptx_data(app_id, app_key, url)
+  if (substr(xml_text(x), 1, 4)=="City"){
+    warning(paste0("City: '", county, "' is not accepted. Please check out the parameter table above. And please ensure that '", county, "' has bike sharing system."))
+    TDX_County
+  }
+  bike_station=data.frame(StationUID=xml_text(xml_find_all(x, xpath = ".//d1:StationUID")),
+                          StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
+                          PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
+                          PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
+                          BikesCapacity=xml_text(xml_find_all(x, xpath = ".//d1:BikesCapacity")),
+                          ServiceType=xml_text(xml_find_all(x, xpath = ".//d1:ServiceType")))
 
-  if (record=="station"){
-    if (operator=="TRA"){
-      url="https://ptx.transportdata.tw/MOTC/v3/Rail/TRA/GeneralStationTimetable?&$format=xml"
-    }else if (operator=="THSR"){
-      stop("THSR does not provide 'station' time table up to now! Please use 'general' time table.")
-    }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
-      url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/StationTimeTable/", operator, "?&%24format=XML")
-    }else if (operator=="TMRT"){
-      stop("TMRT does not provide 'station' time table up to now! Please check out other MRT system.")
-    }else{
-      print(TDX_Railway)
-      stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(bike_station, out, row.names=F)
+    }
+    return(bike_station)
+  }else if (dtype=="sf"){
+    bike_station$Geometry=paste0("POINT(", bike_station$PositionLon, " ", bike_station$PositionLat, ")")
+    bike_station$Geometry=st_as_sfc(bike_station$Geometry)
+    bike_station=st_sf(bike_station, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(bike_station, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      warning("The file name must contain '.shp'")
     }
 
-    x=.get_ptx_data(app_id, app_key, url)
-    if (operator=="TRA"){
-      station=data.frame(StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                         StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
-                         Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
-
-      num_of_table=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
-
-      rail_timetable_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
-                                     TrainNo=xml_text(xml_find_all(x, xpath = ".//d1:TrainNo")),
-                                     DestinationStationID=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStationID")),
-                                     DestinationStationName=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStationName/d1:Zh_tw")),
-                                     TrainTypeID=xml_text(xml_find_all(x, xpath = ".//d1:TrainTypeID")),
-                                     TrainTypeCode=xml_text(xml_find_all(x, xpath = ".//d1:TrainTypeCode")),
-                                     TrainTypeName=xml_text(xml_find_all(x, xpath = ".//d1:TrainTypeName/d1:Zh_tw")),
-                                     ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
-                                     DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")))
-
-      rail_timetable=data.frame()
-      for (i in c(1:length(num_of_table))){
-        sec_head=sum(num_of_table[0:(i-1)])+1
-        sec_tail=sum(num_of_table[0:i])
-        rail_timetable=rbind(rail_timetable, cbind(station[i,], rail_timetable_temp[c(sec_head:sec_tail),]))
-      }
-    }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
-      station=data.frame(RouteID=xml_text(xml_find_all(x, xpath = ".//d1:RouteID")),
-                         LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
-                         StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                         StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
-                         Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
-                         DestinationStaionID=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStaionID")),
-                         DestinationStationName=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStationName/d1:Zh_tw")))
-
-      num_of_table=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
-
-      rail_timetable_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
-                                     ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
-                                     DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")))
-
-      rail_timetable=data.frame()
-      for (i in c(1:length(num_of_table))){
-        sec_head=sum(num_of_table[0:(i-1)])+1
-        sec_tail=sum(num_of_table[0:i])
-        rail_timetable=rbind(rail_timetable, cbind(LineID=station[i,], rail_timetable_temp[c(sec_head:sec_tail),]))
-      }
-    }
-  }else if (record=="general"){
-    if (operator=="TRA"){
-      url="https://ptx.transportdata.tw/MOTC/v3/Rail/TRA/GeneralTrainTimetable?&$format=XML"
-    }else if (operator=="THSR"){
-      url="https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/GeneralTimetable?&$format=XML"
-    }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT","TMRT")){
-      stop("MRT system does not provide 'general' time table up to now! Please use 'station' time table.")
-    }else{
-      print(TDX_Railway)
-      stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
-    }
-
-    x=.get_ptx_data(app_id, app_key, url)
-    if (operator=="TRA"){
-      tra_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
-                          Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-                          TrainTypeID=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeID")),
-                          TrainTypeCode=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeCode")),
-                          TrainTypeName=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeName//d1:Zh_tw")),
-                          TripHeadSign=xml_text(xml_find_all(x, xpath=".//d1:TripHeadSign")),
-                          StartingStationID=xml_text(xml_find_all(x, xpath=".//d1:StartingStationID")),
-                          StartingStationName=xml_text(xml_find_all(x, xpath=".//d1:StartingStationName//d1:Zh_tw")),
-                          EndingStationID=xml_text(xml_find_all(x, xpath=".//d1:EndingStationID")),
-                          EndingStationName=xml_text(xml_find_all(x, xpath=".//d1:EndingStationName//d1:Zh_tw")),
-                          TripLine=xml_text(xml_find_all(x, xpath=".//d1:TripLine")),
-                          Monday=xml_text(xml_find_all(x, xpath=".//d1:Monday")),
-                          Tuesday=xml_text(xml_find_all(x, xpath=".//d1:Tuesday")),
-                          Wednesday=xml_text(xml_find_all(x, xpath=".//d1:Wednesday")),
-                          Thursday=xml_text(xml_find_all(x, xpath=".//d1:Thursday")),
-                          Friday=xml_text(xml_find_all(x, xpath=".//d1:Friday")),
-                          Saturday=xml_text(xml_find_all(x, xpath=".//d1:Saturday")),
-                          Sunday=xml_text(xml_find_all(x, xpath=".//d1:Sunday")),
-                          NationalHolidays=xml_text(xml_find_all(x, xpath=".//d1:NationalHolidays")),
-                          DayBeforeHoliday=xml_text(xml_find_all(x, xpath=".//d1:DayBeforeHoliday")),
-                          DayAfterHoliday=xml_text(xml_find_all(x, xpath=".//d1:DayAfterHoliday")))
-
-      num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:StopTimes"))
-
-      rail_timetable_temp=data.frame(StopSequence=as.numeric(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))),
-                                     StationID=xml_text(xml_find_all(x, xpath=".//d1:StationID")),
-                                     StationName=xml_text(xml_find_all(x, xpath=".//d1:StationName//d1:Zh_tw")),
-                                     ArrivalTime=xml_text(xml_find_all(x, xpath=".//d1:ArrivalTime")),
-                                     DepartureTime=xml_text(xml_find_all(x, xpath=".//d1:DepartureTime")))
-
-      rail_timetable=data.frame()
-      for (i in c(1:length(num_of_station))){
-        sec_head=sum(num_of_station[0:(i-1)])+1
-        sec_tail=sum(num_of_station[0:i])
-        rail_timetable=rbind(rail_timetable, cbind(tra_info[i, ], rail_timetable_temp[c(sec_head:sec_tail),]))
-      }
-    }else if (operator=="THSR"){
-      tra_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
-                          Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-                          StartingStationID=xml_text(xml_find_all(x, xpath=".//d1:StartingStationID")),
-                          StartingStationName=xml_text(xml_find_all(x, xpath=".//d1:StartingStationName//d1:Zh_tw")),
-                          EndingStationID=xml_text(xml_find_all(x, xpath=".//d1:EndingStationID")),
-                          EndingStationName=xml_text(xml_find_all(x, xpath=".//d1:EndingStationName//d1:Zh_tw")),
-                          Monday=xml_text(xml_find_all(x, xpath=".//d1:Monday")),
-                          Tuesday=xml_text(xml_find_all(x, xpath=".//d1:Tuesday")),
-                          Wednesday=xml_text(xml_find_all(x, xpath=".//d1:Wednesday")),
-                          Thursday=xml_text(xml_find_all(x, xpath=".//d1:Thursday")),
-                          Friday=xml_text(xml_find_all(x, xpath=".//d1:Friday")),
-                          Saturday=xml_text(xml_find_all(x, xpath=".//d1:Saturday")),
-                          Sunday=xml_text(xml_find_all(x, xpath=".//d1:Sunday")))
-
-      num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:StopTimes"))
-
-
-      ArrivalTime=xml_text(xml_find_all(x, xpath=".//d1:ArrivalTime"))
-      ArrivalTime=data.frame(id=which(grepl("ArrivalTime", xml_find_all(x, xpath=".//d1:StopTime"))), ArrivalTime)
-      DepartureTime=xml_text(xml_find_all(x, xpath=".//d1:DepartureTime"))
-      DepartureTime=data.frame(id=which(grepl("DepartureTime", xml_find_all(x, xpath=".//d1:StopTime"))), DepartureTime)
-      temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))))), ArrivalTime)%>%
-        left_join(DepartureTime)%>%
-        select(-id)
-
-      rail_timetable_temp=data.frame(StopSequence=as.numeric(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))),
-                                     StationID=xml_text(xml_find_all(x, xpath=".//d1:StationID")),
-                                     StationName=xml_text(xml_find_all(x, xpath=".//d1:StationName//d1:Zh_tw")),
-                                     temp)
-
-      rail_timetable=data.frame()
-      for (i in c(1:length(num_of_station))){
-        sec_head=sum(num_of_station[0:(i-1)])+1
-        sec_tail=sum(num_of_station[0:i])
-        rail_timetable=rbind(rail_timetable, cbind(tra_info[i, ], rail_timetable_temp[c(sec_head:sec_tail),]))
-      }
-    }
+    return(bike_station)
   }else{
-    stop("'", record, "' is not valid format of timetable. Please use 'station' or 'general'.")
+    warning(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
-
-  if (nchar(out)!=0 & out!=F){
-    write.csv(rail_timetable, out, row.names=F)
-  }
-  return(rail_timetable)
 }
 
 
