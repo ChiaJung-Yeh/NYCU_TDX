@@ -854,7 +854,61 @@ Bike_Shape=function(app_id, app_key, county, dtype="text", out=F){
 
 
 
+Air_Schedule=function(app_id, app_key, domestic=T, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
 
+  Sys.setlocale(category = "LC_ALL", locale = "cht")
+  if (domestic){
+    url="https://ptx.transportdata.tw/MOTC/v2/Air/GeneralSchedule/Domestic?$format=xml"
+    x=.get_ptx_data(app_id, app_key, url)
+    air_schedule=data.frame(AirlineID=xml_text(xml_find_all(x, xpath = ".//d1:AirlineID")),
+                            ScheduleStartDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleStartDate")),
+                            ScheduleEndDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleEndDate")),
+                            FlightNumber=xml_text(xml_find_all(x, xpath = ".//d1:FlightNumber")),
+                            DepartureAirportID=xml_text(xml_find_all(x, xpath = ".//d1:DepartureAirportID")),
+                            DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")),
+                            ArrivalAirportID=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalAirportID")),
+                            ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
+                            Monday=xml_text(xml_find_all(x, xpath = ".//d1:Monday")),
+                            Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Tuesday")),
+                            Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Wednesday")),
+                            Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Thursday")),
+                            Friday=xml_text(xml_find_all(x, xpath = ".//d1:Friday")),
+                            Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Saturday")),
+                            Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Sunday")))
+  }else{
+    url="https://ptx.transportdata.tw/MOTC/v2/Air/GeneralSchedule/International?$format=xml"
+    x=.get_ptx_data(app_id, app_key, url)
+
+    Terminal=xml_text(xml_find_all(x, xpath = ".//d1:Terminal"))
+    Terminal=data.frame(id=which(grepl("Terminal", xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))), Terminal)
+    temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))))), Terminal)%>%
+      select(-id)
+
+    air_schedule=data.frame(AirlineID=xml_text(xml_find_all(x, xpath = ".//d1:AirlineID"))[1:length(xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))],
+                            FlightNumber=xml_text(xml_find_all(x, xpath = ".//d1:FlightNumber"))[1:length(xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))],
+                            scheduleStartDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleStartDate")),
+                            ScheduleEndDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleEndDate")),
+                            DepartureAirportID=xml_text(xml_find_all(x, xpath = ".//d1:DepartureAirportID")),
+                            DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")),
+                            ArrivalAirportID=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalAirportID")),
+                            ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
+                            Monday=xml_text(xml_find_all(x, xpath = ".//d1:Monday")),
+                            Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Tuesday")),
+                            Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Wednesday")),
+                            Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Thursday")),
+                            Friday=xml_text(xml_find_all(x, xpath = ".//d1:Friday")),
+                            Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Saturday")),
+                            Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Sunday")),
+                            temp)
+  }
+  if (nchar(out)!=0 & out!=F){
+    write.csv(air_schedule, out, row.names=F)
+  }
+  return(air_schedule)
+}
 
 
 
