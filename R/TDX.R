@@ -912,5 +912,57 @@ Air_Schedule=function(app_id, app_key, domestic=T, out=F){
 
 
 
+ScenicSpot=function(app_id, app_key, county, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
+
+  Sys.setlocale(category = "LC_ALL", locale = "cht")
+
+
+  if (county=="ALL"){
+    url="https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?&$format=xml"
+  }else{
+    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot/", county, "?&$format=xml")
+  }
+  x=.get_ptx_data(app_id, app_key, url)
+
+  if (substr(xml_text(x), 1, 4)=="City"){
+    print(TDX_County)
+    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+  }
+
+  Address=xml_text(xml_find_all(x, xpath = ".//d1:Address"))
+  Address=data.frame(id=which(grepl("Address", xml_find_all(x, xpath=".//d1:ScenicSpotTourismInfo"))), Address)
+  temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:ScenicSpotTourismInfo"))))), Address)%>%
+    select(-id)
+
+  scenic_spot=data.frame(ScenicSpotID=xml_text(xml_find_all(x, xpath = ".//d1:ScenicSpotID")),
+                          ScenicSpotName=xml_text(xml_find_all(x, xpath = ".//d1:ScenicSpotName")),
+                          temp,
+                          PositionLon=as.numeric(xml_text(xml_find_all(x, xpath = ".//d1:Position//d1:PositionLon"))),
+                          PositionLat=as.numeric(xml_text(xml_find_all(x, xpath = ".//d1:Position//d1:PositionLat"))))
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(scenic_spot, out, row.names=F)
+    }
+    return(scenic_spot)
+  }else if (dtype=="sf"){
+    scenic_spot$Geometry=st_as_sfc(paste0("POINT(", scenic_spot$PositionLon, " ", scenic_spot$PositionLat, ")"))
+    scenic_spot=st_sf(scenic_spot, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(scenic_spot, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      stop("The file name must contain '.shp'")
+    }
+
+    return(scenic_spot)
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+  }
+}
 
 
