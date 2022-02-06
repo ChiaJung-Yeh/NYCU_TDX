@@ -802,6 +802,55 @@ Rail_TimeTable=function(app_id, app_key, operator, record, out=F){
 
 
 
+Bike_Shape=function(app_id, app_key, county, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
+
+  Sys.setlocale(category = "LC_ALL", locale = "cht")
+  url=paste0("https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/", county, "?&$format=XML")
+  x=.get_ptx_data(app_id, app_key, url)
+  if (substr(xml_text(x), 1, 4)=="City"){
+    print(TDX_County)
+    stop(paste0("City: '", county, "' is not accepted. Please check out the paramete table above.",
+                "\nIf the county code is indeed in the parameter table, but the error still occurs, it means that the county has no cycling network now in TDX platform."))
+  }
+
+  RoadSectionStart=xml_text(xml_find_all(x, xpath = ".//d1:RoadSectionStart"))
+  RoadSectionStart=data.frame(id=which(grepl("RoadSectionStart", xml_find_all(x, xpath=".//d1:BikeShape"))), RoadSectionStart)
+  RoadSectionEnd=xml_text(xml_find_all(x, xpath = ".//d1:RoadSectionEnd"))
+  RoadSectionEnd=data.frame(id=which(grepl("RoadSectionEnd", xml_find_all(x, xpath=".//d1:BikeShape"))), RoadSectionEnd)
+  temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:City"))))), RoadSectionStart)%>%
+    left_join(RoadSectionEnd)%>%
+    select(-id)
+
+  bike_shape=data.frame(RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName")),
+                        City=xml_text(xml_find_all(x, xpath = ".//d1:City")),
+                        temp,
+                        CyclingLength=xml_text(xml_find_all(x, xpath = ".//d1:CyclingLength")),
+                        Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(bike_shape, out, row.names=F)
+    }
+    return(bike_shape)
+  }else if (dtype=="sf"){
+    bike_shape$Geometry=st_as_sfc(bike_shape$Geometry)
+    bike_shape=st_sf(bike_shape, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(bike_shape, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      stop("The file name must contain '.shp'")
+    }
+
+    return(bike_shape)
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+  }
+}
 
 
 
