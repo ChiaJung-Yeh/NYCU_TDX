@@ -483,7 +483,7 @@ Bike_Station=function(app_id, app_key, county, dtype="text", out=F){
                           StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
                           PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
                           PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
-                          BikesCapacity=xml_text(xml_find_all(x, xpath = ".//d1:BikesCapacity")),
+                          BikesCapacity=as.numeric(xml_text(xml_find_all(x, xpath = ".//d1:BikesCapacity"))),
                           ServiceType=xml_text(xml_find_all(x, xpath = ".//d1:ServiceType")))
 
   if (dtype=="text"){
