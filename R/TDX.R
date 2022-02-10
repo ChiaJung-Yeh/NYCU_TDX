@@ -699,7 +699,7 @@ Rail_TimeTable=function(app_id, app_key, operator, record, out=F){
       for (i in c(1:length(num_of_table))){
         sec_head=sum(num_of_table[0:(i-1)])+1
         sec_tail=sum(num_of_table[0:i])
-        rail_timetable=rbind(rail_timetable, cbind(LineID=station[i,], rail_timetable_temp[c(sec_head:sec_tail),]))
+        rail_timetable=rbind(rail_timetable, cbind(station[i,], rail_timetable_temp[c(sec_head:sec_tail),]))
       }
     }
   }else if (record=="general"){
