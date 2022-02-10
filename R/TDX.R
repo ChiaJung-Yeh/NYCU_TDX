@@ -147,9 +147,9 @@ Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
     stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
   }else{
     bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
-                         RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName")),
+                         RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
                          SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
-                         SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName")),
+                         SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
                          Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
                          Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
