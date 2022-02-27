@@ -519,7 +519,7 @@ Geocoding=function(address, dtype="text", out=F){
   temp_cou=0
   address_record=data.frame()
   for (i in c(1:length(address))){
-    if (grepl("", address[i])==F){
+    if (grepl("??", address[i])==F){
       tryCatch({
         if (i-temp_cou!=1){
           i=temp_cou
