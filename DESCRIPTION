@@ -1,7 +1,7 @@
 Package: TDX
 Type: Package
 Title: Connecting transportation data from TDX, Taiwan.
-Version: 0.1.0
+Version: 1.2.1
 Author: Chia Jung, Yeh
 Maintainer: Chia Jung, Yeh <1328robert@gmail.com>
 Description: This package provides a neat and efficient way to connect the transportation data from TDX, Taiwan.
