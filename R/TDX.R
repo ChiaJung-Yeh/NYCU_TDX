@@ -4,6 +4,12 @@ library(httr)
 library(sf)
 library(urltools)
 
+usethis::use_package("dplyr")
+usethis::use_package("xml2")
+usethis::use_package("httr")
+usethis::use_package("sf")
+usethis::use_package("urltools")
+
 # TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
 # TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
 #                       Code=xml_text(xml_find_all(TDX_County, xpath = "//City")))
@@ -14,8 +20,9 @@ library(urltools)
 #                        Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
-TDX_RoadClass=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
-                         RoadClass=c(0,1,3,"ALL"))
+# TDX_RoadClass=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
+#                          RoadClass=c(0,1,3,"ALL"))
+# usethis::use_data(TDX_Railway, overwrite=T)
 
 # PTX api (copy from TDX website)
 # https://github.com/ptxmotc/Sample-code/blob/master/R/get_ptx_data.R
