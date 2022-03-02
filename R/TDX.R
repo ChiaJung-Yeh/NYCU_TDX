@@ -4,17 +4,17 @@ library(httr)
 library(sf)
 library(urltools)
 
-TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
-TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
-                      Code=xml_text(xml_find_all(TDX_County, xpath = "//City")))
-TDX_County=rbind(TDX_County, cbind(County="?????ȹB", Code="Intercity"))
+# TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
+# TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
+#                       Code=xml_text(xml_find_all(TDX_County, xpath = "//City")))
+# TDX_County=rbind(TDX_County, cbind(County="公路客運", Code="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
-TDX_Railway=data.frame(Operator=c("?O?K","???K","?O?_???B","???????B","???鱶?B","?s?_???B","?O?????B","???????y"),
-                       Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT"))
+# TDX_Railway=data.frame(Operator=c("臺鐵","高鐵","臺北捷運","高雄捷運","桃園捷運","新北捷運","臺中捷運","高雄輕軌"),
+#                        Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
-TDX_RoadClass=data.frame(RoadClassName=c("???D","?ٹD?ֳt????","?ٹD?@?뤽??","?H?W????"),
+TDX_RoadClass=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
                          RoadClass=c(0,1,3,"ALL"))
 
 # PTX api (copy from TDX website)
@@ -519,7 +519,7 @@ Geocoding=function(address, dtype="text", out=F){
   temp_cou=0
   address_record=data.frame()
   for (i in c(1:length(address))){
-    if (grepl("", address[i])==F){
+    if (grepl("?", address[i])==F){
       tryCatch({
         if (i-temp_cou!=1){
           i=temp_cou
