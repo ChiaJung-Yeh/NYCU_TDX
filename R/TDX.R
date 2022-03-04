@@ -526,33 +526,31 @@ Geocoding=function(address, dtype="text", out=F){
   temp_cou=0
   address_record=data.frame()
   for (i in c(1:length(address))){
-    if (grepl("?", address[i])==F){
-      tryCatch({
-        if (i-temp_cou!=1){
-          i=temp_cou
-        }
-        add_temp=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/GeoCode/Coordinate/Address/", url_encode(address[i]), "?&$format=xml"))
+    tryCatch({
+      add_temp=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/GeoCode/Coordinate/Address/", url_encode(address[i]), "?&$format=xml"))
 
-        if (length(xml_text(xml_find_all(add_temp, xpath=".//Address")))==0){
-          print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
-        }else{
-          add_temp=data.frame(AddressOriginal=address[i],
-                              AddressNew=xml_text(xml_find_all(add_temp, xpath=".//Address")),
-                              Geometry=xml_text(xml_find_all(add_temp, xpath=".//Geometry")))
-          address_record=rbind(address_record, add_temp)
-        }
+      if (length(xml_text(xml_find_all(add_temp, xpath=".//Address")))==0){
+        print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
+      }else{
+        add_temp=data.frame(AddressOriginal=address[i],
+                            AddressNew=xml_text(xml_find_all(add_temp, xpath=".//Address")),
+                            Geometry=xml_text(xml_find_all(add_temp, xpath=".//Geometry")))
+        address_record=rbind(address_record, add_temp)
+      }
 
-        if((i %% 10==0 | i==length(address))){
-          print(paste0(i, "/", length(address)))
-        }
+      if((i %% 10==0 | i==length(address))){
+        print(paste0(i, "/", length(address)))
+      }
 
-        temp_cou=i
-        # print(paste0(temp_cou, "__", i))
-      }, error=function(e){})
-    }else{
       temp_cou=i
-      print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
-    }
+    }, error=function(err){
+      print(paste("ERROR:", conditionMessage(err)))
+      if (conditionMessage(err)=="Timeout was reached: [gist.motc.gov.tw] Connection timed out after 10005 milliseconds"){
+        i=temp_cou-1
+      }else{
+        print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
+      }
+    })
   }
 
   address_record=distinct(address_record)
