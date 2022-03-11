@@ -10,7 +10,7 @@ The function is used to download the bus route information, including the route 
 The output code of bus route type is listed below.
 
   \tabular{rlll}{
-    1   \tab outbound\cr
+    0   \tab outbound\cr
     1   \tab inbound\cr
     2   \tab loop\cr
     255   \tab unknown\cr
