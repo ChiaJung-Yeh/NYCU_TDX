@@ -133,11 +133,6 @@ Bus_StopOfRoute=function(app_id, app_key, county, dtype="text", out=F){
   }
 }
 
-temp=data.frame()
-for (i in c(1:nrow(TDX_County))){
-  temp=rbind(temp, Bus_Route(app_id, app_key, TDX_County$Code[i]))
-}
-
 
 
 Bus_Route=function(app_id, app_key, county, out=F){
