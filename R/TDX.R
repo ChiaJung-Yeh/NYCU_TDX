@@ -133,6 +133,76 @@ Bus_StopOfRoute=function(app_id, app_key, county, dtype="text", out=F){
   }
 }
 
+temp=data.frame()
+for (i in c(1:nrow(TDX_County))){
+  temp=rbind(temp, Bus_Route(app_id, app_key, TDX_County$Code[i]))
+}
+
+
+
+Bus_Route=function(app_id, app_key, county, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
+
+  Sys.setlocale(category = "LC_ALL", locale = "cht")
+  if (county=="Intercity"){
+    url="https://ptx.transportdata.tw/MOTC/v2/Bus/Route/InterCity?&$format=XML"
+  }else{
+    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bus/Route/City/", county, "?&$format=XML")
+  }
+  x=.get_ptx_data(app_id, app_key, url)
+
+  if (substr(xml_text(x), 1, 4)=="City"){
+    print(TDX_County)
+    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+  }else{
+    bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+                        RouteID=xml_text(xml_find_all(x, xpath = ".//d1:RouteID")),
+                        RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
+                        BusRouteType=xml_text(xml_find_all(x, xpath = ".//d1:BusRouteType")))
+
+    DepartureStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DepartureStopNameZh"))
+    DepartureStopNameZh=data.frame(id=which(grepl("DepartureStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DepartureStopNameZh)
+    temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DepartureStopNameZh)%>%
+      select(-id)
+    DestinationStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DestinationStopNameZh"))
+    DestinationStopNameZh=data.frame(id=which(grepl("DestinationStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DestinationStopNameZh)
+    temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DestinationStopNameZh)%>%
+      select(-id)
+
+    bus_info=cbind(bus_info, temp1, temp2)
+
+
+    # operator_num=xml_length(xml_find_all(x, xpath = ".//d1:Operators"))
+    # bus_info=as.data.frame(lapply(bus_info, rep, operator_num))
+
+    # operator=data.frame(Operator=xml_text(xml_find_all(x, xpath = ".//d1:Operators//d1:Operator//d1:OperatorID")),
+    #                     OperatorName=xml_text(xml_find_all(x, xpath = ".//d1:OperatorName//d1:Zh_tw")),
+    #                     OperatorCode=xml_text(xml_find_all(x, xpath = ".//d1:OperatorCode")),
+    #                     OperatorNo=xml_text(xml_find_all(x, xpath = ".//d1:OperatorNo")))
+
+    # bus_info=cbind(bus_info, operator)
+
+    subroute_num=xml_length(xml_find_all(x, xpath = ".//d1:SubRoutes"))
+    bus_info=as.data.frame(lapply(bus_info, rep, subroute_num))
+
+    bus_subroute=data.frame(SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
+                            SubRouteID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteID")),
+                            SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName")),
+                            Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
+
+    bus_route=cbind(bus_info, bus_subroute)
+
+
+    if (nchar(out)!=0 & out!=F){
+      write.csv(bus_stop, out, row.names=F)
+    }
+    return(bus_route)
+  }
+}
+
 
 
 Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
