@@ -139,7 +139,6 @@ Bus_Route=function(app_id, app_key, county, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
-  if (!require(sf)) install.packages("sf")
 
   Sys.setlocale(category = "LC_ALL", locale = "cht")
   if (county=="Intercity"){
