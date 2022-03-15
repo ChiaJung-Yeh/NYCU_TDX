@@ -217,10 +217,21 @@ Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
     print(TDX_County)
     stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
   }else{
+    SubRouteUID=xml_text(xml_find_all(x, xpath=".//d1:SubRouteUID"))
+    SubRouteUID=data.frame(id=which(grepl("SubRouteUID", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteUID)
+    temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteUID)%>%
+      select(-id)
+
+    SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName"))
+    SubRouteName=data.frame(id=which(grepl("SubRouteName", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteName)
+    SubRouteName$SubRouteName=substr(SubRouteName$SubRouteName, 1, 5)
+    temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteName)%>%
+      select(-id)
+
     bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                          RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
-                         SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
-                         SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
+                         temp1,
+                         temp2,
                          Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
                          Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
