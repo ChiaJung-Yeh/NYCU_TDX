@@ -7,7 +7,7 @@ Retrieve the detailed information of each bus route
 \description{
 The function is used to download the bus route information, including the route name, subroute name, bus route type, direction, departure and destination stop name.
 
-The output code of bus route type is listed below.
+The output code of direction is listed below.
 
   \tabular{rlll}{
     0   \tab outbound\cr
@@ -16,7 +16,7 @@ The output code of bus route type is listed below.
     255   \tab unknown\cr
   }
 
-The output code of direction is listed below.
+The output code of bus route type is listed below.
 
   \tabular{rlll}{
     11   \tab City Bus\cr
