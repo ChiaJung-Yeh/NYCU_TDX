@@ -184,11 +184,10 @@ Bus_Route=function(app_id, app_key, county, out=F){
 
     bus_subroute=data.frame(SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
                             SubRouteID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteID")),
-                            SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName")),
+                            SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
                             Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
 
     bus_route=cbind(bus_info, bus_subroute)
-
 
     if (nchar(out)!=0 & out!=F){
       write.csv(bus_stop, out, row.names=F)
