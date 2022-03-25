@@ -619,7 +619,7 @@ Geocoding=function(address, dtype="text", out=F){
       temp_cou=i
     }, error=function(err){
       print(paste("ERROR:", conditionMessage(err)))
-      if (grepl("Timeout was reached: [gist.motc.gov.tw] Connection timed out after", conditionMessage(err))){
+      if (grepl("Timeout was reached", conditionMessage(err))){
         i=temp_cou-1
       }else{
         print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
@@ -649,7 +649,7 @@ Geocoding=function(address, dtype="text", out=F){
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
-
+grepl("Timeout was reached: [gist.motc.gov.tw] Connection timed out after","Timeout was reached:")
 
 
 Road_Network=function(county, roadclass, dtype="text", out=F){
