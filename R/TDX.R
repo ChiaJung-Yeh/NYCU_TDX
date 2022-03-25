@@ -619,7 +619,7 @@ Geocoding=function(address, dtype="text", out=F){
       temp_cou=i
     }, error=function(err){
       print(paste("ERROR:", conditionMessage(err)))
-      if (conditionMessage(err)=="Timeout was reached: [gist.motc.gov.tw] Connection timed out after 10005 milliseconds"){
+      if (grepl("Timeout was reached: [gist.motc.gov.tw] Connection timed out after", conditionMessage(err))){
         i=temp_cou-1
       }else{
         print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
