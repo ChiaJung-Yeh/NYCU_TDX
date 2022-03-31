@@ -18,6 +18,9 @@ Please install the package from Github (ChiaJung-Yeh/NYCU\_TDX).
 
 ## Usage
 
+All functions provided in this package are summarised in the table
+below.
+
 <table class="table table-striped table-hover" style="font-size: 14px; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -53,7 +56,7 @@ PTX
 點
 </td>
 <td style="text-align:left;">
-[Rail\_Shape()](https://chiajung-yeh.github.io/TDX_Guide/%E8%BB%8C%E9%81%93%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%BB%8C%E9%81%93%E8%B7%AF%E7%B7%9A%E7%B7%9A%E5%9E%8B%E8%B3%87%E6%96%99)
+Rail\_Shape()
 </td>
 </tr>
 <tr>
@@ -61,7 +64,7 @@ PTX
 軌道路線站點
 </td>
 <td style="text-align:left;">
-[Rail\_Station()](https://chiajung-yeh.github.io/TDX_Guide/%E8%BB%8C%E9%81%93%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%BB%8C%E9%81%93%E7%AB%99%E9%BB%9E%E8%B3%87%E6%96%99)
+Rail\_Station()
 </td>
 </tr>
 <tr>
@@ -72,7 +75,7 @@ PTX
 線
 </td>
 <td style="text-align:left;">
-[`Rail_StationOfLine()`](https://chiajung-yeh.github.io/TDX_Guide/%E8%BB%8C%E9%81%93%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%BB%8C%E9%81%93%E8%B7%AF%E7%B7%9A%E7%AB%99%E9%BB%9E%E8%B3%87%E6%96%99)
+Rail\_StationOfLine()
 </td>
 </tr>
 <tr>
@@ -83,7 +86,7 @@ PTX
 文字
 </td>
 <td style="text-align:left;">
-[Rail\_TimeTable()](https://chiajung-yeh.github.io/TDX_Guide/%E8%BB%8C%E9%81%93%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%BB%8C%E9%81%93%E7%8F%AD%E8%A1%A8%E8%B3%87%E6%96%99)
+Rail\_TimeTable()
 </td>
 </tr>
 <tr>
@@ -97,7 +100,7 @@ PTX
 點
 </td>
 <td style="text-align:left;">
-[Bus\_StopOfRoute()](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%AC%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E5%85%AC%E8%BB%8A%E8%B7%AF%E7%B7%9A%E7%AB%99%E9%BB%9E%E8%B3%87%E6%96%99)
+Bus\_StopOfRoute()
 </td>
 </tr>
 <tr>
@@ -108,7 +111,7 @@ PTX
 文字
 </td>
 <td style="text-align:left;">
-[Bus\_Route()](#公車路線資料)
+Bus\_Route()
 </td>
 </tr>
 <tr>
@@ -119,7 +122,7 @@ PTX
 線
 </td>
 <td style="text-align:left;">
-[Bus\_Shape()](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%AC%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E5%85%AC%E8%BB%8A%E8%B7%AF%E7%B7%9A%E7%B7%9A%E5%9E%8B%E8%B3%87%E6%96%99)
+Bus\_Shape()
 </td>
 </tr>
 <tr>
@@ -130,7 +133,7 @@ PTX
 文字
 </td>
 <td style="text-align:left;">
-[\`Bus\_Schedule()](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%AC%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E5%85%AC%E8%BB%8A%E7%8F%AD%E8%A1%A8%E8%B3%87%E6%96%99)
+Bus\_Schedule()
 </td>
 </tr>
 <tr>
@@ -144,7 +147,7 @@ PTX
 點
 </td>
 <td style="text-align:left;">
-[Bike\_Station()\`](https://chiajung-yeh.github.io/TDX_Guide/%E8%87%AA%E8%A1%8C%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E5%85%AC%E5%85%B1%E8%87%AA%E8%A1%8C%E8%BB%8A%E7%AB%99%E9%BB%9E%E8%B3%87%E6%96%99)
+Bike\_Station()
 </td>
 </tr>
 <tr>
@@ -155,7 +158,7 @@ PTX
 線
 </td>
 <td style="text-align:left;">
-[Bike\_Shape()](https://chiajung-yeh.github.io/TDX_Guide/%E8%87%AA%E8%A1%8C%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%87%AA%E8%A1%8C%E8%BB%8A%E7%B7%9A%E5%9E%8B%E8%B3%87%E6%96%99)
+Bike\_Shape()
 </td>
 </tr>
 <tr>
@@ -169,7 +172,7 @@ PTX
 文字
 </td>
 <td style="text-align:left;">
-[Air\_Schedule()](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%B6%E4%BB%96-tdx-%E8%B3%87%E6%96%99.html#%E8%88%AA%E7%A9%BA%E7%8F%AD%E8%A1%A8%E8%B3%87%E6%96%99)
+Air\_Schedule()
 </td>
 </tr>
 <tr>
@@ -183,7 +186,7 @@ PTX
 點
 </td>
 <td style="text-align:left;">
-[ScenicSpot()](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%B6%E4%BB%96-tdx-%E8%B3%87%E6%96%99.html#%E8%A7%80%E5%85%89%E6%99%AF%E9%BB%9E%E9%BB%9E%E4%BD%8D)
+ScenicSpot()
 </td>
 </tr>
 <tr>
@@ -200,7 +203,7 @@ GIS-T
 線
 </td>
 <td style="text-align:left;">
-[Road\_Network()](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%B6%E4%BB%96-tdx-%E8%B3%87%E6%96%99.html#%E9%81%93%E8%B7%AF%E8%B7%AF%E7%B6%B2%E7%B7%9A%E5%9E%8B)
+Road\_Network()
 </td>
 </tr>
 <tr>
@@ -214,8 +217,20 @@ GIS-T
 點
 </td>
 <td style="text-align:left;">
-[Geocoding()](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%B6%E4%BB%96-tdx-%E8%B3%87%E6%96%99.html#%E5%9C%B0%E7%90%86%E7%B7%A8%E7%A2%BC%E6%9C%8D%E5%8B%99)
+`Geocoding()`
 </td>
 </tr>
 </tbody>
 </table>
+
+Take retrieving MRT stations of Taipei Metro System for example. The
+code and its result are shown below. Note that the parameter `app_id`
+and `app_key` is the
+
+    TRTC_station=Rail_Station(app_id, app_key, "TRTC", dtype="sf")
+
+## Contact
+
+For questions, bugs, and other discussion, please feel free to contact
+the package maintainer, Chia Jung, Yeh.  
+Email:
