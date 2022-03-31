@@ -250,8 +250,8 @@ The result is shown as followings.
     ## 5  121.452465    24.99828
     ## 6  121.459276   25.008465
 
-Usages of other functions can be found in the *[TDX
-Guide](https://chiajung-yeh.github.io/TDX_Guide/)* website.
+Usages of other functions can be found in the **[TDX
+Guide](https://chiajung-yeh.github.io/TDX_Guide/)** website.
 
 ## Support
 
