@@ -46,20 +46,21 @@ kable(TDX_table, booktabs=T)%>%
   row_spec(0, bold=T, color="white", background="#8E8E8E")
 ```
 
-Take retrieving MRT stations of Taipei Metro System for example. The code and its result are shown below. Note that the parameter `app_id` and `app_key` is the authentication key applied from PTX.  
+Take retrieving MRT stations of Taipei Metro System for example. The code is shown below. Note that the parameter `app_id` and `app_key` is the authentication key applied from PTX.  
 
 ```{r TDX_test_show, echo=T, eval=F, message=F}
 TRTC_station=Rail_Station(app_id, app_key, "TRTC")
 head(TRTC_station)
 ```
 
-```{r TDX_test, echo=F, eval=T}
+The result is shown as followings.  
+```{r TDX_test, echo=F, eval=T, message=F}
 TRTC_station=Rail_Station(app_id, app_key, "TRTC")
 head(TRTC_station)
 ```
 
 ## Support
-This package takes advantage of API service by TDX. 
+This package takes advantage of API service provided by TDX, MOTC. 
 
 ```{r TDX_figure, echo=F, eval=T, out.width="60%", fig.align="center"}
 include_graphics("./TDX.png")

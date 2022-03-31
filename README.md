@@ -224,19 +224,13 @@ GIS-T
 </table>
 
 Take retrieving MRT stations of Taipei Metro System for example. The
-code and its result are shown below. Note that the parameter `app_id`
-and `app_key` is the authentication key applied from PTX.
+code is shown below. Note that the parameter `app_id` and `app_key` is
+the authentication key applied from PTX.
 
     TRTC_station=Rail_Station(app_id, app_key, "TRTC")
     head(TRTC_station)
 
-    ## 載入需要的套件：xml2
-
-    ## 載入需要的套件：httr
-
-    ## 載入需要的套件：sf
-
-    ## Linking to GEOS 3.9.1, GDAL 3.2.1, PROJ 7.2.1; sf_use_s2() is TRUE
+The result is shown as followings.
 
     ## [1] "Success: (200) OK"
     ## [1] "#---TRTC Station Downloaded---#"
@@ -258,7 +252,7 @@ and `app_key` is the authentication key applied from PTX.
 
 ## Support
 
-This package takes advantage of API service by TDX.
+This package takes advantage of API service provided by TDX, MOTC.
 
 <img src="./TDX.png" width="60%" style="display: block; margin: auto;" />
 
