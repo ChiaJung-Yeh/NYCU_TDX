@@ -56,7 +56,7 @@ PTX
 點
 </td>
 <td style="text-align:left;">
-Rail\_Shape()
+`Rail_Shape()`
 </td>
 </tr>
 <tr>
@@ -64,7 +64,7 @@ Rail\_Shape()
 軌道路線站點
 </td>
 <td style="text-align:left;">
-Rail\_Station()
+`Rail_Station()`
 </td>
 </tr>
 <tr>
@@ -75,7 +75,7 @@ Rail\_Station()
 線
 </td>
 <td style="text-align:left;">
-Rail\_StationOfLine()
+`Rail_StationOfLine()`
 </td>
 </tr>
 <tr>
@@ -227,7 +227,20 @@ Take retrieving MRT stations of Taipei Metro System for example. The
 code and its result are shown below. Note that the parameter `app_id`
 and `app_key` is the
 
-    TRTC_station=Rail_Station(app_id, app_key, "TRTC", dtype="sf")
+    TRTC_station=Rail_Station(app_id, app_key, "TRTC")
+
+    ## 載入需要的套件：xml2
+
+    ## 載入需要的套件：httr
+
+    ## 載入需要的套件：sf
+
+    ## Linking to GEOS 3.9.1, GDAL 3.2.1, PROJ 7.2.1; sf_use_s2() is TRUE
+
+    ## [1] "Success: (200) OK"
+    ## [1] "#---TRTC Station Downloaded---#"
+
+![](README_files/figure-markdown_strict/TDX_test-1.png)
 
 ## Contact
 
