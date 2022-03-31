@@ -46,28 +46,26 @@ kable(TDX_table, booktabs=T)%>%
   row_spec(0, bold=T, color="white", background="#8E8E8E")
 ```
 
-Take retrieving MRT stations of Taipei Metro System for example. The code and its result are shown below. Note that the parameter `app_id` and `app_key` is the 
+Take retrieving MRT stations of Taipei Metro System for example. The code and its result are shown below. Note that the parameter `app_id` and `app_key` is the authentication key applied from PTX.  
 
-```{r TDX_test_show, echo=T, eval=F}
+```{r TDX_test_show, echo=T, eval=T}
 TRTC_station=Rail_Station(app_id, app_key, "TRTC")
+head(TRTC_station)
 ```
 
-```{r TDX_test, echo=F, eval=T}
-TRTC_station=Rail_Station(app_id, app_key, "TRTC")
-datatable(TRTC_station, options=list(pageLength=5, scrollX=T,
-                                    headerCallback = DT::JS(
-    "function(thead) {",
-    "  $(thead).css('font-size', '0.7em');",
-    "}"
-  )))%>%
-  formatStyle(columns=c(1:ncol(TRTC_station)), fontSize='80%')%>%
-  formatRound(c("PositionLon", "PositionLat"), digits=4)
-```
+## Support
+
 
 
 ## Contact
 
 For questions, bugs, and other discussion, please feel free to contact the package maintainer, Chia Jung, Yeh.  
-Email: \email{1328robert@gmail.com}
+Email: <a href="mailto:1328robert@gmail.com"><u>1328robert@gmail.com</u></a>
+
+
+
+
+
+
 
 

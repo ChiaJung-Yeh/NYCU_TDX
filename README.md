@@ -225,7 +225,7 @@ Road\_Network()
 
 Take retrieving MRT stations of Taipei Metro System for example. The
 code and its result are shown below. Note that the parameter `app_id`
-and `app_key` is the
+and `app_key` is the authentication key applied from PTX.
 
     TRTC_station=Rail_Station(app_id, app_key, "TRTC")
 
@@ -240,10 +240,28 @@ and `app_key` is the
     ## [1] "Success: (200) OK"
     ## [1] "#---TRTC Station Downloaded---#"
 
-![](README_files/figure-markdown_strict/TDX_test-1.png)
+    head(TRTC_station)
+
+    ##   StationName StationUID StationID LocationCity LocationTown LocationTownCode
+    ## 1        頂埔  TRTC-BL01      BL01       新北市       土城區         65000130
+    ## 2        永寧  TRTC-BL02      BL02       新北市       土城區         65000130
+    ## 3        土城  TRTC-BL03      BL03       新北市       土城區         65000130
+    ## 4        海山  TRTC-BL04      BL04       新北市       土城區         65000130
+    ## 5    亞東醫院  TRTC-BL05      BL05       新北市       板橋區         65000010
+    ## 6        府中  TRTC-BL06      BL06       新北市       板橋區         65000010
+    ##   PositionLon PositionLat
+    ## 1    121.4205    24.96012
+    ## 2   121.43613    24.96682
+    ## 3   121.44432    24.97313
+    ## 4   121.44873   24.985305
+    ## 5  121.452465    24.99828
+    ## 6  121.459276   25.008465
+
+## Support
 
 ## Contact
 
 For questions, bugs, and other discussion, please feel free to contact
 the package maintainer, Chia Jung, Yeh.  
 Email:
+<a href="mailto:1328robert@gmail.com"><u><1328robert@gmail.com></u></a>
