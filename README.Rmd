@@ -10,8 +10,8 @@ library(kableExtra)
 library(dplyr)
 library(DT)
 library(TDX)
-app_id=read.table("../key.txt", sep=",")[1,2]
-app_key=read.table("../key.txt", sep=",")[2,2]
+app_id=read.table("./key.txt", sep=",")[1,2]
+app_key=read.table("./key.txt", sep=",")[2,2]
 ```
 
 ## Overview
@@ -48,7 +48,7 @@ kable(TDX_table, booktabs=T)%>%
 
 Take retrieving MRT stations of Taipei Metro System for example. The code and its result are shown below. Note that the parameter `app_id` and `app_key` is the authentication key applied from PTX.  
 
-```{r TDX_test_show, echo=T, eval=T}
+```{r TDX_test_show, echo=T, eval=F, message=F}
 TRTC_station=Rail_Station(app_id, app_key, "TRTC")
 head(TRTC_station)
 ```
