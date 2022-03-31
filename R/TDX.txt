@@ -4,18 +4,25 @@ library(httr)
 library(sf)
 library(urltools)
 
-TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
-TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
-                      Code=xml_text(xml_find_all(TDX_County, xpath = "//City")))
-TDX_County=rbind(TDX_County, cbind(County="?????ȹB", Code="Intercity"))
+usethis::use_package("dplyr")
+usethis::use_package("xml2")
+usethis::use_package("httr")
+usethis::use_package("sf")
+usethis::use_package("urltools")
+
+# TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
+# TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
+#                       Code=xml_text(xml_find_all(TDX_County, xpath = "//City")))
+# TDX_County=rbind(TDX_County, cbind(County="公路客運", Code="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
-TDX_Railway=data.frame(Operator=c("?O?K","???K","?O?_???B","???????B","???鱶?B","?s?_???B","?O?????B","???????y"),
-                       Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT"))
+# TDX_Railway=data.frame(Operator=c("臺鐵","高鐵","臺北捷運","高雄捷運","桃園捷運","新北捷運","臺中捷運","高雄輕軌"),
+#                        Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
-TDX_RoadClass=data.frame(RoadClassName=c("???D","?ٹD?ֳt????","?ٹD?@?뤽??","?H?W????"),
-                         RoadClass=c(0,1,3,"ALL"))
+# TDX_RoadClass=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
+#                          RoadClass=c(0,1,3,"ALL"))
+# usethis::use_data(TDX_Railway, overwrite=T)
 
 # PTX api (copy from TDX website)
 # https://github.com/ptxmotc/Sample-code/blob/master/R/get_ptx_data.R
@@ -128,6 +135,69 @@ Bus_StopOfRoute=function(app_id, app_key, county, dtype="text", out=F){
 
 
 
+Bus_Route=function(app_id, app_key, county, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+
+  Sys.setlocale(category = "LC_ALL", locale = "cht")
+  if (county=="Intercity"){
+    url="https://ptx.transportdata.tw/MOTC/v2/Bus/Route/InterCity?&$format=XML"
+  }else{
+    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bus/Route/City/", county, "?&$format=XML")
+  }
+  x=.get_ptx_data(app_id, app_key, url)
+
+  if (substr(xml_text(x), 1, 4)=="City"){
+    print(TDX_County)
+    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+  }else{
+    bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+                        RouteID=xml_text(xml_find_all(x, xpath = ".//d1:RouteID")),
+                        RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
+                        BusRouteType=xml_text(xml_find_all(x, xpath = ".//d1:BusRouteType")))
+
+    DepartureStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DepartureStopNameZh"))
+    DepartureStopNameZh=data.frame(id=which(grepl("DepartureStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DepartureStopNameZh)
+    temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DepartureStopNameZh)%>%
+      select(-id)
+    DestinationStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DestinationStopNameZh"))
+    DestinationStopNameZh=data.frame(id=which(grepl("DestinationStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DestinationStopNameZh)
+    temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DestinationStopNameZh)%>%
+      select(-id)
+
+    bus_info=cbind(bus_info, temp1, temp2)
+
+
+    # operator_num=xml_length(xml_find_all(x, xpath = ".//d1:Operators"))
+    # bus_info=as.data.frame(lapply(bus_info, rep, operator_num))
+
+    # operator=data.frame(Operator=xml_text(xml_find_all(x, xpath = ".//d1:Operators//d1:Operator//d1:OperatorID")),
+    #                     OperatorName=xml_text(xml_find_all(x, xpath = ".//d1:OperatorName//d1:Zh_tw")),
+    #                     OperatorCode=xml_text(xml_find_all(x, xpath = ".//d1:OperatorCode")),
+    #                     OperatorNo=xml_text(xml_find_all(x, xpath = ".//d1:OperatorNo")))
+
+    # bus_info=cbind(bus_info, operator)
+
+    subroute_num=xml_length(xml_find_all(x, xpath = ".//d1:SubRoutes"))
+    bus_info=as.data.frame(lapply(bus_info, rep, subroute_num))
+
+    bus_subroute=data.frame(SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
+                            SubRouteID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteID")),
+                            SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
+                            Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
+
+    bus_route=cbind(bus_info, bus_subroute)
+
+    if (nchar(out)!=0 & out!=F){
+      write.csv(bus_stop, out, row.names=F)
+    }
+    return(bus_route)
+  }
+}
+
+
+
 Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
@@ -146,10 +216,21 @@ Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
     print(TDX_County)
     stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
   }else{
+    SubRouteUID=xml_text(xml_find_all(x, xpath=".//d1:SubRouteUID"))
+    SubRouteUID=data.frame(id=which(grepl("SubRouteUID", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteUID)
+    temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteUID)%>%
+      select(-id)
+
+    SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName"))
+    SubRouteName=data.frame(id=which(grepl("SubRouteName", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteName)
+    SubRouteName$SubRouteName=substr(SubRouteName$SubRouteName, 1, 5)
+    temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteName)%>%
+      select(-id)
+
     bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                          RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
-                         SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
-                         SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
+                         temp1,
+                         temp2,
                          Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
                          Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
@@ -519,33 +600,31 @@ Geocoding=function(address, dtype="text", out=F){
   temp_cou=0
   address_record=data.frame()
   for (i in c(1:length(address))){
-    if (grepl("??", address[i])==F){
-      tryCatch({
-        if (i-temp_cou!=1){
-          i=temp_cou
-        }
-        add_temp=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/GeoCode/Coordinate/Address/", url_encode(address[i]), "?&$format=xml"))
+    tryCatch({
+      add_temp=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/GeoCode/Coordinate/Address/", url_encode(address[i]), "?&$format=xml"))
 
-        if (length(xml_text(xml_find_all(add_temp, xpath=".//Address")))==0){
-          print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
-        }else{
-          add_temp=data.frame(AddressOriginal=address[i],
-                              AddressNew=xml_text(xml_find_all(add_temp, xpath=".//Address")),
-                              Geometry=xml_text(xml_find_all(add_temp, xpath=".//Geometry")))
-          address_record=rbind(address_record, add_temp)
-        }
+      if (length(xml_text(xml_find_all(add_temp, xpath=".//Address")))==0){
+        print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
+      }else{
+        add_temp=data.frame(AddressOriginal=address[i],
+                            AddressNew=xml_text(xml_find_all(add_temp, xpath=".//Address")),
+                            Geometry=xml_text(xml_find_all(add_temp, xpath=".//Geometry")))
+        address_record=rbind(address_record, add_temp)
+      }
 
-        if((i %% 10==0 | i==length(address))){
-          print(paste0(i, "/", length(address)))
-        }
+      if((i %% 10==0 | i==length(address))){
+        print(paste0(i, "/", length(address)))
+      }
 
-        temp_cou=i
-        # print(paste0(temp_cou, "__", i))
-      }, error=function(e){})
-    }else{
       temp_cou=i
-      print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
-    }
+    }, error=function(err){
+      print(paste("ERROR:", conditionMessage(err)))
+      if (grepl("Timeout was reached", conditionMessage(err))){
+        i=temp_cou-1
+      }else{
+        print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
+      }
+    })
   }
 
   address_record=distinct(address_record)
@@ -570,7 +649,7 @@ Geocoding=function(address, dtype="text", out=F){
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
-
+grepl("Timeout was reached: [gist.motc.gov.tw] Connection timed out after","Timeout was reached:")
 
 
 Road_Network=function(county, roadclass, dtype="text", out=F){

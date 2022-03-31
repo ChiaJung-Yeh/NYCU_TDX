@@ -1,0 +1,44 @@
+---
+output: md_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(kableExtra)
+library(dplyr)
+```
+
+## Overview
+
+This package can be used to connect transportation data from TDX (Transport Data eXchange) in a neat and efficient function. TDX platform is supported by Ministry of Transportation and Communications (MOTC) in Taiwan, which provides lots of API for the members download the transportation data. Before using the function provided in this package, the authentication key is a must, which can be applied from PTX [platform](https://ptx.transportdata.tw/PTX/Management/AccountApply).  
+
+
+## Installation
+
+Please install the package from Github (ChiaJung-Yeh/NYCU_TDX).  
+
+```{r installation, echo=T, eval=F}
+install.packages("devtools")
+devtools::install_github("ChiaJung-Yeh/NYCU_TDX")
+library(TDX)
+```
+
+
+## Usage
+
+```{r TDX_table, echo=F, eval=T}
+TDX_table=data.frame(data=c(rep("軌道", 4), rep("公車", 4), rep("自行車", 2), "航空", "觀光景點", "道路路網", "地理編碼"), type=c("軌道站點","軌道路線站點","軌道路線線型","軌道班表","公車站點","公車路線","公車路線線型","公車班表","公共自行車站點","自行車路網","航空班表","觀光景點點位","道路路網線型","地理編碼服務"), source=c(rep("PTX", 12), rep("GIS-T", 2)), class=c(rep("點", 2),"線","文字","點","文字","線","文字","點","線","文字","點","線","點"), functiona=c("[`Rail_Shape()`](#軌道路線線型資料)", "[`Rail_Station()`](#軌道站點資料)", "[`Rail_StationOfLine()`](#軌道路線站點資料)", "[`Rail_TimeTable()`](#軌道班表資料)", "[`Bus_StopOfRoute()`](#公車路線站點資料)", "[`Bus_Route()`](#公車路線資料)", "[`Bus_Shape()`](#公車路線線型資料)", "[`Bus_Schedule()`](#公車班表資料)", "[`Bike_Station()`](#公共自行車站點資料)", "[`Bike_Shape()`](#自行車線型資料)","[`Air_Schedule()`](#航空班表資料)","[`ScenicSpot()`](#觀光景點點位)","[`Road_Network()`](#道路路網線型)","[`Geocoding()`](#地理編碼服務)"))
+
+colnames(TDX_table)=c("資料","資料細目","資料來源","資料型態","函式")
+
+kable(TDX_table, booktabs=T)%>%
+  kable_styling(bootstrap_options=c("striped", "hover"), font_size=14)%>%
+  column_spec(1, bold=T)%>%
+  collapse_rows(columns=c(1:4))%>%
+  row_spec(0, bold=T, color="white", background="#8E8E8E")
+```
+
+
+
