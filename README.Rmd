@@ -59,7 +59,7 @@ TRTC_station=Rail_Station(app_id, app_key, "TRTC")
 head(TRTC_station)
 ```
 
-Usages of other functions can be found in the [TDX Guide](#https://chiajung-yeh.github.io/TDX_Guide/) website.  
+Usages of other functions can be found in the *[TDX Guide](https://chiajung-yeh.github.io/TDX_Guide/)* website.  
 
 ## Support
 This package takes advantage of API service provided by TDX, MOTC. 
