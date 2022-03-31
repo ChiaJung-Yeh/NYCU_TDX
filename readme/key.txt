@@ -1,2 +1,0 @@
-app_id,'8f35504e01eb4a43abfd41c920955690'
-app_key,'H9MfljykHDeGiifyr2zKJ0XsKFQ'
