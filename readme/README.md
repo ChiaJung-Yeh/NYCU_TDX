@@ -5,8 +5,8 @@ This package can be used to connect transportation data from TDX
 is supported by Ministry of Transportation and Communications (MOTC) in
 Taiwan, which provides lots of API for the members download the
 transportation data. Before using the function provided in this package,
-the authentication key is a must, which can be applied from PTX
-[platform](https://ptx.transportdata.tw/PTX/Management/AccountApply).
+the authentication key is a must, which can be applied from [PTX
+platform](https://ptx.transportdata.tw/PTX/Management/AccountApply).
 
 ## Installation
 
@@ -53,7 +53,7 @@ PTX
 點
 </td>
 <td style="text-align:left;">
-[`Rail_Shape()`](#軌道路線線型資料)
+[`Rail_Shape()`](https://chiajung-yeh.github.io/TDX_Guide/%E8%BB%8C%E9%81%93%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%BB%8C%E9%81%93%E8%B7%AF%E7%B7%9A%E7%B7%9A%E5%9E%8B%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -61,7 +61,7 @@ PTX
 軌道路線站點
 </td>
 <td style="text-align:left;">
-[`Rail_Station()`](#軌道站點資料)
+[`Rail_Station()`](https://chiajung-yeh.github.io/TDX_Guide/%E8%BB%8C%E9%81%93%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%BB%8C%E9%81%93%E7%AB%99%E9%BB%9E%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -72,7 +72,7 @@ PTX
 線
 </td>
 <td style="text-align:left;">
-[`Rail_StationOfLine()`](#軌道路線站點資料)
+[`Rail_StationOfLine()`](https://chiajung-yeh.github.io/TDX_Guide/%E8%BB%8C%E9%81%93%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%BB%8C%E9%81%93%E8%B7%AF%E7%B7%9A%E7%AB%99%E9%BB%9E%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -83,7 +83,7 @@ PTX
 文字
 </td>
 <td style="text-align:left;">
-[`Rail_TimeTable()`](#軌道班表資料)
+[`Rail_TimeTable()`](https://chiajung-yeh.github.io/TDX_Guide/%E8%BB%8C%E9%81%93%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%BB%8C%E9%81%93%E7%8F%AD%E8%A1%A8%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -97,7 +97,7 @@ PTX
 點
 </td>
 <td style="text-align:left;">
-[`Bus_StopOfRoute()`](#公車路線站點資料)
+[`Bus_StopOfRoute()`](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%AC%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E5%85%AC%E8%BB%8A%E8%B7%AF%E7%B7%9A%E7%AB%99%E9%BB%9E%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -119,7 +119,7 @@ PTX
 線
 </td>
 <td style="text-align:left;">
-[`Bus_Shape()`](#公車路線線型資料)
+[`Bus_Shape()`](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%AC%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E5%85%AC%E8%BB%8A%E8%B7%AF%E7%B7%9A%E7%B7%9A%E5%9E%8B%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -130,7 +130,7 @@ PTX
 文字
 </td>
 <td style="text-align:left;">
-[`Bus_Schedule()`](#公車班表資料)
+[`Bus_Schedule()`](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%AC%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E5%85%AC%E8%BB%8A%E7%8F%AD%E8%A1%A8%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -144,7 +144,7 @@ PTX
 點
 </td>
 <td style="text-align:left;">
-[`Bike_Station()`](#公共自行車站點資料)
+[`Bike_Station()`](https://chiajung-yeh.github.io/TDX_Guide/%E8%87%AA%E8%A1%8C%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E5%85%AC%E5%85%B1%E8%87%AA%E8%A1%8C%E8%BB%8A%E7%AB%99%E9%BB%9E%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -155,7 +155,7 @@ PTX
 線
 </td>
 <td style="text-align:left;">
-[`Bike_Shape()`](#自行車線型資料)
+[`Bike_Shape()`](https://chiajung-yeh.github.io/TDX_Guide/%E8%87%AA%E8%A1%8C%E8%BB%8A%E9%81%8B%E8%BC%B8%E8%B3%87%E6%96%99.html#%E8%87%AA%E8%A1%8C%E8%BB%8A%E7%B7%9A%E5%9E%8B%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -169,7 +169,7 @@ PTX
 文字
 </td>
 <td style="text-align:left;">
-[`Air_Schedule()`](#航空班表資料)
+[`Air_Schedule()`](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%B6%E4%BB%96-tdx-%E8%B3%87%E6%96%99.html#%E8%88%AA%E7%A9%BA%E7%8F%AD%E8%A1%A8%E8%B3%87%E6%96%99)
 </td>
 </tr>
 <tr>
@@ -183,7 +183,7 @@ PTX
 點
 </td>
 <td style="text-align:left;">
-[`ScenicSpot()`](#觀光景點點位)
+[`ScenicSpot()`](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%B6%E4%BB%96-tdx-%E8%B3%87%E6%96%99.html#%E8%A7%80%E5%85%89%E6%99%AF%E9%BB%9E%E9%BB%9E%E4%BD%8D)
 </td>
 </tr>
 <tr>
@@ -200,7 +200,7 @@ GIS-T
 線
 </td>
 <td style="text-align:left;">
-[`Road_Network()`](#道路路網線型)
+[`Road_Network()`](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%B6%E4%BB%96-tdx-%E8%B3%87%E6%96%99.html#%E9%81%93%E8%B7%AF%E8%B7%AF%E7%B6%B2%E7%B7%9A%E5%9E%8B)
 </td>
 </tr>
 <tr>
@@ -214,7 +214,7 @@ GIS-T
 點
 </td>
 <td style="text-align:left;">
-[`Geocoding()`](#地理編碼服務)
+[`Geocoding()`](https://chiajung-yeh.github.io/TDX_Guide/%E5%85%B6%E4%BB%96-tdx-%E8%B3%87%E6%96%99.html#%E5%9C%B0%E7%90%86%E7%B7%A8%E7%A2%BC%E6%9C%8D%E5%8B%99)
 </td>
 </tr>
 </tbody>
