@@ -86,7 +86,7 @@ PTX
 文字
 </td>
 <td style="text-align:left;">
-Rail\_TimeTable()
+`Rail_TimeTable()`
 </td>
 </tr>
 <tr>
@@ -100,7 +100,7 @@ Rail\_TimeTable()
 點
 </td>
 <td style="text-align:left;">
-Bus\_StopOfRoute()
+`Bus_StopOfRoute()`
 </td>
 </tr>
 <tr>
@@ -111,7 +111,7 @@ Bus\_StopOfRoute()
 文字
 </td>
 <td style="text-align:left;">
-Bus\_Route()
+`Bus_Route()`
 </td>
 </tr>
 <tr>
@@ -122,7 +122,7 @@ Bus\_Route()
 線
 </td>
 <td style="text-align:left;">
-Bus\_Shape()
+`Bus_Shape()`
 </td>
 </tr>
 <tr>
@@ -133,7 +133,7 @@ Bus\_Shape()
 文字
 </td>
 <td style="text-align:left;">
-Bus\_Schedule()
+`Bus_Schedule()`
 </td>
 </tr>
 <tr>
@@ -147,7 +147,7 @@ Bus\_Schedule()
 點
 </td>
 <td style="text-align:left;">
-Bike\_Station()
+`Bike_Station()`
 </td>
 </tr>
 <tr>
@@ -158,7 +158,7 @@ Bike\_Station()
 線
 </td>
 <td style="text-align:left;">
-Bike\_Shape()
+`Bike_Shape()`
 </td>
 </tr>
 <tr>
@@ -172,7 +172,7 @@ Bike\_Shape()
 文字
 </td>
 <td style="text-align:left;">
-Air\_Schedule()
+`Air_Schedule()`
 </td>
 </tr>
 <tr>
@@ -186,7 +186,7 @@ Air\_Schedule()
 點
 </td>
 <td style="text-align:left;">
-ScenicSpot()
+`ScenicSpot()`
 </td>
 </tr>
 <tr>
@@ -203,7 +203,7 @@ GIS-T
 線
 </td>
 <td style="text-align:left;">
-Road\_Network()
+`Road_Network()`
 </td>
 </tr>
 <tr>
@@ -257,7 +257,29 @@ and `app_key` is the authentication key applied from PTX.
     ## 5  121.452465    24.99828
     ## 6  121.459276   25.008465
 
+    ## [1] "Success: (200) OK"
+    ## [1] "#---TRTC Station Downloaded---#"
+
+    ##   StationName StationUID StationID LocationCity LocationTown LocationTownCode
+    ## 1        頂埔  TRTC-BL01      BL01       新北市       土城區         65000130
+    ## 2        永寧  TRTC-BL02      BL02       新北市       土城區         65000130
+    ## 3        土城  TRTC-BL03      BL03       新北市       土城區         65000130
+    ## 4        海山  TRTC-BL04      BL04       新北市       土城區         65000130
+    ## 5    亞東醫院  TRTC-BL05      BL05       新北市       板橋區         65000010
+    ## 6        府中  TRTC-BL06      BL06       新北市       板橋區         65000010
+    ##   PositionLon PositionLat
+    ## 1    121.4205    24.96012
+    ## 2   121.43613    24.96682
+    ## 3   121.44432    24.97313
+    ## 4   121.44873   24.985305
+    ## 5  121.452465    24.99828
+    ## 6  121.459276   25.008465
+
 ## Support
+
+This package takes advantage of API service by TDX.
+
+<img src="./TDX.png" width="60%" style="display: block; margin: auto;" />
 
 ## Contact
 

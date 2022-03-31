@@ -35,7 +35,7 @@ library(TDX)
 All functions provided in this package are summarised in the table below.  
 
 ```{r TDX_table, echo=F, eval=T}
-TDX_table=data.frame(data=c(rep("軌道", 4), rep("公車", 4), rep("自行車", 2), "航空", "觀光景點", "道路路網", "地理編碼"), type=c("軌道站點","軌道路線站點","軌道路線線型","軌道班表","公車站點","公車路線","公車路線線型","公車班表","公共自行車站點","自行車路網","航空班表","觀光景點點位","道路路網線型","地理編碼服務"), source=c(rep("PTX", 12), rep("GIS-T", 2)), class=c(rep("點", 2),"線","文字","點","文字","線","文字","點","線","文字","點","線","點"), functiona=c("`Rail_Shape()`", "`Rail_Station()`", "`Rail_StationOfLine()`", "Rail_TimeTable()", "Bus_StopOfRoute()", "Bus_Route()", "Bus_Shape()", "Bus_Schedule()", "Bike_Station()", "Bike_Shape()","Air_Schedule()","ScenicSpot()","Road_Network()","`Geocoding()`"))
+TDX_table=data.frame(data=c(rep("軌道", 4), rep("公車", 4), rep("自行車", 2), "航空", "觀光景點", "道路路網", "地理編碼"), type=c("軌道站點","軌道路線站點","軌道路線線型","軌道班表","公車站點","公車路線","公車路線線型","公車班表","公共自行車站點","自行車路網","航空班表","觀光景點點位","道路路網線型","地理編碼服務"), source=c(rep("PTX", 12), rep("GIS-T", 2)), class=c(rep("點", 2),"線","文字","點","文字","線","文字","點","線","文字","點","線","點"), functiona=c("`Rail_Shape()`", "`Rail_Station()`", "`Rail_StationOfLine()`", "`Rail_TimeTable()`", "`Bus_StopOfRoute()`", "`Bus_Route()`", "`Bus_Shape()`", "`Bus_Schedule()`", "`Bike_Station()`", "`Bike_Shape()`","`Air_Schedule()`","`ScenicSpot()`","`Road_Network()`","`Geocoding()`"))
 
 colnames(TDX_table)=c("資料","資料細目","資料來源","資料型態","函式")
 
@@ -53,8 +53,17 @@ TRTC_station=Rail_Station(app_id, app_key, "TRTC")
 head(TRTC_station)
 ```
 
-## Support
+```{r TDX_test, echo=F, eval=T}
+TRTC_station=Rail_Station(app_id, app_key, "TRTC")
+head(TRTC_station)
+```
 
+## Support
+This package takes advantage of API service by TDX. 
+
+```{r TDX_figure, echo=F, eval=T, out.width="60%", fig.align="center"}
+include_graphics("./TDX.png")
+```
 
 
 ## Contact
