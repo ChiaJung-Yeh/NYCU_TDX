@@ -1,6 +1,13 @@
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
 ## Overview
 
-<center><img src="./figure/TDX_icon.png" width="30%" style="display: block; margin: auto;" /></center>
+<img src="./figure/TDX_icon.png" class="center" width="30%" style="display: block; margin: auto;" />
 
 This package can be used to connect transportation data from TDX
 (Transport Data eXchange) in a neat and efficient function. TDX platform
