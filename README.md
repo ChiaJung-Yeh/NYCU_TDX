@@ -1,5 +1,7 @@
 ## Overview
 
+<img src="./figure/TDX_icon.png" width="60%" style="display: block; margin: auto;" />
+
 This package can be used to connect transportation data from TDX
 (Transport Data eXchange) in a neat and efficient function. TDX platform
 is supported by Ministry of Transportation and Communications (MOTC) in
