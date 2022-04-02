@@ -16,7 +16,7 @@ app_key=read.table("./key.txt", sep=",")[2,2]
 
 ## Overview
 
-```{r TDX_icon, echo=F, eval=T, out.width="60%", fig.align="center"}
+```{r TDX_icon, echo=F, eval=T, out.width="30%", fig.align="center"}
 include_graphics("./figure/TDX_icon.png")
 ```
 
