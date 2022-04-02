@@ -69,7 +69,7 @@ Usages of other functions can be found in the *_[TDX Guide](https://chiajung-yeh
 This package takes advantage of API service provided by TDX, MOTC. 
 
 ```{r TDX_figure, echo=F, eval=T, out.width="60%", fig.align="center"}
-include_graphics("./TDX.png")
+include_graphics("./figure/TDX.png")
 ```
 
 

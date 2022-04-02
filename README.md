@@ -259,7 +259,7 @@ Guide](https://chiajung-yeh.github.io/TDX_Guide/)** website.
 
 This package takes advantage of API service provided by TDX, MOTC.
 
-<img src="./TDX.png" width="60%" style="display: block; margin: auto;" />
+<img src="./figure/TDX.png" width="60%" style="display: block; margin: auto;" />
 
 ## Contact
 
