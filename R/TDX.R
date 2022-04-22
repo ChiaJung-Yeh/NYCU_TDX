@@ -258,7 +258,7 @@ Bus_Shape=function(app_id, app_key, county, dtype="text", out=F){
   }
 }
 
-temp=Bus_Schedule(app_id, app_key, "Taipei")
+
 
 Bus_Schedule=function(app_id, app_key, county, out=F){
   if (!require(dplyr)) install.packages("dplyr")
