@@ -24,6 +24,33 @@ usethis::use_package("urltools")
 #                          RoadClass=c(0,1,3,"ALL"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
+# PTX api (copy from TDX website)
+# https://github.com/ptxmotc/Sample-code/blob/master/R/get_ptx_data.R
+.get_ptx_data <- function (app_id, app_key, url){
+  Sys.setlocale("LC_ALL","C")
+  xdate <- format(as.POSIXlt(Sys.time(), tz = "GMT"), "%a, %d %b %Y %H:%M:%S GMT")
+  sig <- hmac_sha1(app_key, paste("x-date:", xdate))
+
+  authorization <- paste0(
+    'hmac username="', app_id, '", ',
+    'algorithm="hmac-sha1", ',
+    'headers="x-date", ',
+    'signature="', sig, '/"', sep = '')
+
+  auth_header <- c(
+    'Authorization'= authorization,
+    'x-date'= as.character(xdate))
+
+  dat <- GET(url,
+             config = httr::config(ssl_verifypeer = 0L),
+             add_headers(.headers = auth_header))
+
+  print(http_status(dat)$message)
+  Sys.setlocale(category = "LC_ALL", locale = "cht")
+  return(content(dat))
+}
+
+
 
 #---get the token---#
 get_token=function(client_id, client_secret){
