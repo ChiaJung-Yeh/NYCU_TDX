@@ -27,6 +27,7 @@ usethis::use_package("urltools")
 
 #---get the token---#
 get_token=function(client_id, client_secret){
+  if (!require(httr)) install.packages("httr")
   x=POST("https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token",
          encode="form",
          body=list(
