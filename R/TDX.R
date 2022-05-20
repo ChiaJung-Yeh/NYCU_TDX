@@ -615,7 +615,7 @@ Bike_Station=function(app_id, app_key, county, dtype="text", out=F){
 
 
 
-Geocoding=function(address, dtype="text", out=F){
+Geocoding=function(access_token, address, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(sf)) install.packages("sf")
@@ -623,16 +623,24 @@ Geocoding=function(address, dtype="text", out=F){
 
   temp_cou=0
   address_record=data.frame()
+
   for (i in c(1:length(address))){
     tryCatch({
-      add_temp=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/GeoCode/Coordinate/Address/", url_encode(address[i]), "?&$format=xml"))
+      # 改版後無法辨識「一」
+      address_temp=gsub("一", 1, address[i])%>%
+        url_encode()
 
-      if (length(xml_text(xml_find_all(add_temp, xpath=".//Address")))==0){
+      url=paste0("https://tdx.transportdata.tw/api/advanced/V3/Map/GeoCode/Coordinate/Address/", address_temp, "?&$format=JSON")
+      add_temp=x=GET(url, add_headers(Accept="application/+json",
+                                      Authorization=paste("Bearer", access_token)))%>%
+        content()
+
+      if (length(add_temp)==0){
         print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
       }else{
         add_temp=data.frame(AddressOriginal=address[i],
-                            AddressNew=xml_text(xml_find_all(add_temp, xpath=".//Address")),
-                            Geometry=xml_text(xml_find_all(add_temp, xpath=".//Geometry")))
+                            AddressNew=add_temp[[1]]$Address,
+                            Geometry=add_temp[[1]]$Geometry)
         address_record=rbind(address_record, add_temp)
       }
 
@@ -673,7 +681,6 @@ Geocoding=function(address, dtype="text", out=F){
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
-grepl("Timeout was reached: [gist.motc.gov.tw] Connection timed out after","Timeout was reached:")
 
 
 Road_Network=function(county, roadclass, dtype="text", out=F){
