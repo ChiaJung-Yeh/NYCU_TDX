@@ -175,11 +175,11 @@ Bus_Route=function(access_token, county, out=F){
     DepartureStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DepartureStopNameZh"))
     DepartureStopNameZh=data.frame(id=which(grepl("DepartureStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DepartureStopNameZh)
     temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DepartureStopNameZh)%>%
-      select(-id)
+      dplyr::select(-id)
     DestinationStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DestinationStopNameZh"))
     DestinationStopNameZh=data.frame(id=which(grepl("DestinationStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DestinationStopNameZh)
     temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DestinationStopNameZh)%>%
-      select(-id)
+      dplyr::select(-id)
 
     bus_info=cbind(bus_info, temp1, temp2)
 
@@ -236,13 +236,13 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
     SubRouteUID=xml_text(xml_find_all(x, xpath=".//d1:SubRouteUID"))
     SubRouteUID=data.frame(id=which(grepl("SubRouteUID", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteUID)
     temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteUID)%>%
-      select(-id)
+      dplyr::select(-id)
 
     SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName"))
     SubRouteName=data.frame(id=which(grepl("SubRouteName", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteName)
     SubRouteName$SubRouteName=substr(SubRouteName$SubRouteName, 1, 5)
     temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteName)%>%
-      select(-id)
+      dplyr::select(-id)
 
     bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                          RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
@@ -354,7 +354,7 @@ Bus_Schedule=function(access_token, county, out=F){
         cat(paste0("Attribute '", node_name, "' is parsed\n"))
       }
 
-      bus_schedule_1=select(bus_schedule_1, -temp_id)
+      bus_schedule_1=dplyr::select(bus_schedule_1, -temp_id)
 
       table_num=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
       bus_info1=as.data.frame(lapply(bus_info1, rep, table_num))
@@ -389,7 +389,7 @@ Bus_Schedule=function(access_token, county, out=F){
         bus_schedule_2=left_join(bus_schedule_2, temp, by="temp_id")
         cat(paste0("Attribute '", node_name, "' is parsed\n"))
       }
-      bus_schedule_2=select(bus_schedule_2, -temp_id)
+      bus_schedule_2=dplyr::select(bus_schedule_2, -temp_id)
 
       table_num=xml_length(xml_find_all(x, xpath = ".//d1:Frequencys"))
       bus_info2=as.data.frame(lapply(bus_info2, rep, table_num))
@@ -463,14 +463,14 @@ Rail_StationOfLine=function(app_id, app_key, operator, out=F){
                          LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineNameZh")),
                          LineSectionName=xml_text(xml_find_all(x, xpath = ".//d1:LineSectionNameZh")))
     rail_station_line=left_join(rail_station_line, rail_line)%>%
-      select(LineID, LineName, LineSectionName, Sequence, StationID, StationName, TraveledDistance)
+      dplyr::select(LineID, LineName, LineSectionName, Sequence, StationID, StationName, TraveledDistance)
   }else{
     url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Line/", operator,"?&%24format=XML")
     x=.get_ptx_data(app_id, app_key, url)
     rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
                          LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName//d1:Zh_tw")))
     rail_station_line=left_join(rail_station_line, rail_line)%>%
-      select(LineID, LineName, Sequence, StationID, StationName)
+      dplyr::select(LineID, LineName, Sequence, StationID, StationName)
   }
 
   cat(paste0("#---", operator, " Station of Line Downloaded---#\n"))
@@ -926,7 +926,7 @@ Rail_TimeTable=function(app_id, app_key, operator, record, out=F){
       DepartureTime=data.frame(id=which(grepl("DepartureTime", xml_find_all(x, xpath=".//d1:StopTime"))), DepartureTime)
       temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))))), ArrivalTime)%>%
         left_join(DepartureTime)%>%
-        select(-id)
+        dplyr::select(-id)
 
       rail_timetable_temp=data.frame(StopSequence=as.numeric(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))),
                                      StationID=xml_text(xml_find_all(x, xpath=".//d1:StationID")),
@@ -951,7 +951,7 @@ Rail_TimeTable=function(app_id, app_key, operator, record, out=F){
 }
 
 
-
+Bike_Shape(app_id, app_key, "Taipei", dtype="sf")
 Bike_Shape=function(app_id, app_key, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
@@ -973,7 +973,7 @@ Bike_Shape=function(app_id, app_key, county, dtype="text", out=F){
   RoadSectionEnd=data.frame(id=which(grepl("RoadSectionEnd", xml_find_all(x, xpath=".//d1:BikeShape"))), RoadSectionEnd)
   temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:City"))))), RoadSectionStart)%>%
     left_join(RoadSectionEnd)%>%
-    select(-id)
+    dplyr::select(-id)
 
   bike_shape=data.frame(RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName")),
                         City=xml_text(xml_find_all(x, xpath = ".//d1:City")),
@@ -1035,7 +1035,7 @@ Air_Schedule=function(app_id, app_key, domestic=T, out=F){
     Terminal=xml_text(xml_find_all(x, xpath = ".//d1:Terminal"))
     Terminal=data.frame(id=which(grepl("Terminal", xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))), Terminal)
     temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))))), Terminal)%>%
-      select(-id)
+      dplyr::select(-id)
 
     air_schedule=data.frame(AirlineID=xml_text(xml_find_all(x, xpath = ".//d1:AirlineID"))[1:length(xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))],
                             FlightNumber=xml_text(xml_find_all(x, xpath = ".//d1:FlightNumber"))[1:length(xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))],
@@ -1086,7 +1086,7 @@ ScenicSpot=function(app_id, app_key, county, dtype="text", out=F){
   Address=xml_text(xml_find_all(x, xpath = ".//d1:Address"))
   Address=data.frame(id=which(grepl("Address", xml_find_all(x, xpath=".//d1:ScenicSpotTourismInfo"))), Address)
   temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:ScenicSpotTourismInfo"))))), Address)%>%
-    select(-id)
+    dplyr::select(-id)
 
   scenic_spot=data.frame(ScenicSpotID=xml_text(xml_find_all(x, xpath = ".//d1:ScenicSpotID")),
                          ScenicSpotName=xml_text(xml_find_all(x, xpath = ".//d1:ScenicSpotName")),
