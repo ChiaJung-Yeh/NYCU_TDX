@@ -951,7 +951,7 @@ Rail_TimeTable=function(app_id, app_key, operator, record, out=F){
 }
 
 
-Bike_Shape(app_id, app_key, "Taipei", dtype="sf")
+
 Bike_Shape=function(app_id, app_key, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
