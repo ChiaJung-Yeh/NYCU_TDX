@@ -419,7 +419,8 @@ Rail_StationOfLine=function(access_token, operator, out=F){
 
   if (operator=="TRA"){
     url="tdx.transportdata.tw/api/basic/v2/Rail/TRA/Line?&%24format=XML"
-    x=.get_ptx_data(app_id, app_key, url)
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    x=read_xml(x)
     rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
                          LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineNameZh")),
                          LineSectionName=xml_text(xml_find_all(x, xpath = ".//d1:LineSectionNameZh")))
@@ -427,7 +428,8 @@ Rail_StationOfLine=function(access_token, operator, out=F){
       dplyr::select(LineID, LineName, LineSectionName, Sequence, StationID, StationName, TraveledDistance)
   }else{
     url=paste0("tdx.transportdata.tw/api/basic/v2/Rail/Metro/Line/", operator,"?&%24format=XML")
-    x=.get_ptx_data(app_id, app_key, url)
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    x=read_xml(x)
     rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
                          LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName//d1:Zh_tw")))
     rail_station_line=left_join(rail_station_line, rail_line)%>%
