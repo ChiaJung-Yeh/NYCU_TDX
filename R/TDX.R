@@ -35,7 +35,11 @@ get_token=function(client_id, client_secret){
            client_id=client_id,
            client_secret=client_secret
          ))
-  return(content(x)$access_token)
+  if (is.null(content(x)$access_token)){
+    stop("Your 'client_id' or 'client_secret' is WRONG!!")
+  }else{
+    return(content(x)$access_token)
+  }
 }
 
 # access_token=get_token(client_id, client_secret)
@@ -57,7 +61,7 @@ Bus_StopOfRoute=function(access_token, county, dtype="text", out=F){
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
   }else{
     bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                         RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
@@ -133,7 +137,7 @@ Bus_Route=function(access_token, county, out=F){
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
   }else{
     bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                         RouteID=xml_text(xml_find_all(x, xpath = ".//d1:RouteID")),
@@ -196,7 +200,7 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
   }else{
     SubRouteUID=xml_text(xml_find_all(x, xpath=".//d1:SubRouteUID"))
     SubRouteUID=data.frame(id=which(grepl("SubRouteUID", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteUID)
@@ -257,7 +261,7 @@ Bus_Schedule=function(access_token, county, out=F){
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
   }else{
     bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
                         RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
@@ -571,7 +575,7 @@ Bike_Station=function(access_token, county, dtype="text", out=F){
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above. And please ensure that '", county, "' has bike sharing system."))
+    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. And please ensure that '", county, "' has bike sharing system."))
   }
   bike_station=data.frame(StationUID=xml_text(xml_find_all(x, xpath = ".//d1:StationUID")),
                           StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
@@ -944,7 +948,7 @@ Bike_Shape=function(access_token, county, dtype="text", out=F){
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the paramete table above.",
+    stop(paste0("City: '", county, "' is not valid. Please check out the paramete table above.",
                 "\nIf the county code is indeed in the parameter table, but the error still occurs, it means that the county has no cycling network now in TDX platform."))
   }
 
