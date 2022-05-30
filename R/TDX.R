@@ -16,8 +16,8 @@ usethis::use_package("urltools")
 # TDX_County=rbind(TDX_County, cbind(County="公路客運", Code="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
-# TDX_Railway=data.frame(Operator=c("臺鐵","高鐵","臺北捷運","高雄捷運","桃園捷運","新北捷運","臺中捷運","高雄輕軌"),
-#                        Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT"))
+# TDX_Railway=data.frame(Operator=c("臺鐵","高鐵","臺北捷運","高雄捷運","桃園捷運","新北捷運","臺中捷運","高雄輕軌","阿里山林業鐵路"),
+#                        Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT","AFR"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
 # TDX_RoadClass=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
@@ -393,6 +393,8 @@ Rail_StationOfLine=function(access_token, operator, out=F){
     stop("Please use function 'Rail_Station' to retrieve the station of high speed rail (THSR).")
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=XML")
+  }else if (operator=="AFR"){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/StationOfLine?&%24format=XML")
   }else{
     print(TDX_Railway)
     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
@@ -408,21 +410,22 @@ Rail_StationOfLine=function(access_token, operator, out=F){
                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
                                  StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")),
                                  TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:TraveledDistance")))
+  }else if(operator=="AFR"){
+    rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
+                                 StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
+                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")),
+                                 TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:CumulativeDistance")))
   }else{
     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
                                  StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")))
   }
 
-  rail_station_line=data.frame()
-  for (i in c(1:length(num_of_station))){
-    sec_head=sum(num_of_station[0:(i-1)])+1
-    sec_tail=sum(num_of_station[0:i])
-    rail_station_line=rbind(rail_station_line, cbind(LineID=rail_line[i,], rail_station_temp[c(sec_head:sec_tail),]))
-  }
+  rail_line=as.data.frame(lapply(rail_line, rep, num_of_station))
+  rail_station_line=cbind(rail_line, rail_station_temp)
 
   if (operator=="TRA"){
-    url="tdx.transportdata.tw/api/basic/v2/Rail/TRA/Line?&%24format=XML"
+    url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/Line?&%24format=XML"
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
     x=read_xml(x)
     rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
@@ -430,8 +433,17 @@ Rail_StationOfLine=function(access_token, operator, out=F){
                          LineSectionName=xml_text(xml_find_all(x, xpath = ".//d1:LineSectionNameZh")))
     rail_station_line=left_join(rail_station_line, rail_line)%>%
       dplyr::select(LineID, LineName, LineSectionName, Sequence, StationID, StationName, TraveledDistance)
+  }else if (operator=="AFR"){
+    url="https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/Line?&%24format=XML"
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    x=read_xml(x)
+    rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
+                         LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName//d1:Zh_tw")),
+                         LineSectionName=xml_text(xml_find_all(x, xpath = ".//d1:LineSectionName//d1:Zh_tw")))
+    rail_station_line=left_join(rail_station_line, rail_line)%>%
+      dplyr::select(LineID, LineName, LineSectionName, Sequence, StationID, StationName, TraveledDistance)
   }else{
-    url=paste0("tdx.transportdata.tw/api/basic/v2/Rail/Metro/Line/", operator,"?&%24format=XML")
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Line/", operator,"?&%24format=XML")
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
     x=read_xml(x)
     rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
@@ -462,6 +474,8 @@ Rail_Station=function(access_token, operator, dtype="text", out=F){
     url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/Station?&%24format=XML"
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Station/", operator, "?&%24format=XML")
+  }else if (operator=="AFR"){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/Station?&%24format=XML")
   }else{
     print(TDX_Railway)
     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
@@ -476,6 +490,13 @@ Rail_Station=function(access_token, operator, dtype="text", out=F){
                             LocationCity=xml_text(xml_find_all(x, xpath = ".//d1:LocationCity")),
                             LocationTown=xml_text(xml_find_all(x, xpath = ".//d1:LocationTown")),
                             LocationTownCode=xml_text(xml_find_all(x, xpath = ".//d1:LocationTownCode")),
+                            PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
+                            PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
+                            StationClass=xml_text(xml_find_all(x, xpath = ".//d1:StationClass")))
+  }else if (operator=="AFR"){
+    rail_station=data.frame(StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
+                            StationUID=xml_text(xml_find_all(x, xpath = ".//d1:StationUID")),
+                            StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
                             PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
                             PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
                             StationClass=xml_text(xml_find_all(x, xpath = ".//d1:StationClass")))
@@ -527,6 +548,8 @@ Rail_Shape=function(access_token, operator, dtype="text", out=F){
     url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/Shape?%24format=XML"
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Shape/", operator, "?&%24format=XML")
+  }else if (operator=="AFR"){
+    stop("AFR does not provide route geometry data up to now! Please check out other rail system.")
   }else{
     print(TDX_Railway)
     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
@@ -781,8 +804,8 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
       stop("THSR does not provide 'station' time table up to now! Please use 'general' time table.")
     }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
       url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationTimeTable/", operator, "?&%24format=XML")
-    }else if (operator=="TMRT"){
-      stop("TMRT does not provide 'station' time table up to now! Please check out other MRT system.")
+    }else if (operator %in% c("TMRT","AFR")){
+      stop(paste0(operator, " does not provide 'station' time table up to now! Please check out other MRT system."))
     }else{
       print(TDX_Railway)
       stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
@@ -807,12 +830,8 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
                                      ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
                                      DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")))
 
-      rail_timetable=data.frame()
-      for (i in c(1:length(num_of_table))){
-        sec_head=sum(num_of_table[0:(i-1)])+1
-        sec_tail=sum(num_of_table[0:i])
-        rail_timetable=rbind(rail_timetable, cbind(station[i,], rail_timetable_temp[c(sec_head:sec_tail),]))
-      }
+      station=as.data.frame(lapply(station, rep, num_of_table))
+      rail_timetable=cbind(station, rail_timetable_temp)
     }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
       station=data.frame(RouteID=xml_text(xml_find_all(x, xpath = ".//d1:RouteID")),
                          LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
@@ -828,12 +847,8 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
                                      ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
                                      DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")))
 
-      rail_timetable=data.frame()
-      for (i in c(1:length(num_of_table))){
-        sec_head=sum(num_of_table[0:(i-1)])+1
-        sec_tail=sum(num_of_table[0:i])
-        rail_timetable=rbind(rail_timetable, cbind(station[i,], rail_timetable_temp[c(sec_head:sec_tail),]))
-      }
+      station=as.data.frame(lapply(station, rep, num_of_table))
+      rail_timetable=cbind(station, rail_timetable_temp)
     }
   }else if (record=="general"){
     if (operator=="TRA"){
@@ -842,6 +857,8 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
       url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/GeneralTimetable?&$format=XML"
     }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT","TMRT")){
       stop("MRT system does not provide 'general' time table up to now! Please use 'station' time table.")
+    }else if (operator =="AFR"){
+      url="https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/GeneralTrainTimetable?&%24format=XML"
     }else{
       print(TDX_Railway)
       stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
@@ -880,12 +897,8 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
                                      ArrivalTime=xml_text(xml_find_all(x, xpath=".//d1:ArrivalTime")),
                                      DepartureTime=xml_text(xml_find_all(x, xpath=".//d1:DepartureTime")))
 
-      rail_timetable=data.frame()
-      for (i in c(1:length(num_of_station))){
-        sec_head=sum(num_of_station[0:(i-1)])+1
-        sec_tail=sum(num_of_station[0:i])
-        rail_timetable=rbind(rail_timetable, cbind(tra_info[i, ], rail_timetable_temp[c(sec_head:sec_tail),]))
-      }
+      tra_info=as.data.frame(lapply(tra_info, rep, num_of_station))
+      rail_timetable=cbind(tra_info, rail_timetable_temp)
     }else if (operator=="THSR"){
       tra_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
                           Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
@@ -917,12 +930,41 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
                                      StationName=xml_text(xml_find_all(x, xpath=".//d1:StationName//d1:Zh_tw")),
                                      temp)
 
-      rail_timetable=data.frame()
-      for (i in c(1:length(num_of_station))){
-        sec_head=sum(num_of_station[0:(i-1)])+1
-        sec_tail=sum(num_of_station[0:i])
-        rail_timetable=rbind(rail_timetable, cbind(tra_info[i, ], rail_timetable_temp[c(sec_head:sec_tail),]))
-      }
+      tra_info=as.data.frame(lapply(tra_info, rep, num_of_station))
+      rail_timetable=cbind(tra_info, rail_timetable_temp)
+    }else if (operator=="AFR"){
+      afr_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
+                          RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
+                          Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),                          Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
+                          TrainTypeID=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeID")),
+                          TrainTypeCode=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeCode")),
+                          TrainTypeName=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeName//d1:Zh_tw")),
+                          StartingStationID=xml_text(xml_find_all(x, xpath=".//d1:StartingStationID")),
+                          StartingStationName=xml_text(xml_find_all(x, xpath=".//d1:StartingStationName//d1:Zh_tw")),
+                          EndingStationID=xml_text(xml_find_all(x, xpath=".//d1:EndingStationID")),
+                          EndingStationName=xml_text(xml_find_all(x, xpath=".//d1:EndingStationName//d1:Zh_tw")),
+                          TripLine=xml_text(xml_find_all(x, xpath=".//d1:TripLine")),
+                          Monday=xml_text(xml_find_all(x, xpath=".//d1:Monday")),
+                          Tuesday=xml_text(xml_find_all(x, xpath=".//d1:Tuesday")),
+                          Wednesday=xml_text(xml_find_all(x, xpath=".//d1:Wednesday")),
+                          Thursday=xml_text(xml_find_all(x, xpath=".//d1:Thursday")),
+                          Friday=xml_text(xml_find_all(x, xpath=".//d1:Friday")),
+                          Saturday=xml_text(xml_find_all(x, xpath=".//d1:Saturday")),
+                          Sunday=xml_text(xml_find_all(x, xpath=".//d1:Sunday")),
+                          NationalHolidays=xml_text(xml_find_all(x, xpath=".//d1:NationalHolidays")),
+                          DayBeforeHoliday=xml_text(xml_find_all(x, xpath=".//d1:DayBeforeHoliday")),
+                          DayAfterHoliday=xml_text(xml_find_all(x, xpath=".//d1:DayAfterHoliday")))
+
+      num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:StopTimes"))
+
+      rail_timetable_temp=data.frame(StopSequence=as.numeric(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))),
+                                     StationID=xml_text(xml_find_all(x, xpath=".//d1:StationID")),
+                                     StationName=xml_text(xml_find_all(x, xpath=".//d1:StationName//d1:Zh_tw")),
+                                     ArrivalTime=xml_text(xml_find_all(x, xpath=".//d1:ArrivalTime")),
+                                     DepartureTime=xml_text(xml_find_all(x, xpath=".//d1:DepartureTime")))
+
+      afr_info=as.data.frame(lapply(afr_info, rep, num_of_station))
+      rail_timetable=cbind(afr_info, rail_timetable_temp)
     }
   }else{
     stop("'", record, "' is not valid format of timetable. Please use 'station' or 'general'.")
@@ -1149,3 +1191,8 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
+
+
+
+
+
