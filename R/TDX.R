@@ -24,33 +24,6 @@ usethis::use_package("urltools")
 #                          RoadClass=c(0,1,3,"ALL"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
-# PTX api (copy from TDX website)
-# https://github.com/ptxmotc/Sample-code/blob/master/R/get_ptx_data.R
-.get_ptx_data <- function (app_id, app_key, url){
-  Sys.setlocale("LC_ALL","C")
-  xdate <- format(as.POSIXlt(Sys.time(), tz = "GMT"), "%a, %d %b %Y %H:%M:%S GMT")
-  sig <- hmac_sha1(app_key, paste("x-date:", xdate))
-
-  authorization <- paste0(
-    'hmac username="', app_id, '", ',
-    'algorithm="hmac-sha1", ',
-    'headers="x-date", ',
-    'signature="', sig, '/"', sep = '')
-
-  auth_header <- c(
-    'Authorization'= authorization,
-    'x-date'= as.character(xdate))
-
-  dat <- GET(url,
-             config = httr::config(ssl_verifypeer = 0L),
-             add_headers(.headers = auth_header))
-
-  print(http_status(dat)$message)
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
-  return(content(dat))
-}
-
-
 
 #---get the token---#
 get_token=function(client_id, client_secret){
@@ -68,22 +41,19 @@ get_token=function(client_id, client_secret){
 # access_token=get_token(client_id, client_secret)
 
 
-
 Bus_StopOfRoute=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
   if (county=="Intercity"){
     url="https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/InterCity?%24format=XML"
   }else{
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/City/", county, "?%24format=XML")
   }
-  x=GET(url, add_headers(Accept="application/+json",
-                         Authorization=paste("Bearer", access_token)))
-  x=content(x)
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
@@ -153,15 +123,13 @@ Bus_Route=function(access_token, county, out=F){
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
   if (county=="Intercity"){
     url="https://tdx.transportdata.tw/api/basic/v2/Bus/Route/InterCity?%24format=XML"
   }else{
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Route/City/", county, "?$format=XML")
   }
-  x=GET(url, add_headers(Accept="application/+json",
-                         Authorization=paste("Bearer", access_token)))
-  x=content(x)
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
@@ -218,16 +186,13 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
   if (county=="Intercity"){
     url="https://tdx.transportdata.tw/api/basic/v2/Bus/Shape/InterCity?&$format=XML"
   }else{
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Shape/City/", county, "?&$format=XML")
   }
-  x=GET(url, add_headers(Accept="application/+json",
-                         Authorization=paste("Bearer", access_token)))
-  x=content(x)
-
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
@@ -282,15 +247,13 @@ Bus_Schedule=function(access_token, county, out=F){
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
   if (county=="Intercity"){
     url="https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/InterCity?&$format=XML"
   }else{
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/City/", county, "?&$format=XML")
   }
-  x=GET(url, add_headers(Accept="application/+json",
-                         Authorization=paste("Bearer", access_token)))
-  x=content(x)
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
@@ -414,28 +377,26 @@ Bus_Schedule=function(access_token, county, out=F){
 
 
 
-Rail_StationOfLine=function(app_id, app_key, operator, out=F){
+Rail_StationOfLine=function(access_token, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
   if (operator=="TRA"){
-    url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/StationOfLine?&%24format=XML"
+    url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/StationOfLine?&%24format=XML"
   }else if (operator=="THSR"){
     stop("Please use function 'Rail_Station' to retrieve the station of high speed rail (THSR).")
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
-    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=XML")
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=XML")
   }else{
     print(TDX_Railway)
     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
   }
-
-  x=.get_ptx_data(app_id, app_key, url)
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
 
   rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")))
-
   num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:Stations"))
 
   if (operator=="TRA"){
@@ -483,25 +444,24 @@ Rail_StationOfLine=function(app_id, app_key, operator, out=F){
 
 
 
-Rail_Station=function(app_id, app_key, operator, dtype="text", out=F){
+Rail_Station=function(access_token, operator, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
   if (operator=="TRA"){
-    url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?&%24format=XML"
+    url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/Station?&%24format=XML"
   }else if (operator=="THSR"){
-    url="https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/Station?&%24format=XML"
+    url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/Station?&%24format=XML"
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
-    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Station/", operator, "?&%24format=XML")
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Station/", operator, "?&%24format=XML")
   }else{
     print(TDX_Railway)
     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
   }
-
-  x=.get_ptx_data(app_id, app_key, url)
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
 
   if (operator=="TRA"){
     rail_station=data.frame(StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
@@ -549,26 +509,25 @@ Rail_Station=function(app_id, app_key, operator, dtype="text", out=F){
 
 
 
-Rail_Shape=function(app_id, app_key, operator, dtype="text", out=F){
+Rail_Shape=function(access_token, operator, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
-
   if (operator=="TRA"){
-    url="https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Shape?%24format=XML"
+    url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/Shape?&%24format=XML"
   }else if (operator=="THSR"){
-    url="https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/Shape?%24format=XML"
+    url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/Shape?%24format=XML"
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
-    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/Shape/", operator, "?&%24format=XML")
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Shape/", operator, "?&%24format=XML")
   }else{
     print(TDX_Railway)
     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
   }
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
 
-  x=.get_ptx_data(app_id, app_key, url)
   rail_shape=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
                         LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName")),
                         Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
@@ -598,15 +557,16 @@ Rail_Shape=function(app_id, app_key, operator, dtype="text", out=F){
 
 
 
-Bike_Station=function(app_id, app_key, county, dtype="text", out=F){
+Bike_Station=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
-  url=paste0("https://ptx.transportdata.tw/MOTC/v2/Bike/Station/", county, "?&$format=XML")
-  x=.get_ptx_data(app_id, app_key, url)
+  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bike/Station/", county, "?&$format=XML")
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
+
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
     stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above. And please ensure that '", county, "' has bike sharing system."))
@@ -710,48 +670,66 @@ Geocoding=function(access_token, address, dtype="text", out=F){
 }
 
 
-Road_Network=function(county, roadclass, dtype="text", out=F){
+
+Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(sf)) install.packages("sf")
 
   if (county %in% c(TDX_County$Code[1:22], "ALL") & roadclass %in% c(0,1,3,"ALL")){
+
     if (county!="ALL" & roadclass=="ALL"){
-      road=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/Road/Network/City/", county, "?&$format=xml"))
-      road=data.frame(RoadClass=xml_text(xml_find_all(road, xpath=".//RoadClass")),
-                      RoadClassName=xml_text(xml_find_all(road, xpath=".//RoadClassName")),
-                      RoadID=xml_text(xml_find_all(road, xpath=".//RoadID")),
-                      RoadName=xml_text(xml_find_all(road, xpath=".//RoadName")),
-                      RoadNameID=xml_text(xml_find_all(road, xpath=".//RoadNameID")),
-                      Geometry=xml_text(xml_find_all(road, xpath=".//Geometry")))
+      # 指定縣市所有道路層級資料
+      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?&%24format=XML")
+      x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+      x=read_xml(x)
+
+      road=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
+                      RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
+                      RoadID=xml_text(xml_find_all(x, xpath=".//RoadID")),
+                      RoadName=xml_text(xml_find_all(x, xpath=".//RoadName")),
+                      RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
+                      Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
     }else if (county!="ALL" & roadclass %in% c(0,1,3)){
-      road=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", roadclass, "'&$format=xml"))
-      road=data.frame(RoadClass=xml_text(xml_find_all(road, xpath=".//RoadClass")),
-                      RoadClassName=xml_text(xml_find_all(road, xpath=".//RoadClassName")),
-                      RoadID=xml_text(xml_find_all(road, xpath=".//RoadID")),
-                      RoadName=xml_text(xml_find_all(road, xpath=".//RoadName")),
-                      RoadNameID=xml_text(xml_find_all(road, xpath=".//RoadNameID")),
-                      Geometry=xml_text(xml_find_all(road, xpath=".//Geometry")))
+      # 指定縣市指定道路層級資料
+      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", 0, "'&$format=xml")
+      x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+      x=read_xml(x)
+
+      road=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
+                      RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
+                      RoadID=xml_text(xml_find_all(x, xpath=".//RoadID")),
+                      RoadName=xml_text(xml_find_all(x, xpath=".//RoadName")),
+                      RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
+                      Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
     }else if (county=="ALL" & roadclass %in% c(0,1,3)){
-      road=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/Road/Network/RoadClass/", roadclass, "?&$format=XML"))
-      road=data.frame(RoadClass=xml_text(xml_find_all(road, xpath=".//RoadClass")),
-                      RoadClassName=xml_text(xml_find_all(road, xpath=".//RoadClassName")),
-                      RoadID=xml_text(xml_find_all(road, xpath=".//RoadID")),
-                      RoadName=xml_text(xml_find_all(road, xpath=".//RoadName")),
-                      RoadNameID=xml_text(xml_find_all(road, xpath=".//RoadNameID")),
-                      Geometry=xml_text(xml_find_all(road, xpath=".//Geometry")))
+      # 所有縣市指定道路層級資料
+      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", roadclass, "?&$format=XML")
+      x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+      x=read_xml(x)
+
+      road=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
+                      RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
+                      RoadID=xml_text(xml_find_all(x, xpath=".//RoadID")),
+                      RoadName=xml_text(xml_find_all(x, xpath=".//RoadName")),
+                      RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
+                      Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
     }else if (county=="ALL" & roadclass=="ALL"){
+      # 所有縣市所有道路層級資料
       road=data.frame()
       for (i in c(0,1,3)){
-        temp=read_xml(paste0("https://gist.motc.gov.tw/gist_api/V3/Map/Road/Network/RoadClass/", i, "?&$format=XML"))
-        temp=data.frame(RoadClass=xml_text(xml_find_all(temp, xpath=".//RoadClass")),
-                        RoadClassName=xml_text(xml_find_all(temp, xpath=".//RoadClassName")),
-                        RoadID=xml_text(xml_find_all(temp, xpath=".//RoadID")),
-                        RoadName=xml_text(xml_find_all(temp, xpath=".//RoadName")),
-                        RoadNameID=xml_text(xml_find_all(temp, xpath=".//RoadNameID")),
-                        Geometry=xml_text(xml_find_all(temp, xpath=".//Geometry")))
-        road=rbind(road, temp)
-        print(paste0("Road Class ", i, " Downloaded"))
+        url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", i, "?&$format=XML")
+        x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+        x=read_xml(x)
+
+        x=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
+                     RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
+                     RoadID=xml_text(xml_find_all(x, xpath=".//RoadID")),
+                     RoadName=xml_text(xml_find_all(x, xpath=".//RoadName")),
+                     RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
+                     Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
+        road=rbind(road, x)
+        cat(paste0("Road Class ", i, " Downloaded\n"))
       }
     }
   }else if(!(county %in% c(TDX_County$Code[1:22], "ALL"))){
@@ -759,7 +737,7 @@ Road_Network=function(county, roadclass, dtype="text", out=F){
     stop(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
   }else if(!(RoadClass %in% c(0,1,3,"ALL"))){
     print(TDX_RoadClass)
-    stop(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
+    stop(paste0("'", RoadClass, "' is invalid RoadClass code. Please check out the parameter table above."))
   }
 
   if (dtype=="text"){
@@ -785,28 +763,27 @@ Road_Network=function(county, roadclass, dtype="text", out=F){
 
 
 
-Rail_TimeTable=function(app_id, app_key, operator, record, out=F){
+Rail_TimeTable=function(access_token, operator, record, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
-
   if (record=="station"){
     if (operator=="TRA"){
-      url="https://ptx.transportdata.tw/MOTC/v3/Rail/TRA/GeneralStationTimetable?&$format=xml"
+      url="https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/GeneralStationTimetable?&$format=xml"
     }else if (operator=="THSR"){
       stop("THSR does not provide 'station' time table up to now! Please use 'general' time table.")
     }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
-      url=paste0("https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/StationTimeTable/", operator, "?&%24format=XML")
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationTimeTable/", operator, "?&%24format=XML")
     }else if (operator=="TMRT"){
       stop("TMRT does not provide 'station' time table up to now! Please check out other MRT system.")
     }else{
       print(TDX_Railway)
       stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
     }
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    x=read_xml(x)
 
-    x=.get_ptx_data(app_id, app_key, url)
     if (operator=="TRA"){
       station=data.frame(StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
                          StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
@@ -854,17 +831,18 @@ Rail_TimeTable=function(app_id, app_key, operator, record, out=F){
     }
   }else if (record=="general"){
     if (operator=="TRA"){
-      url="https://ptx.transportdata.tw/MOTC/v3/Rail/TRA/GeneralTrainTimetable?&$format=XML"
+      url="https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/GeneralTrainTimetable?&$format=XML"
     }else if (operator=="THSR"){
-      url="https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/GeneralTimetable?&$format=XML"
+      url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/GeneralTimetable?&$format=XML"
     }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT","TMRT")){
       stop("MRT system does not provide 'general' time table up to now! Please use 'station' time table.")
     }else{
       print(TDX_Railway)
       stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
     }
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    x=read_xml(x)
 
-    x=.get_ptx_data(app_id, app_key, url)
     if (operator=="TRA"){
       tra_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
                           Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
@@ -952,15 +930,16 @@ Rail_TimeTable=function(app_id, app_key, operator, record, out=F){
 
 
 
-Bike_Shape=function(app_id, app_key, county, dtype="text", out=F){
+Bike_Shape=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
-  url=paste0("https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/", county, "?&$format=XML")
-  x=.get_ptx_data(app_id, app_key, url)
+  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Cycling/Shape/", county, "?&$format=XML")
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
+
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
     stop(paste0("City: '", county, "' is not accepted. Please check out the paramete table above.",
@@ -1004,15 +983,17 @@ Bike_Shape=function(app_id, app_key, county, dtype="text", out=F){
 
 
 
-Air_Schedule=function(app_id, app_key, domestic=T, out=F){
+Air_Schedule=function(access_token, domestic=T, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
+
   if (domestic){
-    url="https://ptx.transportdata.tw/MOTC/v2/Air/GeneralSchedule/Domestic?$format=xml"
-    x=.get_ptx_data(app_id, app_key, url)
+    url="https://tdx.transportdata.tw/api/basic/v2/Air/GeneralSchedule/Domestic?$format=xml"
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    x=read_xml(x)
+
     air_schedule=data.frame(AirlineID=xml_text(xml_find_all(x, xpath = ".//d1:AirlineID")),
                             ScheduleStartDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleStartDate")),
                             ScheduleEndDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleEndDate")),
@@ -1029,8 +1010,9 @@ Air_Schedule=function(app_id, app_key, domestic=T, out=F){
                             Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Saturday")),
                             Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Sunday")))
   }else{
-    url="https://ptx.transportdata.tw/MOTC/v2/Air/GeneralSchedule/International?$format=xml"
-    x=.get_ptx_data(app_id, app_key, url)
+    url="https://tdx.transportdata.tw/api/basic/v2/Air/GeneralSchedule/International?$format=xml"
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    x=read_xml(x)
 
     Terminal=xml_text(xml_find_all(x, xpath = ".//d1:Terminal"))
     Terminal=data.frame(id=which(grepl("Terminal", xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))), Terminal)
@@ -1062,54 +1044,101 @@ Air_Schedule=function(app_id, app_key, domestic=T, out=F){
 
 
 
-ScenicSpot=function(app_id, app_key, county, dtype="text", out=F){
+Tourism=function(access_token, county, poi, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  Sys.setlocale(category = "LC_ALL", locale = "cht")
-
+  if (!(county %in% c(TDX_County$Code, "ALL"))){
+    print(TDX_County)
+    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+  }else if (!(poi %in% c("ScenicSpot","Restaurant","Hotel"))){
+    stop(paste0("City: '", poi, "' is not valid. Please use the 'ScenicSpot', 'Restaurant', or 'Hotel'."))
+  }
 
   if (county=="ALL"){
-    url="https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?&$format=xml"
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Tourism/", poi, "?&%24format=XML")
   }else{
-    url=paste0("https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot/", county, "?&$format=xml")
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Tourism/", poi, "/", county, "?&$format=xml")
   }
-  x=.get_ptx_data(app_id, app_key, url)
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x=read_xml(x)
 
-  if (substr(xml_text(x), 1, 4)=="City"){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not accepted. Please check out the parameter table above."))
+  # write_xml(x, "./temp.xml")
+  if (poi=="ScenicSpot"){
+    xml_node=c("ScenicSpotTourismInfo//d1:ScenicSpotID","ScenicSpotTourismInfo//d1:ScenicSpotName","ScenicSpotTourismInfo//d1:City",
+               "ScenicSpotTourismInfo//d1:Address","ScenicSpotTourismInfo//d1:Phone","ScenicSpotTourismInfo//d1:OpenTime","ScenicSpotTourismInfo//d1:DescriptionDetail",
+               "ScenicSpotTourismInfo//d1:Position//d1:PositionLon","ScenicSpotTourismInfo//d1:Position//d1:PositionLat")
+    xml_node_name=c("ScenicSpotID","ScenicSpotName","City","Address","Phone","OpenTime","DescriptionDetail","PositionLon","PositionLat")
+
+    poidf=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:ScenicSpotTourismInfo"))))
+    for (i in xml_node){
+      node_name=xml_node_name[which(xml_node==i)]
+      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
+      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:ScenicSpotTourismInfo"))
+      temp_id=which(temp_id)
+      temp=data.frame(temp_id, temp)
+      colnames(temp)[2]=node_name
+      poidf=left_join(poidf, temp, by="temp_id")
+      cat(paste0("Attribute '", node_name, "' is parsed\n"))
+    }
+    poidf=select(poidf, -temp_id)
+  }else if (poi=="Restaurant"){
+    xml_node=c("RestaurantTourismInfo//d1:RestaurantID","RestaurantTourismInfo//d1:RestaurantName","RestaurantTourismInfo//d1:Class",
+               "RestaurantTourismInfo//d1:Address","RestaurantTourismInfo//d1:Phone","RestaurantTourismInfo//d1:OpenTime","RestaurantTourismInfo//d1:Description",
+               "RestaurantTourismInfo//d1:Position//d1:PositionLon","RestaurantTourismInfo//d1:Position//d1:PositionLat")
+    xml_node_name=c("RestaurantID","RestaurantName","Class","Address","Phone","OpenTime","Description","PositionLon","PositionLat")
+
+    poidf=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:RestaurantTourismInfo"))))
+    for (i in xml_node){
+      node_name=xml_node_name[which(xml_node==i)]
+      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
+      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:RestaurantTourismInfo"))
+      temp_id=which(temp_id)
+      temp=data.frame(temp_id, temp)
+      colnames(temp)[2]=node_name
+      poidf=left_join(poidf, temp, by="temp_id")
+      cat(paste0("Attribute '", node_name, "' is parsed\n"))
+    }
+    poidf=select(poidf, -temp_id)
+  }else if (poi=="Hotel"){
+    xml_node=c("HotelTourismInfo//d1:HotelID","HotelTourismInfo//d1:HotelName","HotelTourismInfo//d1:Class","HotelTourismInfo//d1:City",
+               "HotelTourismInfo//d1:Address","HotelTourismInfo//d1:Phone","HotelTourismInfo//d1:OpenTime","HotelTourismInfo//d1:Description","HotelTourismInfo//d1:ParkingInfo",
+               "HotelTourismInfo//d1:Position//d1:PositionLon","HotelTourismInfo//d1:Position//d1:PositionLat")
+    xml_node_name=c("HotelID","HotelName","Class","City","Address","Phone","OpenTime","Description","ParkingInfo","PositionLon","PositionLat")
+
+    poidf=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:HotelTourismInfo"))))
+    for (i in xml_node){
+      node_name=xml_node_name[which(xml_node==i)]
+      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
+      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:HotelTourismInfo"))
+      temp_id=which(temp_id)
+      temp=data.frame(temp_id, temp)
+      colnames(temp)[2]=node_name
+      poidf=left_join(poidf, temp, by="temp_id")
+      cat(paste0("Attribute '", node_name, "' is parsed\n"))
+    }
+    poidf=select(poidf, -temp_id)
   }
 
-  Address=xml_text(xml_find_all(x, xpath = ".//d1:Address"))
-  Address=data.frame(id=which(grepl("Address", xml_find_all(x, xpath=".//d1:ScenicSpotTourismInfo"))), Address)
-  temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:ScenicSpotTourismInfo"))))), Address)%>%
-    dplyr::select(-id)
-
-  scenic_spot=data.frame(ScenicSpotID=xml_text(xml_find_all(x, xpath = ".//d1:ScenicSpotID")),
-                         ScenicSpotName=xml_text(xml_find_all(x, xpath = ".//d1:ScenicSpotName")),
-                         temp,
-                         PositionLon=as.numeric(xml_text(xml_find_all(x, xpath = ".//d1:Position//d1:PositionLon"))),
-                         PositionLat=as.numeric(xml_text(xml_find_all(x, xpath = ".//d1:Position//d1:PositionLat"))))
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
-      write.csv(scenic_spot, out, row.names=F)
+      write.csv(poidf, out, row.names=F)
     }
-    return(scenic_spot)
+    return(poidf)
   }else if (dtype=="sf"){
-    scenic_spot$Geometry=st_as_sfc(paste0("POINT(", scenic_spot$PositionLon, " ", scenic_spot$PositionLat, ")"))
-    scenic_spot=st_sf(scenic_spot, crs=4326)
+    poidf$Geometry=st_as_sfc(paste0("POINT(", poidf$PositionLon, " ", poidf$PositionLat, ")"))
+    poidf=st_sf(poidf, crs=4326)
 
     if (grepl(".shp", out) & out!=F){
-      write_sf(scenic_spot, out, layer_options="ENCODING=UTF-8")
+      write_sf(poidf, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
       stop("The file name must contain '.shp'")
     }
 
-    return(scenic_spot)
+    return(poidf)
   }else{
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
