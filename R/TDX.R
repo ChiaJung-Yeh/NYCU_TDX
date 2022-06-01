@@ -10,9 +10,9 @@ usethis::use_package("httr")
 usethis::use_package("sf")
 usethis::use_package("urltools")
 
-# TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
-# TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
-#                       Code=xml_text(xml_find_all(TDX_County, xpath = "//City")))
+# TDX_County=read_xml(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
+# TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = ".//d1:CityName")),
+#                       Code=xml_text(xml_find_all(TDX_County, xpath = ".//d1:City")))
 # TDX_County=rbind(TDX_County, cbind(County="公路客運", Code="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
