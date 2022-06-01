@@ -15,7 +15,7 @@ Bus_Schedule(access_token, county, out=F)
 }
 \arguments{
   \item{access_token}{Your access token given by TDX platform. This can be derived from the function \code{get_token()}.}
-  \item{county}{Please fill in the English county name. Checking out the appropriate county name in dataframe \code{TDX_County}. Note that some of cities have no cycling path, please check it out first.}
+  \item{county}{Please fill in the English county name. Checking out the appropriate county name in dataframe \code{TDX_County}. If \code{Intercity} is used, the function retrieves the intercity bus data.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data.}
 }
 \author{
