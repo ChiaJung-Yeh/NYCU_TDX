@@ -10,9 +10,9 @@ usethis::use_package("httr")
 usethis::use_package("sf")
 usethis::use_package("urltools")
 
-# TDX_County=read_xml("https://gist.motc.gov.tw/gist_api/V3/Map/Basic/City?$format=XML")
-# TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = "//CityName")),
-#                       Code=xml_text(xml_find_all(TDX_County, xpath = "//City")))
+# TDX_County=read_xml(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
+# TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = ".//d1:CityName")),
+#                       Code=xml_text(xml_find_all(TDX_County, xpath = ".//d1:City")))
 # TDX_County=rbind(TDX_County, cbind(County="公路客運", Code="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
@@ -45,6 +45,7 @@ get_token=function(client_id, client_secret){
 # access_token=get_token(client_id, client_secret)
 
 
+
 Bus_StopOfRoute=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
@@ -57,66 +58,73 @@ Bus_StopOfRoute=function(access_token, county, dtype="text", out=F){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/City/", county, "?%24format=XML")
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
 
-  if (substr(xml_text(x), 1, 4)=="City"){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+  })
+
+  bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+                      RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
+                      SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
+                      SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
+                      Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
+
+  num_of_stop=xml_length(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops"))
+
+  cat(paste0(length(num_of_stop), " Routes\n"))
+
+  if (county %in% c("Keelung","LienchiangCounty")){
+    bus_stop_temp=data.frame(StopUID=xml_text(xml_find_all(x, xpath = ".//d1:StopUID")),
+                             StopID=xml_text(xml_find_all(x, xpath = ".//d1:StopID")),
+                             StopName=xml_text(xml_find_all(x, xpath = ".//d1:StopName//d1:Zh_tw")),
+                             # StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
+                             StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:StopSequence")),
+                             PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
+                             PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")))
   }else{
-    bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
-                        RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
-                        SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
-                        SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
-                        Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
+    bus_stop_temp=data.frame(StopUID=xml_text(xml_find_all(x, xpath = ".//d1:StopUID")),
+                             StopID=xml_text(xml_find_all(x, xpath = ".//d1:StopID")),
+                             StopName=xml_text(xml_find_all(x, xpath = ".//d1:StopName//d1:Zh_tw")),
+                             StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
+                             StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:StopSequence")),
+                             PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
+                             PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")))
+  }
 
-    num_of_stop=xml_length(xml_find_all(x, xpath = ".//d1:BusStopOfRoute//d1:Stops"))
+  bus_info=as.data.frame(lapply(bus_info, rep, num_of_stop))
+  bus_stop=cbind(bus_info, bus_stop_temp)
 
-    cat(paste0(length(num_of_stop), " Routes\n"))
+  rm(bus_info, bus_stop_temp, num_of_stop)
 
-    if (county %in% c("Keelung","LienchiangCounty")){
-      bus_stop_temp=data.frame(StopUID=xml_text(xml_find_all(x, xpath = ".//d1:StopUID")),
-                               StopID=xml_text(xml_find_all(x, xpath = ".//d1:StopID")),
-                               StopName=xml_text(xml_find_all(x, xpath = ".//d1:StopName//d1:Zh_tw")),
-                               # StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                               StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:StopSequence")),
-                               PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
-                               PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")))
-    }else{
-      bus_stop_temp=data.frame(StopUID=xml_text(xml_find_all(x, xpath = ".//d1:StopUID")),
-                               StopID=xml_text(xml_find_all(x, xpath = ".//d1:StopID")),
-                               StopName=xml_text(xml_find_all(x, xpath = ".//d1:StopName//d1:Zh_tw")),
-                               StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                               StopSequence=xml_text(xml_find_all(x, xpath = ".//d1:StopSequence")),
-                               PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
-                               PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")))
+  cat(paste0("#---", county, " Stop of Route Downloaded---#\n"))
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(bus_stop, out, row.names=F)
+    }
+    return(bus_stop)
+  }else if (dtype=="sf"){
+    bus_stop$Geometry=st_as_sfc(paste0("POINT(", bus_stop$PositionLon, " ", bus_stop$PositionLat, ")"))
+    bus_stop=st_sf(bus_stop, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(bus_stop, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      stop("The file name must contain '.shp'")
     }
 
-    bus_info=as.data.frame(lapply(bus_info, rep, num_of_stop))
-    bus_stop=cbind(bus_info, bus_stop_temp)
-
-    rm(bus_info, bus_stop_temp, num_of_stop)
-
-    cat(paste0("#---", county, " Stop of Route Downloaded---#\n"))
-
-    if (dtype=="text"){
-      if (nchar(out)!=0 & out!=F){
-        write.csv(bus_stop, out, row.names=F)
-      }
-      return(bus_stop)
-    }else if (dtype=="sf"){
-      bus_stop$Geometry=st_as_sfc(paste0("POINT(", bus_stop$PositionLon, " ", bus_stop$PositionLat, ")"))
-      bus_stop=st_sf(bus_stop, crs=4326)
-
-      if (grepl(".shp", out) & out!=F){
-        write_sf(bus_stop, out, layer_options="ENCODING=UTF-8")
-      }else if (!(grepl(".shp", out)) & out!=F){
-        stop("The file name must contain '.shp'")
-      }
-
-      return(bus_stop)
-    }else{
-      stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
-    }
+    return(bus_stop)
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
@@ -133,53 +141,50 @@ Bus_Route=function(access_token, county, out=F){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Route/City/", county, "?$format=XML")
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
 
-  if (substr(xml_text(x), 1, 4)=="City"){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
-  }else{
-    bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
-                        RouteID=xml_text(xml_find_all(x, xpath = ".//d1:RouteID")),
-                        RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
-                        BusRouteType=xml_text(xml_find_all(x, xpath = ".//d1:BusRouteType")))
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
 
-    DepartureStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DepartureStopNameZh"))
-    DepartureStopNameZh=data.frame(id=which(grepl("DepartureStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DepartureStopNameZh)
-    temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DepartureStopNameZh)%>%
-      dplyr::select(-id)
-    DestinationStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DestinationStopNameZh"))
-    DestinationStopNameZh=data.frame(id=which(grepl("DestinationStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DestinationStopNameZh)
-    temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DestinationStopNameZh)%>%
-      dplyr::select(-id)
-
-    bus_info=cbind(bus_info, temp1, temp2)
-
-    # operator_num=xml_length(xml_find_all(x, xpath = ".//d1:Operators"))
-    # bus_info=as.data.frame(lapply(bus_info, rep, operator_num))
-
-    # operator=data.frame(Operator=xml_text(xml_find_all(x, xpath = ".//d1:Operators//d1:Operator//d1:OperatorID")),
-    #                     OperatorName=xml_text(xml_find_all(x, xpath = ".//d1:OperatorName//d1:Zh_tw")),
-    #                     OperatorCode=xml_text(xml_find_all(x, xpath = ".//d1:OperatorCode")),
-    #                     OperatorNo=xml_text(xml_find_all(x, xpath = ".//d1:OperatorNo")))
-
-    # bus_info=cbind(bus_info, operator)
-
-    subroute_num=xml_length(xml_find_all(x, xpath = ".//d1:SubRoutes"))
-    bus_info=as.data.frame(lapply(bus_info, rep, subroute_num))
-
-    bus_subroute=data.frame(SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
-                            SubRouteID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteID")),
-                            SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
-                            Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
-
-    bus_route=cbind(bus_info, bus_subroute)
-
-    if (nchar(out)!=0 & out!=F){
-      write.csv(bus_stop, out, row.names=F)
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
     }
-    return(bus_route)
+  })
+
+  bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+                      RouteID=xml_text(xml_find_all(x, xpath = ".//d1:RouteID")),
+                      RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
+                      BusRouteType=xml_text(xml_find_all(x, xpath = ".//d1:BusRouteType")))
+
+  DepartureStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DepartureStopNameZh"))
+  DepartureStopNameZh=data.frame(id=which(grepl("DepartureStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DepartureStopNameZh)
+  temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DepartureStopNameZh)%>%
+    dplyr::select(-id)
+  DestinationStopNameZh=xml_text(xml_find_all(x, xpath=".//d1:DestinationStopNameZh"))
+  DestinationStopNameZh=data.frame(id=which(grepl("DestinationStopNameZh", xml_find_all(x, xpath=".//d1:BusRoute"))), DestinationStopNameZh)
+  temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusRoute"))))), DestinationStopNameZh)%>%
+    dplyr::select(-id)
+
+  bus_info=cbind(bus_info, temp1, temp2)
+
+  subroute_num=xml_length(xml_find_all(x, xpath = ".//d1:SubRoutes"))
+  bus_info=as.data.frame(lapply(bus_info, rep, subroute_num))
+
+  bus_subroute=data.frame(SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
+                          SubRouteID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteID")),
+                          SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
+                          Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
+
+  bus_route=cbind(bus_info, bus_subroute)
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(bus_stop, out, row.names=F)
   }
+  return(bus_route)
 }
 
 
@@ -196,51 +201,58 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Shape/City/", county, "?&$format=XML")
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
 
-  if (substr(xml_text(x), 1, 4)=="City"){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
-  }else{
-    SubRouteUID=xml_text(xml_find_all(x, xpath=".//d1:SubRouteUID"))
-    SubRouteUID=data.frame(id=which(grepl("SubRouteUID", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteUID)
-    temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteUID)%>%
-      dplyr::select(-id)
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
 
-    SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName"))
-    SubRouteName=data.frame(id=which(grepl("SubRouteName", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteName)
-    SubRouteName$SubRouteName=substr(SubRouteName$SubRouteName, 1, 5)
-    temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteName)%>%
-      dplyr::select(-id)
-
-    bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
-                         RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
-                         temp1,
-                         temp2,
-                         Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
-                         Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
-
-    cat(paste0("#---", county, " Bus Route Downloaded---#\n"))
-
-    if (dtype=="text"){
-      if (nchar(out)!=0 & out!=F){
-        write.csv(bus_shape, out, row.names=F)
-      }
-      return(bus_shape)
-    }else if (dtype=="sf"){
-      bus_shape$Geometry=st_as_sfc(bus_shape$Geometry)
-      bus_shape=st_sf(bus_shape, crs=4326)
-
-      if (grepl(".shp", out) & out!=F){
-        write_sf(bus_shape, out, layer_options="ENCODING=UTF-8")
-      }else if (!(grepl(".shp", out)) & out!=F){
-        stop("The file name must contain '.shp'")
-      }
-
-      return(bus_shape)
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
     }else{
-      stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
     }
+  })
+
+  SubRouteUID=xml_text(xml_find_all(x, xpath=".//d1:SubRouteUID"))
+  SubRouteUID=data.frame(id=which(grepl("SubRouteUID", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteUID)
+  temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteUID)%>%
+    dplyr::select(-id)
+
+  SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName"))
+  SubRouteName=data.frame(id=which(grepl("SubRouteName", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteName)
+  SubRouteName$SubRouteName=substr(SubRouteName$SubRouteName, 1, 5)
+  temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteName)%>%
+    dplyr::select(-id)
+
+  bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+                       RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
+                       temp1,
+                       temp2,
+                       Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
+                       Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
+
+  cat(paste0("#---", county, " Bus Route Downloaded---#\n"))
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(bus_shape, out, row.names=F)
+    }
+    return(bus_shape)
+  }else if (dtype=="sf"){
+    bus_shape$Geometry=st_as_sfc(bus_shape$Geometry)
+    bus_shape=st_sf(bus_shape, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(bus_shape, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      stop("The file name must contain '.shp'")
+    }
+
+    return(bus_shape)
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
 
@@ -257,111 +269,118 @@ Bus_Schedule=function(access_token, county, out=F){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/City/", county, "?&$format=XML")
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
 
-  if (substr(xml_text(x), 1, 4)=="City"){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
-  }else{
-    bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
-                        RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
-                        SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
-                        SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
-                        Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
 
-    # check whether the schedule is in timetable form or frequency form
-    tt=as.character(xml_children(x))
-    bus_info1=bus_info[grepl("Timetables", tt),]
-    bus_info2=bus_info[grepl("Frequency", tt),]
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+  })
 
-    if (nrow(bus_info1)!=0){
-      timetable=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
-      cat(paste0("#---Timetables Downloading---#\n"))
-      cat(paste0(length(timetable), " Routes\n"))
+  bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+                      RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
+                      SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
+                      SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
+                      Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
 
-      # 台南沒有TripID
-      if (!(county %in% c("Tainan","KinmenCounty"))){
-        bus_schedule_1=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:TripID"))), TripID=xml_text(xml_find_all(x, xpath = ".//d1:TripID")))
-      }else{
-        bus_schedule_1=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:Timetable"))))
-      }
+  # check whether the schedule is in timetable form or frequency form
+  tt=as.character(xml_children(x))
+  bus_info1=bus_info[grepl("Timetables", tt),]
+  bus_info2=bus_info[grepl("Frequency", tt),]
 
-      xml_node=c("Timetable//d1:ServiceDay//d1:Sunday","Timetable//d1:ServiceDay//d1:Monday","Timetable//d1:ServiceDay//d1:Tuesday",
-                 "Timetable//d1:ServiceDay//d1:Wednesday","Timetable//d1:ServiceDay//d1:Thursday","Timetable//d1:ServiceDay//d1:Friday",
-                 "Timetable//d1:ServiceDay//d1:Saturday","Timetable//d1:SpecialDays//d1:SpecialDay//d1:Dates","Timetable//d1:SpecialDays//d1:SpecialDay//d1:ServiceStatus",
-                 "Timetable//d1:StopTimes//d1:StopTime//d1:StopSequence",
-                 "Timetable//d1:StopTimes//d1:StopTime//d1:StopUID","Timetable//d1:StopTimes//d1:StopTime//d1:StopName//d1:Zh_tw",
-                 "Timetable//d1:StopTimes//d1:StopTime//d1:ArrivalTime","Timetable//d1:StopTimes//d1:StopTime//d1:DepartureTime")
-      xml_node_name=c("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Dates","ServiceStatus","StopSequence","StopUID","StopName","ArrivalTime","DepartureTime")
+  if (nrow(bus_info1)!=0){
+    timetable=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
+    cat(paste0("#---Timetables Downloading---#\n"))
+    cat(paste0(length(timetable), " Routes\n"))
 
-
-      for (i in xml_node[1:9]){
-        node_name=xml_node_name[which(xml_node==i)]
-        temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:Timetables//d1:", i)))
-        temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Timetable"))
-        temp_id=which(temp_id)
-        temp=data.frame(temp_id, temp)
-        colnames(temp)[2]=node_name
-        bus_schedule_1=left_join(bus_schedule_1, temp, by="temp_id")
-        cat(paste0("Attribute '", node_name, "' is parsed\n"))
-      }
-
-      # StopTime (台中的StopTime重複紀錄)
-      StopTimes_cumsum=xml_length(xml_find_all(x, xpath=".//d1:Timetable//d1:StopTimes"))
-      StopTimes_cumsum=cumsum(StopTimes_cumsum)
-      for (i in xml_node[10:14]){
-        node_name=xml_node_name[which(xml_node==i)]
-        temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:Timetables//d1:", i)))
-        temp=temp[StopTimes_cumsum]
-        temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Timetable"))
-        temp_id=which(temp_id)
-        temp=data.frame(temp_id, temp)
-        colnames(temp)[2]=node_name
-        bus_schedule_1=left_join(bus_schedule_1, temp, by="temp_id")
-        cat(paste0("Attribute '", node_name, "' is parsed\n"))
-      }
-
-      bus_schedule_1=dplyr::select(bus_schedule_1, -temp_id)
-
-      table_num=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
-      bus_info1=as.data.frame(lapply(bus_info1, rep, table_num))
-      bus_schedule_timetable=cbind(bus_info1, bus_schedule_1)
-
-      if (sum(grepl("-", bus_schedule_timetable$TripID))==0 & !(county %in% c("Tainan","KinmenCounty"))){
-        bus_schedule_timetable$TripID=as.numeric(bus_schedule_timetable$TripID)
-        bus_schedule_timetable=arrange(bus_schedule_timetable, RouteUID, RouteName, SubRouteUID, SubRouteName, Direction, TripID)
-      }
+    # 台南沒有TripID
+    if (!(county %in% c("Tainan","KinmenCounty"))){
+      bus_schedule_1=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:TripID"))), TripID=xml_text(xml_find_all(x, xpath = ".//d1:TripID")))
+    }else{
+      bus_schedule_1=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:Timetable"))))
     }
 
-    if (nrow(bus_info2)!=0){
-      freq=xml_length(xml_find_all(x, xpath = ".//d1:Frequencys"))
-      cat(paste0("#---Frequencys Downloading---#\n"))
-      cat(paste0(length(freq), " Routes\n"))
-
-      xml_node=c("Frequencys//d1:Frequency//d1:StartTime","Frequencys//d1:Frequency//d1:EndTime","Frequencys//d1:Frequency//d1:MinHeadwayMins",
-                 "Frequencys//d1:Frequency//d1:MaxHeadwayMins","Frequencys//d1:ServiceDay//d1:Sunday","Frequencys//d1:ServiceDay//d1:Monday",
-                 "Frequencys//d1:ServiceDay//d1:Tuesday","Frequencys//d1:ServiceDay//d1:Wednesday","Frequencys//d1:ServiceDay//d1:Thursday",
-                 "Frequencys//d1:ServiceDay//d1:Friday","Frequencys//d1:ServiceDay//d1:Saturday")
-      xml_node_name=c("StartTime","EndTime","MinHeadwayMins","MaxHeadwayMins","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday")
+    xml_node=c("Timetable//d1:ServiceDay//d1:Sunday","Timetable//d1:ServiceDay//d1:Monday","Timetable//d1:ServiceDay//d1:Tuesday",
+               "Timetable//d1:ServiceDay//d1:Wednesday","Timetable//d1:ServiceDay//d1:Thursday","Timetable//d1:ServiceDay//d1:Friday",
+               "Timetable//d1:ServiceDay//d1:Saturday","Timetable//d1:SpecialDays//d1:SpecialDay//d1:Dates","Timetable//d1:SpecialDays//d1:SpecialDay//d1:ServiceStatus",
+               "Timetable//d1:StopTimes//d1:StopTime//d1:StopSequence",
+               "Timetable//d1:StopTimes//d1:StopTime//d1:StopUID","Timetable//d1:StopTimes//d1:StopTime//d1:StopName//d1:Zh_tw",
+               "Timetable//d1:StopTimes//d1:StopTime//d1:ArrivalTime","Timetable//d1:StopTimes//d1:StopTime//d1:DepartureTime")
+    xml_node_name=c("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Dates","ServiceStatus","StopSequence","StopUID","StopName","ArrivalTime","DepartureTime")
 
 
-      bus_schedule_2=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:StartTime"))))
-      for (i in xml_node){
-        node_name=xml_node_name[which(xml_node==i)]
-        temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
-        temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Frequency"))
-        temp_id=which(temp_id)
-        temp=data.frame(temp_id, temp)
-        colnames(temp)[2]=node_name
-        bus_schedule_2=left_join(bus_schedule_2, temp, by="temp_id")
-        cat(paste0("Attribute '", node_name, "' is parsed\n"))
-      }
-      bus_schedule_2=dplyr::select(bus_schedule_2, -temp_id)
-
-      table_num=xml_length(xml_find_all(x, xpath = ".//d1:Frequencys"))
-      bus_info2=as.data.frame(lapply(bus_info2, rep, table_num))
-      bus_schedule_frequency=cbind(bus_info2, bus_schedule_2)
+    for (i in xml_node[1:9]){
+      node_name=xml_node_name[which(xml_node==i)]
+      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:Timetables//d1:", i)))
+      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Timetable"))
+      temp_id=which(temp_id)
+      temp=data.frame(temp_id, temp)
+      colnames(temp)[2]=node_name
+      bus_schedule_1=left_join(bus_schedule_1, temp, by="temp_id")
+      cat(paste0("Attribute '", node_name, "' is parsed\n"))
     }
+
+    # StopTime (台中的StopTime重複紀錄)
+    StopTimes_cumsum=xml_length(xml_find_all(x, xpath=".//d1:Timetable//d1:StopTimes"))
+    StopTimes_cumsum=cumsum(StopTimes_cumsum)
+    for (i in xml_node[10:14]){
+      node_name=xml_node_name[which(xml_node==i)]
+      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:Timetables//d1:", i)))
+      temp=temp[StopTimes_cumsum]
+      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Timetable"))
+      temp_id=which(temp_id)
+      temp=data.frame(temp_id, temp)
+      colnames(temp)[2]=node_name
+      bus_schedule_1=left_join(bus_schedule_1, temp, by="temp_id")
+      cat(paste0("Attribute '", node_name, "' is parsed\n"))
+    }
+
+    bus_schedule_1=dplyr::select(bus_schedule_1, -temp_id)
+
+    table_num=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
+    bus_info1=as.data.frame(lapply(bus_info1, rep, table_num))
+    bus_schedule_timetable=cbind(bus_info1, bus_schedule_1)
+
+    if (sum(grepl("-", bus_schedule_timetable$TripID))==0 & !(county %in% c("Tainan","KinmenCounty"))){
+      bus_schedule_timetable$TripID=as.numeric(bus_schedule_timetable$TripID)
+      bus_schedule_timetable=arrange(bus_schedule_timetable, RouteUID, RouteName, SubRouteUID, SubRouteName, Direction, TripID)
+    }
+  }
+
+  if (nrow(bus_info2)!=0){
+    freq=xml_length(xml_find_all(x, xpath = ".//d1:Frequencys"))
+    cat(paste0("#---Frequencys Downloading---#\n"))
+    cat(paste0(length(freq), " Routes\n"))
+
+    xml_node=c("Frequencys//d1:Frequency//d1:StartTime","Frequencys//d1:Frequency//d1:EndTime","Frequencys//d1:Frequency//d1:MinHeadwayMins",
+               "Frequencys//d1:Frequency//d1:MaxHeadwayMins","Frequencys//d1:ServiceDay//d1:Sunday","Frequencys//d1:ServiceDay//d1:Monday",
+               "Frequencys//d1:ServiceDay//d1:Tuesday","Frequencys//d1:ServiceDay//d1:Wednesday","Frequencys//d1:ServiceDay//d1:Thursday",
+               "Frequencys//d1:ServiceDay//d1:Friday","Frequencys//d1:ServiceDay//d1:Saturday")
+    xml_node_name=c("StartTime","EndTime","MinHeadwayMins","MaxHeadwayMins","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday")
+
+
+    bus_schedule_2=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:StartTime"))))
+    for (i in xml_node){
+      node_name=xml_node_name[which(xml_node==i)]
+      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
+      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Frequency"))
+      temp_id=which(temp_id)
+      temp=data.frame(temp_id, temp)
+      colnames(temp)[2]=node_name
+      bus_schedule_2=left_join(bus_schedule_2, temp, by="temp_id")
+      cat(paste0("Attribute '", node_name, "' is parsed\n"))
+    }
+    bus_schedule_2=dplyr::select(bus_schedule_2, -temp_id)
+
+    table_num=xml_length(xml_find_all(x, xpath = ".//d1:Frequencys"))
+    bus_info2=as.data.frame(lapply(bus_info2, rep, table_num))
+    bus_schedule_frequency=cbind(bus_info2, bus_schedule_2)
   }
 
   cat(paste0("#---", county, " Bus Schedule Downloaded---#\n"))
@@ -400,7 +419,13 @@ Rail_StationOfLine=function(access_token, operator, out=F){
     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+    stop(paste0("Your access token is invalid!"))
+  })
 
   rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")))
   num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:Stations"))
@@ -481,7 +506,13 @@ Rail_Station=function(access_token, operator, dtype="text", out=F){
     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+    stop(paste0("Your access token is invalid!"))
+  })
 
   if (operator=="TRA"){
     rail_station=data.frame(StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
@@ -555,7 +586,13 @@ Rail_Shape=function(access_token, operator, dtype="text", out=F){
     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+    stop(paste0("Your access token is invalid!"))
+  })
 
   rail_shape=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
                         LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName")),
@@ -594,12 +631,20 @@ Bike_Station=function(access_token, county, dtype="text", out=F){
 
   url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bike/Station/", county, "?&$format=XML")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
 
-  if (substr(xml_text(x), 1, 4)=="City"){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. And please ensure that '", county, "' has bike sharing system."))
-  }
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. And please ensure that '", county, "' has bike sharing system."))
+    }
+  })
+
   bike_station=data.frame(StationUID=xml_text(xml_find_all(x, xpath = ".//d1:StationUID")),
                           StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
                           PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
@@ -647,12 +692,11 @@ Geocoding=function(access_token, address, dtype="text", out=F){
         url_encode()
 
       url=paste0("https://tdx.transportdata.tw/api/advanced/V3/Map/GeoCode/Coordinate/Address/", address_temp, "?&$format=JSON")
-      add_temp=x=GET(url, add_headers(Accept="application/+json",
-                                      Authorization=paste("Bearer", access_token)))%>%
+      add_temp=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))%>%
         content()
 
       if (length(add_temp)==0){
-        print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
+        cat(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
       }else{
         add_temp=data.frame(AddressOriginal=address[i],
                             AddressNew=add_temp[[1]]$Address,
@@ -661,16 +705,18 @@ Geocoding=function(access_token, address, dtype="text", out=F){
       }
 
       if((i %% 10==0 | i==length(address))){
-        print(paste0(i, "/", length(address)))
+        cat(paste0(i, "/", length(address), "\n"))
       }
 
       temp_cou=i
     }, error=function(err){
-      print(paste("ERROR:", conditionMessage(err)))
+      cat(paste0("ERROR:", conditionMessage(err), "\n"))
       if (grepl("Timeout was reached", conditionMessage(err))){
         i=temp_cou-1
+      }else if (grepl("atomic vectors", conditionMessage(err))){
+        stop(paste0("Your access token is invalid!"))
       }else{
-        print(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
+        cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
       }
     })
   }
@@ -711,7 +757,13 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
       # 指定縣市所有道路層級資料
       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?&%24format=XML")
       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-      x=read_xml(x)
+
+      tryCatch({
+        x=read_xml(x)
+      }, error=function(err){
+        cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+        stop(paste0("Your access token is invalid!"))
+      })
 
       road=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
                       RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
@@ -723,7 +775,13 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
       # 指定縣市指定道路層級資料
       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", 0, "'&$format=xml")
       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-      x=read_xml(x)
+
+      tryCatch({
+        x=read_xml(x)
+      }, error=function(err){
+        cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+        stop(paste0("Your access token is invalid!"))
+      })
 
       road=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
                       RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
@@ -735,7 +793,13 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
       # 所有縣市指定道路層級資料
       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", roadclass, "?&$format=XML")
       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-      x=read_xml(x)
+
+      tryCatch({
+        x=read_xml(x)
+      }, error=function(err){
+        cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+        stop(paste0("Your access token is invalid!"))
+      })
 
       road=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
                       RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
@@ -749,7 +813,13 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
       for (i in c(0,1,3)){
         url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", i, "?&$format=XML")
         x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-        x=read_xml(x)
+
+        tryCatch({
+          x=read_xml(x)
+        }, error=function(err){
+          cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+          stop(paste0("Your access token is invalid!"))
+        })
 
         x=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
                      RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
@@ -811,7 +881,13 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
       stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
     }
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-    x=read_xml(x)
+
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+      stop(paste0("Your access token is invalid!"))
+    })
 
     if (operator=="TRA"){
       station=data.frame(StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
@@ -864,7 +940,13 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
       stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
     }
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-    x=read_xml(x)
+
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+      stop(paste0("Your access token is invalid!"))
+    })
 
     if (operator=="TRA"){
       tra_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
@@ -986,7 +1068,19 @@ Bike_Shape=function(access_token, county, dtype="text", out=F){
 
   url=paste0("https://tdx.transportdata.tw/api/basic/v2/Cycling/Shape/", county, "?&$format=XML")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+  })
 
   if (substr(xml_text(x), 1, 4)=="City"){
     print(TDX_County)
@@ -1036,11 +1130,16 @@ Air_Schedule=function(access_token, domestic=T, out=F){
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
 
-
   if (domestic){
     url="https://tdx.transportdata.tw/api/basic/v2/Air/GeneralSchedule/Domestic?$format=xml"
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-    x=read_xml(x)
+
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+      stop(paste0("Your access token is invalid!"))
+    })
 
     air_schedule=data.frame(AirlineID=xml_text(xml_find_all(x, xpath = ".//d1:AirlineID")),
                             ScheduleStartDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleStartDate")),
@@ -1060,7 +1159,13 @@ Air_Schedule=function(access_token, domestic=T, out=F){
   }else{
     url="https://tdx.transportdata.tw/api/basic/v2/Air/GeneralSchedule/International?$format=xml"
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-    x=read_xml(x)
+
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+      stop(paste0("Your access token is invalid!"))
+    })
 
     Terminal=xml_text(xml_find_all(x, xpath = ".//d1:Terminal"))
     Terminal=data.frame(id=which(grepl("Terminal", xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))), Terminal)
@@ -1111,7 +1216,19 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Tourism/", poi, "/", county, "?&$format=xml")
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x=read_xml(x)
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+  })
 
   # write_xml(x, "./temp.xml")
   if (poi=="ScenicSpot"){
@@ -1203,9 +1320,25 @@ Bus_TravelTime=function(access_token, county, routeid, out=F){
 
   traveltime_ALL=data.frame()
   for (route in routeid){
-    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/S2STravelTime/City/", county, "/", route, "?&%24format=XML")
+    if (county=="Intercity"){
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/S2STravelTime/InterCity/", route, "?&%24format=XML")
+    }else{
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/S2STravelTime/City/", county, "/", route, "?&%24format=XML")
+    }
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-    x=read_xml(x)
+
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+      if (grepl("Unauthorized", conditionMessage(err))){
+        stop(paste0("Your access token is invalid!"))
+      }else{
+        print(TDX_County)
+        stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+      }
+    })
 
     subroute_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath=".//d1:RouteUID")),
                              RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
@@ -1252,7 +1385,14 @@ Rail_ODFare=function(access_token, operator, out=F){
     cat("Please wait for a while...\n")
     url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/ODFare?&%24format=XML"
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-    x=read_xml(x)
+
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+      stop(paste0("Your access token is invalid!"))
+    })
+
     rail_info=data.frame(OriginStationID=xml_text(xml_find_all(x, xpath=".//d1:OriginStationID")),
                          OriginStationName=xml_text(xml_find_all(x, xpath=".//d1:OriginStationName//d1:Zh_tw")),
                          DestinationStationID=xml_text(xml_find_all(x, xpath=".//d1:DestinationStationID")),
@@ -1261,7 +1401,14 @@ Rail_ODFare=function(access_token, operator, out=F){
   }else if (operator=="THSR"){
     url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/ODFare?&%24format=XML"
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-    x=read_xml(x)
+
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+      stop(paste0("Your access token is invalid!"))
+    })
+
     rail_info=data.frame(OriginStationID=xml_text(xml_find_all(x, xpath=".//d1:OriginStationID")),
                          OriginStationName=xml_text(xml_find_all(x, xpath=".//d1:OriginStationName//d1:Zh_tw")),
                          DestinationStationID=xml_text(xml_find_all(x, xpath=".//d1:DestinationStationID")),
@@ -1270,7 +1417,14 @@ Rail_ODFare=function(access_token, operator, out=F){
   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/ODFare/", operator, "?&%24format=XML")
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-    x=read_xml(x)
+
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+      stop(paste0("Your access token is invalid!"))
+    })
+
     rail_info=data.frame(OriginStationID=xml_text(xml_find_all(x, xpath=".//d1:OriginStationID")),
                          OriginStationName=xml_text(xml_find_all(x, xpath=".//d1:OriginStationName//d1:Zh_tw")),
                          DestinationStationID=xml_text(xml_find_all(x, xpath=".//d1:DestinationStationID")),
@@ -1279,7 +1433,14 @@ Rail_ODFare=function(access_token, operator, out=F){
   }else if (operator=="AFR"){
     url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/ODFare?&%24format=XML")
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-    x=read_xml(x)
+
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+      stop(paste0("Your access token is invalid!"))
+    })
+
     rail_info=data.frame(OriginStationID=xml_text(xml_find_all(x, xpath=".//d1:OriginStationID")),
                          OriginStationName=xml_text(xml_find_all(x, xpath=".//d1:OriginStationName//d1:Zh_tw")),
                          DestinationStationID=xml_text(xml_find_all(x, xpath=".//d1:DestinationStationID")),
@@ -1324,6 +1485,7 @@ Car_Park=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
 
   url=paste0("https://tdx.transportdata.tw/api/basic/v1/Parking/OffStreet/CarPark/City/", county, "?&%24format=XML")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
@@ -1331,9 +1493,14 @@ Car_Park=function(access_token, county, dtype="text", out=F){
   tryCatch({
     x=read_xml(x)
   }, error=function(err){
-    cat(paste0("ERROR:", conditionMessage(err), "\n"))
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. Or it might because that '", county, "' does not provide any data up to now."))
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
   })
 
   xml_node=c("CarParkID","CarParkName//d1:Zh_tw","OperatorID","Description","Telephone","PositionLat","PositionLon","Address","FareDescription","IsPublic","OperationType",
@@ -1374,6 +1541,180 @@ Car_Park=function(access_token, county, dtype="text", out=F){
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
 }
+
+
+
+Ship_Port=function(access_token, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
+
+  url="https://tdx.transportdata.tw/api/basic/v3/Ship/Basic/Port?&%24format=XML"
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+    stop(paste0("Your access token is invalid!"))
+  })
+
+  shipport=data.frame(PortID=xml_text(xml_find_all(x, xpath=".//d1:PortID")),
+                      PortName=xml_text(xml_find_all(x, xpath=".//d1:PortName//d1:Zh_tw")),
+                      PositionLat=xml_text(xml_find_all(x, xpath=".//d1:PositionLat")),
+                      PositionLon=xml_text(xml_find_all(x, xpath=".//d1:PositionLon")),
+                      City=xml_text(xml_find_all(x, xpath=".//d1:City")))
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(shipport, out, row.names=F)
+    }
+    return(shipport)
+  }else if (dtype=="sf"){
+    shipport$Geometry=st_as_sfc(paste0("POINT(", shipport$PositionLon, " ", shipport$PositionLat, ")"))
+    shipport=st_sf(shipport, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(shipport, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      stop("The file name must contain '.shp'")
+    }
+
+    return(shipport)
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+  }
+}
+
+
+
+Ship_Route=function(access_token, county, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+
+  url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/Route/Domestic/City/", county, "?&%24format=XML")
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. Or it might becasue there is no ship service in '", county, "'."))
+    }
+  })
+
+  shiproute=data.frame(RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
+                       RouteName=xml_text(xml_find_all(x, xpath=".//d1:RouteName//d1:Zh_tw")),
+                       StartPortID=xml_text(xml_find_all(x, xpath=".//d1:StartPortID")),
+                       StartPortName=xml_text(xml_find_all(x, xpath=".//d1:StartPortName")),
+                       EndPortID=xml_text(xml_find_all(x, xpath=".//d1:EndPortID")),
+                       EndPortName=xml_text(xml_find_all(x, xpath=".//d1:EndPortName")),
+                       Description=xml_text(xml_find_all(x, xpath=".//d1:Description")),
+                       TicketPriceDescription=xml_text(xml_find_all(x, xpath=".//d1:TicketPriceDescription")),
+                       RouteType=xml_text(xml_find_all(x, xpath=".//d1:RouteType")),
+                       RouteDistance=xml_text(xml_find_all(x, xpath=".//d1:RouteDistance")))
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(shiproute, out, row.names=F)
+  }
+  return(shiproute)
+}
+
+
+
+Ship_StopOfRoute=function(access_token, county, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+
+  url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/StopOfRoute/Domestic/City/", county, "?&%24format=XML")
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. Or it might becasue there is no ship service in '", county, "'."))
+    }
+  })
+
+  stopofroute=data.frame(RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
+                         RouteName=xml_text(xml_find_all(x, xpath=".//d1:RouteName//d1:Zh_tw")),
+                         Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
+                         StopSequence=xml_text(xml_find_all(x, xpath=".//d1:StopSequence")),
+                         PortID=xml_text(xml_find_all(x, xpath=".//d1:PortID")),
+                         PortName=xml_text(xml_find_all(x, xpath=".//d1:PortName//d1:Zh_tw")))
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(stopofroute, out, row.names=F)
+  }
+  return(stopofroute)
+}
+
+
+
+Ship_Schedule=function(access_token, county, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+
+  url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/GeneralSchedule/Domestic/City/", county, "?&%24format=XML")
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. Or it might becasue there is no ship service in '", county, "'."))
+    }
+  })
+
+  route_info=data.frame(RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
+                        RouteName=xml_text(xml_find_all(x, xpath=".//d1:RouteName//d1:Zh_tw")),
+                        Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
+                        EffectiveDate=xml_text(xml_find_all(x, xpath=".//d1:EffectiveDate")),
+                        ExpireDate=xml_text(xml_find_all(x, xpath=".//d1:ExpireDate")),
+                        OperatorID=xml_text(xml_find_all(x, xpath=".//d1:OperatorID")))
+
+  url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/Operator/Domestic/City/", county, "?&%24format=XML")
+  x_temp=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  x_temp=read_xml(x_temp)
+  operator_info=data.frame(OperatorID=xml_text(xml_find_all(x_temp, xpath=".//d1:OperatorID")),
+                        OperatorName=xml_text(xml_find_all(x_temp, xpath=".//d1:OperatorName//d1:Zh_tw")))
+  route_info=left_join(route_info, operator_info)
+
+  xml_length(xml_find_all(x, xpath = ".//d1:Frequencies"))
+
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(stopofroute, out, row.names=F)
+  }
+  return(stopofroute)
+}
+
+
+
+
+
+
+
 
 
 
