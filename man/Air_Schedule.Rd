@@ -8,19 +8,18 @@ Retrieve the schedule of domestic or international airline flights
 The function is used to download the schedule of airline. And it supports to download data of domestic and international flights.
 }
 \usage{
-Air_Schedule(app_id, app_key, domestic=T, out=F)
+Air_Schedule(access_token, domestic=T, out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
 }
 \arguments{
-  \item{app_id}{Your APP ID applied from \href{https://ptx.transportdata.tw/PTX/}{PTX platform}.}
-  \item{app_key}{Your APP Key applied from \href{https://ptx.transportdata.tw/PTX/}{PTX platform}.}
+  \item{access_token}{Your access token given by TDX platform. This can be derived from the function \code{get_token()}.}
   \item{domestic}{TRUE for the domestic airline, while FALSE for the international airline.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data. Note that the directory must contain ".csv" or ".txt" when exporting text file.}
 }
 \author{
-Maintainer: Chia Jung, Yeh  \email{1328robert@gmail.com}
+Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 }
 \details{
 %%  ~~ If necessary, more details than the __description__ above ~~
@@ -33,10 +32,10 @@ Maintainer: Chia Jung, Yeh  \email{1328robert@gmail.com}
 }
 \examples{
 # Retrieve the schedule of domestic flight
-Air_Schedule(app_id, app_key, domestic=T)
+Air_Schedule(access_token, domestic=T)
 
 # Retrieve the schedule of international flight
-Air_Schedule(app_id, app_key, domestic=F, "./international_flight.csv")
+Air_Schedule(access_token, domestic=F, "./international_flight.csv")
 }
 \keyword{datasets}
 

@@ -29,19 +29,18 @@ Note that it supports to download data of city buses and intercity buses.
 
 }
 \usage{
-Bus_Schedule(app_id, app_key, county, out=F)
+Bus_Schedule(access_token, county, out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
 }
 \arguments{
-  \item{app_id}{Your APP ID applied from \href{https://ptx.transportdata.tw/PTX/}{PTX platform}.}
-  \item{app_key}{Your APP Key applied from \href{https://ptx.transportdata.tw/PTX/}{PTX platform}.}
-  \item{county}{Please fill in the English county name. Checking out the appropriate county name in dataframe `TDX_County`. Note that if 'Intercity' is filled in, it would retrieve the bis route of intercity buses in Taiwan.}
+  \item{access_token}{Your access token given by TDX platform. This can be derived from the function \code{get_token()}.}
+   \item{county}{Please fill in the English county name. Checking out the appropriate county name in dataframe \code{TDX_County}. Note that some of cities have no bike sharing system, please check it out first.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data.}
 }
 \author{
-Maintainer: Chia Jung, Yeh  \email{1328robert@gmail.com}
+Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 }
 \details{
 %%  ~~ If necessary, more details than the __description__ above ~~
@@ -53,8 +52,8 @@ Maintainer: Chia Jung, Yeh  \email{1328robert@gmail.com}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-Bus_Schedule(app_id , app_key, "Taipei")
-Bus_Schedule(app_id , app_key, "Hsinchu", out="./Hsinchu_Bus_Route.csv")
+Bus_Schedule(access_token, "Taipei")
+Bus_Schedule(access_token, "Hsinchu", out="./Hsinchu_Bus_Route.csv")
 }
 \keyword{datasets}
 

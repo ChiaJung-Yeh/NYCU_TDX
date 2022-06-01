@@ -1665,49 +1665,79 @@ Ship_StopOfRoute=function(access_token, county, out=F){
 
 
 
-Ship_Schedule=function(access_token, county, out=F){
-  if (!require(dplyr)) install.packages("dplyr")
-  if (!require(xml2)) install.packages("xml2")
-  if (!require(httr)) install.packages("httr")
-
-  url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/GeneralSchedule/Domestic/City/", county, "?&%24format=XML")
-  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-
-  tryCatch({
-    x=read_xml(x)
-  }, error=function(err){
-    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-
-    if (grepl("Unauthorized", conditionMessage(err))){
-      stop(paste0("Your access token is invalid!"))
-    }else{
-      print(TDX_County)
-      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. Or it might becasue there is no ship service in '", county, "'."))
-    }
-  })
-
-  route_info=data.frame(RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
-                        RouteName=xml_text(xml_find_all(x, xpath=".//d1:RouteName//d1:Zh_tw")),
-                        Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-                        EffectiveDate=xml_text(xml_find_all(x, xpath=".//d1:EffectiveDate")),
-                        ExpireDate=xml_text(xml_find_all(x, xpath=".//d1:ExpireDate")),
-                        OperatorID=xml_text(xml_find_all(x, xpath=".//d1:OperatorID")))
-
-  url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/Operator/Domestic/City/", county, "?&%24format=XML")
-  x_temp=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  x_temp=read_xml(x_temp)
-  operator_info=data.frame(OperatorID=xml_text(xml_find_all(x_temp, xpath=".//d1:OperatorID")),
-                        OperatorName=xml_text(xml_find_all(x_temp, xpath=".//d1:OperatorName//d1:Zh_tw")))
-  route_info=left_join(route_info, operator_info)
-
-  xml_length(xml_find_all(x, xpath = ".//d1:Frequencies"))
-
-
-  if (nchar(out)!=0 & out!=F){
-    write.csv(stopofroute, out, row.names=F)
-  }
-  return(stopofroute)
-}
+# Ship_Schedule=function(access_token, county, out=F){
+#   if (!require(dplyr)) install.packages("dplyr")
+#   if (!require(xml2)) install.packages("xml2")
+#   if (!require(httr)) install.packages("httr")
+#
+#   url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/GeneralSchedule/Domestic/City/", county, "?&%24format=XML")
+#   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+#
+#   tryCatch({
+#     x=read_xml(x)
+#   }, error=function(err){
+#     cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+#
+#     if (grepl("Unauthorized", conditionMessage(err))){
+#       stop(paste0("Your access token is invalid!"))
+#     }else{
+#       print(TDX_County)
+#       stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. Or it might becasue there is no ship service in '", county, "'."))
+#     }
+#   })
+#
+#   x=xml_find_all(x, xpath = ".//d1:GeneralSchedules")
+#   route_info=data.frame(RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
+#                         RouteName=xml_text(xml_find_all(x, xpath=".//d1:RouteName//d1:Zh_tw")),
+#                         Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
+#                         EffectiveDate=xml_text(xml_find_all(x, xpath=".//d1:EffectiveDate")),
+#                         ExpireDate=xml_text(xml_find_all(x, xpath=".//d1:ExpireDate")),
+#                         OperatorID=xml_text(xml_find_all(x, xpath=".//d1:OperatorID")))
+#
+#   url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/Operator/Domestic/City/", county, "?&%24format=XML")
+#   x_temp=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+#   x_temp=read_xml(x_temp)
+#   operator_info=data.frame(OperatorID=xml_text(xml_find_all(x_temp, xpath=".//d1:OperatorID")),
+#                         OperatorName=xml_text(xml_find_all(x_temp, xpath=".//d1:OperatorName//d1:Zh_tw")))
+#   route_info=left_join(route_info, operator_info)
+#
+#
+#   # check whether the schedule is in timetable form or frequency form
+#   tt=as.character(xml_children(x))
+#   route_info1=route_info[grepl("Timetables", tt),]
+#   route_info2=route_info[grepl("Frequencies", tt),]
+#
+#   if (nrow(route_info1)!=0){
+#     ship_schedule_1=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:Timetable"))))
+#
+#     xml_node=c("Timetable//d1:ServiceDay//d1:Sunday","Timetable//d1:ServiceDay//d1:Monday","Timetable//d1:ServiceDay//d1:Tuesday",
+#                "Timetable//d1:ServiceDay//d1:Wednesday","Timetable//d1:ServiceDay//d1:Thursday","Timetable//d1:ServiceDay//d1:Friday",
+#                "Timetable//d1:ServiceDay//d1:Saturday","Timetable//d1:ServiceDay//d1:NationalHolidays","Timetable//d1:StopTimes//d1:StopTime//d1:StopSequence",
+#                "Timetable//d1:StopTimes//d1:StopTime//d1:StopUID","Timetable//d1:StopTimes//d1:StopTime//d1:StopName//d1:Zh_tw",
+#                "Timetable//d1:StopTimes//d1:StopTime//d1:ArrivalTime","Timetable//d1:StopTimes//d1:StopTime//d1:DepartureTime")
+#     xml_node_name=c("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","NationalHolidays","StopSequence","StopUID","StopName","ArrivalTime","DepartureTime")
+#     xml_text(xml_find_all(x, xpath=paste0(".//d1:StopSequence")))
+#     for (i in xml_node){
+#       node_name=xml_node_name[which(xml_node==i)]
+#       temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:Timetables//d1:", i)))
+#       temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Timetable"))
+#       temp_id=which(temp_id)
+#       temp=data.frame(temp_id, temp)
+#       colnames(temp)[2]=node_name
+#       ship_schedule_1=left_join(ship_schedule_1, temp, by="temp_id")
+#       cat(paste0("Attribute '", node_name, "' is parsed\n"))
+#     }
+#   }
+#
+#
+#   xml_length(xml_find_all(x, xpath = ".//d1:Frequencies"))
+#
+#
+#   if (nchar(out)!=0 & out!=F){
+#     write.csv(stopofroute, out, row.names=F)
+#   }
+#   return(stopofroute)
+# }
 
 
 
