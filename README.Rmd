@@ -20,7 +20,7 @@ app_key=read.table("./key.txt", sep=",")[2,2]
 include_graphics("./figure/TDX_icon.png")
 ```
 
-This package can be used to connect transportation data from TDX (Transport Data eXchange) in a neat and efficient function. TDX platform is supported by Ministry of Transportation and Communications (MOTC) in Taiwan, which provides lots of API for the members download the transportation data. Before using the function provided in this package, the authentication key is a must, which can be applied from [PTX platform](https://ptx.transportdata.tw/PTX/Management/AccountApply).  
+This package can be used to connect transportation data from TDX (Transport Data eXchange) in a neat and efficient way. TDX platform is supported by Ministry of Transportation and Communications (MOTC) in Taiwan, which provides lots of API for the members download the transportation data. Before using the function provided in this package, the authentication key is a must, which can be applied from [TDX platform](https://tdx.transportdata.tw/register). After being a member of TDX, you will soon get the Client Id and Client Secret, please check out in the \href{https://tdx.transportdata.tw/user/dataservice/key}{API key Dashboard.}  
 
 
 ## Installation
@@ -36,7 +36,7 @@ library(TDX)
 
 ## Usage
 
-All functions provided in this package are summarised in the table below.  
+All functions provided in this package are summarized in the table below.  
 
 ```{r TDX_table, echo=F, eval=T}
 TDX_table=data.frame(data=c(rep("軌道", 4), rep("公車", 4), rep("自行車", 2), "航空", "觀光景點", "道路路網", "地理編碼"), type=c("軌道站點","軌道路線站點","軌道路線線型","軌道班表","公車站點","公車路線","公車路線線型","公車班表","公共自行車站點","自行車路網","航空班表","觀光景點點位","道路路網線型","地理編碼服務"), source=c(rep("PTX", 12), rep("GIS-T", 2)), class=c(rep("點", 2),"線","文字","點","文字","線","文字","點","線","文字","點","線","點"), functiona=c("`Rail_Shape()`", "`Rail_Station()`", "`Rail_StationOfLine()`", "`Rail_TimeTable()`", "`Bus_StopOfRoute()`", "`Bus_Route()`", "`Bus_Shape()`", "`Bus_Schedule()`", "`Bike_Station()`", "`Bike_Shape()`","`Air_Schedule()`","`ScenicSpot()`","`Road_Network()`","`Geocoding()`"))
@@ -50,22 +50,30 @@ kable(TDX_table, booktabs=T)%>%
   row_spec(0, bold=T, color="white", background="#8E8E8E")
 ```
 
-Take retrieving MRT stations of Taipei Metro System for example. The code is shown below. Note that the parameter `app_id` and `app_key` is the authentication key applied from PTX.  
+Data retrieving process requires an access token to obtain the data from TDX platform. Every function in this package should use function `get_token()` to obtain the token by entering your Client ID and Client Secret. Note that the access token will expire in 1 day.  
+
+Take retrieving MRT stations of Taipei Metro System for example. The code is shown below. Here the argument `client_id` and `client_secret` is the authentication key applied from TDX.    
 
 ```{r TDX_test_show, echo=T, eval=F, message=F}
-TRTC_station=Rail_Station(app_id, app_key, "TRTC")
+# get the access token first
+access_token=get_token("CLIENT_ID", "CLIEN_SECRET")
+
+# retrieve Taipei MRT station
+TRTC_station=Rail_Station(access_token, "TRTC")
 head(TRTC_station)
 ```
 
 The result is shown as followings.  
 ```{r TDX_test, echo=F, eval=T, message=F}
-TRTC_station=Rail_Station(app_id, app_key, "TRTC")
+access_token=read.table("./temp_token.txt")
+TRTC_station=Rail_Station(access_token, "TRTC")
 head(TRTC_station)
 ```
 
 Usages of other functions can be found in the *_[TDX Guide](https://chiajung-yeh.github.io/TDX_Guide/)_* website.  
 
 ## Support
+
 This package takes advantage of API service provided by TDX, MOTC. 
 
 ```{r TDX_figure, echo=F, eval=T, out.width="60%", fig.align="center"}
@@ -76,7 +84,7 @@ include_graphics("./figure/TDX.png")
 ## Contact
 
 For questions, bugs, and other discussion, please feel free to contact the package maintainer, Chia Jung, Yeh.  
-Email: <a href="mailto:1328robert@gmail.com"><u>1328robert@gmail.com</u></a>
+Email: <a href="mailto:robert1328.mg10@nycu.edu.tw"><u>robert1328.mg10@nycu.edu.tw</u></a>
 
 
 
