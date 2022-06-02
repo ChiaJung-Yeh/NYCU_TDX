@@ -245,11 +245,6 @@ is the authentication key applied from TDX.
 
 The result is shown as followings.
 
-    ## Warning in read.table("./temp_token.txt"): 由 './temp_token.txt' 上的
-    ## readTableHeader 找到不完整的最終列
-
-    ## Warning: 套件 'httr' 是用 R 版本 4.1.3 來建造的
-
     ## [1] "#---TRTC Station Downloaded---#"
 
     ##   StationName StationUID StationID LocationCity LocationTown LocationTownCode

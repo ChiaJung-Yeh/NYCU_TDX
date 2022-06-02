@@ -64,7 +64,7 @@ head(TRTC_station)
 ```
 
 The result is shown as followings.  
-```{r TDX_test, echo=F, eval=T, message=F}
+```{r TDX_test, echo=F, eval=T, message=F, warning=F}
 access_token=read.table("./temp_token.txt")
 TRTC_station=Rail_Station(access_token, "TRTC")
 head(TRTC_station)
