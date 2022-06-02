@@ -49,7 +49,7 @@ Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 }
 \examples{
 Bus_StopOfRoute(access_token, "Hsinchu")
-Bus_StopOfRoute(access_token, "Taipei", dtype="text", out="./Taipei_Stop.csv")
+Bus_StopOfRoute(access_token, "Taipei", dtype="text", out="./Taipei_StopOfRoute.csv")
 }
 \keyword{datasets}
 

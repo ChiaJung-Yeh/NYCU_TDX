@@ -26,7 +26,7 @@ Some columns definition are listed below.
       \tab \strong{TripID} \tab It is used to record the sequence of Trips. It only occurs when the schedule is recorded in timetable format.\cr
       \tab \strong{Sunday} \tab If the trip is operated in that day, it is recorded in 1; ortherwise, 0. \emph{Other days are the same.}\cr
       \tab \strong{Date} \tab Use to record some special hoildays.\cr
-      \tab \strong{Service Status} \tab Use to record the service status in special hoildays, including "Operating As Usual" and "Cancelling Operation."\cr
+      \tab \strong{ServiceStatus} \tab Use to record the service status in special hoildays, including "Operating As Usual" and "Cancelling Operation."\cr
       \tab \strong{ArrivalTime} \tab The arrival time of the bus. This is only recorded in timetable format.\cr
       \tab \strong{DepartureTime} \tab The departure time of the bus. This is only recorded in timetable format.\cr
       \tab \strong{StartTime} \tab The start time of the specific frequency data. This is only recorded in frequency format.\cr

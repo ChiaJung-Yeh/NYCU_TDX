@@ -2,26 +2,27 @@
 \alias{Tourism}
 \docType{data}
 \title{
-Retrieve the geometry of tourism scenic spot
+Retrieve the geometry of tourism
 }
 \description{
-The function is used to download the data of tourism, including scenic spot, restaurant, amd hotel. But please note that the data is not
+The function is used to download the tourism data, including scenic spot, restaurant, and hotel. But note that the data is not collected completely, please take it as reference. Point of interests can be downloaded from other platform or map for relatively complete infromation.
 }
 \usage{
-ScenicSpot(app_id, app_key, county, dtype="text", out=F)
+Tourism(access_token, county, poi, dtype="text", out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
 }
 \arguments{
-  \item{app_id}{Your APP ID applied from \href{https://ptx.transportdata.tw/PTX/}{PTX platform}.}
-  \item{app_key}{Your APP Key applied from \href{https://ptx.transportdata.tw/PTX/}{PTX platform}.}
-  \item{county}{Please fill in the English county name. Checking out the appropriate county name in dataframe `TDX_County`. If "ALL" is entered, the scenic spots of all counties in Taiwan are retrieved.}
-  \item{dtype}{The class of data, including "text" (data frame) and "sf" (simple feature). The default value is "text".}
+  \item{access_token}{Your access token given by TDX platform. This can be derived from the function \code{get_token()}.}
+  \item{county}{Please fill in the English county name. Checking out the appropriate county name in dataframe \code{TDX_County}.}
+  \item{poi}{Type of the point of interest, including \code{ScenicSpot}, \code{Restaurant}, and \code{Hotel}.}
+  \item{dtype}{The class of data, including \code{text} (data frame) and \code{sf} (simple feature). The default value is \code{text}.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data. Note that the directory must contain ".shp" when exporting simple feature. And the directory must contain ".csv" or ".txt" when exporting text file.}
 }
 \author{
-Maintainer: Chia Jung, Yeh  \email{1328robert@gmail.com}
+\author{
+Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 }
 \details{
 %%  ~~ If necessary, more details than the __description__ above ~~
@@ -33,8 +34,8 @@ Maintainer: Chia Jung, Yeh  \email{1328robert@gmail.com}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-ScenicSpot(app_id , app_key, "Taipei")
-ScenicSpot(app_id , app_key, "Hsinchu", dtype="sf", out="./hsinchu_youbike.shp")
+Tourism(access_token, "Taipei")
+Tourism(access_token, "Hsinchu", dtype="sf", out="./hsinchu_youbike.shp")
 }
 \keyword{datasets}
 

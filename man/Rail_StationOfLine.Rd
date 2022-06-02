@@ -32,7 +32,7 @@ Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 }
 \examples{
 Rail_StationOfLine(access_token, "TRA")
-Rail_StationOfLine(access_token, "TRTC", out="./taipei_mrt_stop.csv")
+Rail_StationOfLine(access_token, "TRTC", out="./taipei_mrt_stationofline.csv")
 }
 \keyword{datasets}
 
