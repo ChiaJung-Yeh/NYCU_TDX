@@ -10,7 +10,8 @@ transportation data. Before using the function provided in this package,
 the authentication key is a must, which can be applied from [TDX
 platform](https://tdx.transportdata.tw/register). After being a member
 of TDX, you will soon get the Client Id and Client Secret, please check
-out in the
+out in the [API key
+Dashboard](https://tdx.transportdata.tw/user/dataservice/key).
 
 ## Installation
 
@@ -230,7 +231,7 @@ GIS-T
 Data retrieving process requires an access token to obtain the data from
 TDX platform. Every function in this package should use function
 `get_token()` to obtain the token by entering your Client ID and Client
-Secret. Note that the access token will expire in 1 day.
+Secret first. Note that the access token will expire in 1 day.
 
 Take retrieving MRT stations of Taipei Metro System for example. The
 code is shown below. Here the argument `client_id` and `client_secret`

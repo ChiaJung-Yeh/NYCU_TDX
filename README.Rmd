@@ -20,7 +20,7 @@ app_key=read.table("./key.txt", sep=",")[2,2]
 include_graphics("./figure/TDX_icon.png")
 ```
 
-This package can be used to connect transportation data from TDX (Transport Data eXchange) in a neat and efficient way. TDX platform is supported by Ministry of Transportation and Communications (MOTC) in Taiwan, which provides lots of API for the members download the transportation data. Before using the function provided in this package, the authentication key is a must, which can be applied from [TDX platform](https://tdx.transportdata.tw/register). After being a member of TDX, you will soon get the Client Id and Client Secret, please check out in the \href{https://tdx.transportdata.tw/user/dataservice/key}{API key Dashboard.}  
+This package can be used to connect transportation data from TDX (Transport Data eXchange) in a neat and efficient way. TDX platform is supported by Ministry of Transportation and Communications (MOTC) in Taiwan, which provides lots of API for the members download the transportation data. Before using the function provided in this package, the authentication key is a must, which can be applied from [TDX platform](https://tdx.transportdata.tw/register). After being a member of TDX, you will soon get the Client Id and Client Secret, please check out in the [API key Dashboard](https://tdx.transportdata.tw/user/dataservice/key).  
 
 
 ## Installation
@@ -50,9 +50,10 @@ kable(TDX_table, booktabs=T)%>%
   row_spec(0, bold=T, color="white", background="#8E8E8E")
 ```
 
-Data retrieving process requires an access token to obtain the data from TDX platform. Every function in this package should use function `get_token()` to obtain the token by entering your Client ID and Client Secret. Note that the access token will expire in 1 day.  
+Data retrieving process requires an access token to obtain the data from TDX platform. Every function in this package should use function `get_token()` to obtain the token by entering your Client ID and Client Secret first. Note that the access token will expire in 1 day.  
 
-Take retrieving MRT stations of Taipei Metro System for example. The code is shown below. Here the argument `client_id` and `client_secret` is the authentication key applied from TDX.    
+Take retrieving MRT stations of Taipei Metro System for example. The code is shown below. Here the argument `client_id` and `client_secret` is the authentication key applied from TDX.  
+
 
 ```{r TDX_test_show, echo=T, eval=F, message=F}
 # get the access token first
