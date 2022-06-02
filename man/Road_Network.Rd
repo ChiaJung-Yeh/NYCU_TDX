@@ -19,6 +19,14 @@ Road_Network(access_token, county, roadclass, dtype="text", out=F)
   \item{roadclass}{Please fill in the road class code of the network. Checking out the appropriate road class code in dataframe \code{TDX_RoadClass}. Note that if \code{ALL} is used, it would retrieve all the road class.}
   \item{dtype}{The class of data, including \code{text} (data frame) and \code{sf} (simple feature). The default value is \code{text}.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data. Note that the directory must contain ".shp" when exporting simple feature. And the directory must contain ".csv" or ".txt" when exporting text file.}}
+\value{
+Codes of RoadClass are listed below.
+  \tabular{rlll}{
+      \tab \strong{0} \tab National Highway\cr
+      \tab \strong{1} \tab Provincial Expressway\cr
+      \tab \strong{3} \tab Provincial Highway\cr
+    }
+}
 \author{
 Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 }

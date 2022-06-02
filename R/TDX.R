@@ -38,6 +38,7 @@ get_token=function(client_id, client_secret){
   if (is.null(content(x)$access_token)){
     stop("Your 'client_id' or 'client_secret' is WRONG!!")
   }else{
+    cat("Connect Successfully! This token will expire in 1 day.")
     return(content(x)$access_token)
   }
 }
@@ -433,17 +434,17 @@ Rail_StationOfLine=function(access_token, operator, out=F){
   if (operator=="TRA"){
     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")),
+                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
                                  TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:TraveledDistance")))
   }else if(operator=="AFR"){
     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")),
+                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
                                  TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:CumulativeDistance")))
   }else{
     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")))
+                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")))
   }
 
   rail_line=as.data.frame(lapply(rail_line, rep, num_of_station))
@@ -595,7 +596,7 @@ Rail_Shape=function(access_token, operator, dtype="text", out=F){
   })
 
   rail_shape=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
-                        LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName")),
+                        LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName//d1:Zh_tw")),
                         Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
   print(paste0("#---", operator, " Shape Downloaded---#"))
@@ -681,6 +682,7 @@ Geocoding=function(access_token, address, dtype="text", out=F){
   if (!require(xml2)) install.packages("xml2")
   if (!require(sf)) install.packages("sf")
   if (!require(urltools)) install.packages("urltools")
+  if (!require(httr)) install.packages("httr")
 
   temp_cou=0
   address_record=data.frame()
@@ -750,6 +752,7 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(sf)) install.packages("sf")
+  if (!require(httr)) install.packages("httr")
 
   if (county %in% c(TDX_County$Code[1:22], "ALL") & roadclass %in% c(0,1,3,"ALL")){
 

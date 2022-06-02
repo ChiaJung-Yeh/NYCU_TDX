@@ -1,11 +1,11 @@
-\name{ScenicSpot}
-\alias{ScenicSpot}
+\name{Tourism}
+\alias{Tourism}
 \docType{data}
 \title{
 Retrieve the geometry of tourism scenic spot
 }
 \description{
-The function is used to download the data of scenic spot, including the spot name, address and geometry.
+The function is used to download the data of tourism, including scenic spot, restaurant, amd hotel. But please note that the data is not
 }
 \usage{
 ScenicSpot(app_id, app_key, county, dtype="text", out=F)
