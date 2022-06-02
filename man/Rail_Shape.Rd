@@ -5,7 +5,7 @@
 Retrieve the shape of railway
 }
 \description{
-The function is used to download the shape of railway. Please fill in the operator to retrieve its geometry.
+The function is used to download the shape of railway. Please fill in the \code{operator} to retrieve its geometry.
 }
 \usage{
 Rail_Shape(access_token, operator, dtype="text", out=F)
