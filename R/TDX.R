@@ -399,7 +399,7 @@ Bus_Schedule=function(access_token, county, out=F){
   return(bus_schedule)
 }
 
-
+Rail_StationOfLine(access_token, "TRTC")
 
 Rail_StationOfLine=function(access_token, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
@@ -434,7 +434,7 @@ Rail_StationOfLine=function(access_token, operator, out=F){
   if (operator=="TRA"){
     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
+                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")),
                                  TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:TraveledDistance")))
   }else if(operator=="AFR"){
     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
