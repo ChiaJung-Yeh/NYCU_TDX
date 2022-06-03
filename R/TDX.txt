@@ -38,6 +38,7 @@ get_token=function(client_id, client_secret){
   if (is.null(content(x)$access_token)){
     stop("Your 'client_id' or 'client_secret' is WRONG!!")
   }else{
+    cat("Connect Successfully! This token will expire in 1 day.")
     return(content(x)$access_token)
   }
 }
@@ -220,7 +221,7 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
   temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteUID)%>%
     dplyr::select(-id)
 
-  SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName"))
+  SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName//d1:Zh_tw"))
   SubRouteName=data.frame(id=which(grepl("SubRouteName", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteName)
   SubRouteName$SubRouteName=substr(SubRouteName$SubRouteName, 1, 5)
   temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteName)%>%
@@ -438,12 +439,12 @@ Rail_StationOfLine=function(access_token, operator, out=F){
   }else if(operator=="AFR"){
     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")),
+                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
                                  TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:CumulativeDistance")))
   }else{
     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")))
+                                 StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")))
   }
 
   rail_line=as.data.frame(lapply(rail_line, rep, num_of_station))
@@ -542,7 +543,7 @@ Rail_Station=function(access_token, operator, dtype="text", out=F){
                             PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")))
   }
 
-  print(paste0("#---", operator, " Station Downloaded---#"))
+  cat(paste0("#---", operator, " Station Downloaded---#\n"))
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
@@ -595,10 +596,10 @@ Rail_Shape=function(access_token, operator, dtype="text", out=F){
   })
 
   rail_shape=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
-                        LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName")),
+                        LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName//d1:Zh_tw")),
                         Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
-  print(paste0("#---", operator, " Shape Downloaded---#"))
+  cat(paste0("#---", operator, " Shape Downloaded---#\n"))
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
@@ -681,6 +682,7 @@ Geocoding=function(access_token, address, dtype="text", out=F){
   if (!require(xml2)) install.packages("xml2")
   if (!require(sf)) install.packages("sf")
   if (!require(urltools)) install.packages("urltools")
+  if (!require(httr)) install.packages("httr")
 
   temp_cou=0
   address_record=data.frame()
@@ -750,6 +752,7 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(sf)) install.packages("sf")
+  if (!require(httr)) install.packages("httr")
 
   if (county %in% c(TDX_County$Code[1:22], "ALL") & roadclass %in% c(0,1,3,"ALL")){
 
@@ -1665,6 +1668,114 @@ Ship_StopOfRoute=function(access_token, county, out=F){
 
 
 
+Bus_RouteFare=function(access_token, county, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+
+  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/RouteFare/City/", county, "?&%24format=XML")
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. Or it might becasue there is no API service for '", county, "' up to now."))
+    }
+  })
+
+  bus_info=data.frame(RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
+                      RouteName=xml_text(xml_find_all(x, xpath=".//d1:RouteName")),
+                      OperatorID=xml_text(xml_find_all(x, xpath=".//d1:OperatorID")),
+                      SubRouteID=xml_text(xml_find_all(x, xpath=".//d1:SubRouteID")),
+                      SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName")),
+                      FarePricingType=xml_text(xml_find_all(x, xpath=".//d1:FarePricingType")),
+                      IsFreeBus=xml_text(xml_find_all(x, xpath=".//d1:IsFreeBus")))
+
+  if (unique(bus_info$FarePricingType)==0){
+    temp=xml_find_all(x, xpath = ".//d1:SectionFares")
+    num_of_buffer=lengths(gregexpr("BufferZones", temp))/2
+    num_of_fares=xml_length(xml_find_all(x, xpath = ".//d1:SectionFare"))-num_of_buffer
+
+    route_buffer=data.frame(SectionSequence=xml_text(xml_find_all(x, xpath=".//d1:SectionSequence")),
+                            Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
+                            BZOStopID=xml_text(xml_find_all(x, xpath=".//d1:FareBufferZoneOrigin//d1:StopID")),
+                            BZOStopName=xml_text(xml_find_all(x, xpath=".//d1:FareBufferZoneOrigin//d1:StopName")),
+                            BZDStopID=xml_text(xml_find_all(x, xpath=".//d1:FareBufferZoneDestination//d1:StopID")),
+                            BZDStopName=xml_text(xml_find_all(x, xpath=".//d1:FareBufferZoneDestination//d1:StopName")))
+
+    bus_info_bz=as.data.frame(lapply(bus_info, rep, num_of_buffer))
+    bus_info_bz=cbind(bus_info_bz, route_buffer)
+
+    route_fare=data.frame(TicketType=xml_text(xml_find_all(x, xpath=".//d1:TicketType")),
+                          FareClass=xml_text(xml_find_all(x, xpath=".//d1:FareClass")),
+                          Price=xml_text(xml_find_all(x, xpath=".//d1:Price")))
+
+    bus_info_fare=as.data.frame(lapply(bus_info, rep, num_of_fares))
+    bus_info_fare=cbind(bus_info_fare, route_fare)
+  }else if (unique(bus_info$FarePricingType)==1){
+    cat(paste0("Sorry! Data is too large. '", county, "` is recorded in OD Fare. Please try another county!", "\n"))
+
+    # cat("Please wait for a while...\n")
+    # temp=xml_find_all(x, xpath = ".//d1:BusRouteFare")
+    # bus_info_od=bus_info[which(grepl("ODFares", temp)),]
+    # num_of_odfare=xml_length(xml_find_all(x, xpath = ".//d1:ODFares"))
+    #
+    # route_fare=data.frame(Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
+    #                       OStopID=xml_text(xml_find_all(x, xpath=".//d1:OriginStop//d1:StopID")),
+    #                       OStopName=xml_text(xml_find_all(x, xpath=".//d1:OriginStop//d1:StopName")),
+    #                       DStopID=xml_text(xml_find_all(x, xpath=".//d1:DestinationStop//d1:StopID")),
+    #                       DStopName=xml_text(xml_find_all(x, xpath=".//d1:DestinationStop//d1:StopName")),
+    #                       TicketType=xml_text(xml_find_all(x, xpath=".//d1:TicketType")),
+    #                       FareClass=xml_text(xml_find_all(x, xpath=".//d1:FareClass")),
+    #                       Price=xml_text(xml_find_all(x, xpath=".//d1:Price")))
+    #
+    # bus_info_od=as.data.frame(lapply(bus_info_od, rep, num_of_odfare))
+    # bus_info_fare=cbind(bus_info_od, route_fare)
+  }else if (unique(bus_info$FarePricingType)==2){
+    num_of_stagefare=xml_length(xml_find_all(x, xpath = ".//d1:StageFares"))
+    num_of_fare=xml_length(xml_find_all(x, xpath = ".//d1:Fares"))
+
+    bus_info_stage=as.data.frame(lapply(bus_info, rep, num_of_stagefare))
+    route_info=data.frame(Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
+                          OStopID=xml_text(xml_find_all(x, xpath=".//d1:OriginStage//d1:StopID")),
+                          OStopName=xml_text(xml_find_all(x, xpath=".//d1:OriginStage//d1:StopName")),
+                          DStopID=xml_text(xml_find_all(x, xpath=".//d1:DestinationStage//d1:StopID")),
+                          DStopName=xml_text(xml_find_all(x, xpath=".//d1:DestinationStage//d1:StopName")))
+
+    bus_info_stage=cbind(bus_info_stage, route_info)
+
+    route_fare=data.frame(TicketType=xml_text(xml_find_all(x, xpath=".//d1:TicketType")),
+                          FareClass=xml_text(xml_find_all(x, xpath=".//d1:FareClass")),
+                          Price=xml_text(xml_find_all(x, xpath=".//d1:Price")))
+
+    bus_info_fare=as.data.frame(lapply(bus_info_stage, rep, num_of_fare))
+    bus_info_fare=cbind(bus_info_stage, route_fare)
+  }
+
+
+  # if (nchar(out)!=0 & out!=F){
+  #   write.csv(shiproute, out, row.names=F)
+  # }
+
+  if (unique(bus_info$FarePricingType)==0){
+    return(list(BufferZone=bus_info_bz, ZoneFare=bus_info_fare))
+  }else if (unique(bus_info$FarePricingType)==2){
+    return(bus_info_fare)
+  }
+}
+
+
+
+
+
+
+
 # Ship_Schedule=function(access_token, county, out=F){
 #   if (!require(dplyr)) install.packages("dplyr")
 #   if (!require(xml2)) install.packages("xml2")
@@ -1738,14 +1849,6 @@ Ship_StopOfRoute=function(access_token, county, out=F){
 #   }
 #   return(stopofroute)
 # }
-
-
-
-
-
-
-
-
 
 
 
