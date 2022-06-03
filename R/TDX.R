@@ -1661,6 +1661,8 @@ Ship_StopOfRoute=function(access_token, county, out=F){
                          PortID=xml_text(xml_find_all(x, xpath=".//d1:PortID")),
                          PortName=xml_text(xml_find_all(x, xpath=".//d1:PortName//d1:Zh_tw")))
 
+  stopofroute=arrange(stopofroute, RouteID, Direction, StopSequence)
+
   if (nchar(out)!=0 & out!=F){
     write.csv(stopofroute, out, row.names=F)
   }
