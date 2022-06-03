@@ -36,9 +36,6 @@ below.
 資料細目
 </th>
 <th style="text-align:left;font-weight: bold;color: white !important;background-color: #8E8E8E !important;">
-資料來源
-</th>
-<th style="text-align:left;font-weight: bold;color: white !important;background-color: #8E8E8E !important;">
 資料型態
 </th>
 <th style="text-align:left;font-weight: bold;color: white !important;background-color: #8E8E8E !important;">
@@ -48,20 +45,17 @@ below.
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="4">
+<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="5">
 軌道
 </td>
 <td style="text-align:left;">
 軌道站點
 </td>
-<td style="text-align:left;vertical-align: middle !important;" rowspan="12">
-PTX
-</td>
 <td style="text-align:left;vertical-align: middle !important;" rowspan="2">
 點
 </td>
 <td style="text-align:left;">
-`Rail_Shape()`
+`Rail_Station()`
 </td>
 </tr>
 <tr>
@@ -69,7 +63,7 @@ PTX
 軌道路線站點
 </td>
 <td style="text-align:left;">
-`Rail_Station()`
+`Rail_StationOfLine()`
 </td>
 </tr>
 <tr>
@@ -80,14 +74,14 @@ PTX
 線
 </td>
 <td style="text-align:left;">
-`Rail_StationOfLine()`
+`Rail_Shape()`
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
 軌道班表
 </td>
-<td style="text-align:left;">
+<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
 文字
 </td>
 <td style="text-align:left;">
@@ -95,7 +89,15 @@ PTX
 </td>
 </tr>
 <tr>
-<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="4">
+<td style="text-align:left;">
+軌道票價
+</td>
+<td style="text-align:left;">
+`Rail_ODFare()`
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="5">
 公車
 </td>
 <td style="text-align:left;">
@@ -134,11 +136,19 @@ PTX
 <td style="text-align:left;">
 公車班表
 </td>
-<td style="text-align:left;">
+<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
 文字
 </td>
 <td style="text-align:left;">
 `Bus_Schedule()`
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+公車站間旅行時間
+</td>
+<td style="text-align:left;">
+`Bus_TravelTime()`
 </td>
 </tr>
 <tr>
@@ -167,8 +177,8 @@ PTX
 </td>
 </tr>
 <tr>
-<td style="text-align:left;font-weight: bold;">
-航空
+<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="4">
+航空與航運
 </td>
 <td style="text-align:left;">
 航空班表
@@ -181,17 +191,47 @@ PTX
 </td>
 </tr>
 <tr>
-<td style="text-align:left;font-weight: bold;">
-觀光景點
-</td>
 <td style="text-align:left;">
-觀光景點點位
+港口點位
 </td>
 <td style="text-align:left;">
 點
 </td>
 <td style="text-align:left;">
-`ScenicSpot()`
+`Ship_Port()`
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+航運航線
+</td>
+<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
+文字
+</td>
+<td style="text-align:left;">
+`Ship_Route()`
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+航線靠港順序
+</td>
+<td style="text-align:left;">
+`Ship_StopOfRoute()`
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+觀光點位
+</td>
+<td style="text-align:left;">
+景點、餐廳、旅館點位
+</td>
+<td style="text-align:left;">
+點
+</td>
+<td style="text-align:left;">
+`Tourism()`
 </td>
 </tr>
 <tr>
@@ -200,9 +240,6 @@ PTX
 </td>
 <td style="text-align:left;">
 道路路網線型
-</td>
-<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
-GIS-T
 </td>
 <td style="text-align:left;">
 線
@@ -246,7 +283,7 @@ is the authentication key applied from TDX.
 
 The result is shown as followings.
 
-    ## [1] "#---TRTC Station Downloaded---#"
+    ## #---TRTC Station Downloaded---#
 
     ##   StationName StationUID StationID LocationCity LocationTown LocationTownCode
     ## 1        頂埔  TRTC-BL01      BL01       新北市       土城區         65000130

@@ -7,4 +7,4 @@
 .DS_Store
 key.txt
 key_old.txt
-temp_token.txt
+access_token.txt
