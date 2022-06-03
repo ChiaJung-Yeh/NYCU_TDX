@@ -221,7 +221,7 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
   temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteUID)%>%
     dplyr::select(-id)
 
-  SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName"))
+  SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName//d1:Zh_tw"))
   SubRouteName=data.frame(id=which(grepl("SubRouteName", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteName)
   SubRouteName$SubRouteName=substr(SubRouteName$SubRouteName, 1, 5)
   temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteName)%>%
