@@ -399,7 +399,7 @@ Bus_Schedule=function(access_token, county, out=F){
   return(bus_schedule)
 }
 
-Rail_StationOfLine(access_token, "TRTC")
+
 
 Rail_StationOfLine=function(access_token, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
