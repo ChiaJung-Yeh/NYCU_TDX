@@ -543,7 +543,7 @@ Rail_Station=function(access_token, operator, dtype="text", out=F){
                             PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")))
   }
 
-  print(paste0("#---", operator, " Station Downloaded---#"))
+  cat(paste0("#---", operator, " Station Downloaded---#\n"))
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
@@ -599,7 +599,7 @@ Rail_Shape=function(access_token, operator, dtype="text", out=F){
                         LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName//d1:Zh_tw")),
                         Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
-  print(paste0("#---", operator, " Shape Downloaded---#"))
+  cat(paste0("#---", operator, " Shape Downloaded---#\n"))
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
