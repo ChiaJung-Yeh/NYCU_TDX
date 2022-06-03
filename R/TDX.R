@@ -777,7 +777,7 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
     }else if (county!="ALL" & roadclass %in% c(0,1,3)){
       # 指定縣市指定道路層級資料
-      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", 0, "'&$format=xml")
+      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", roadclass, "'&$format=xml")
       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
       tryCatch({
@@ -1234,7 +1234,7 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
     }
   })
 
-  # write_xml(x, "./temp.xml")
+
   if (poi=="ScenicSpot"){
     xml_node=c("ScenicSpotTourismInfo//d1:ScenicSpotID","ScenicSpotTourismInfo//d1:ScenicSpotName","ScenicSpotTourismInfo//d1:City",
                "ScenicSpotTourismInfo//d1:Address","ScenicSpotTourismInfo//d1:Phone","ScenicSpotTourismInfo//d1:OpenTime","ScenicSpotTourismInfo//d1:DescriptionDetail",
