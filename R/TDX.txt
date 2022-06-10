@@ -688,55 +688,69 @@ Geocoding=function(access_token, address, dtype="text", out=F){
   if (!require(httr)) install.packages("httr")
   if (!require(progress)) install.packages("progress")
 
-  pb=progress_bar$new(format = "(:spin) [:bar] :percent", total=length(address), clear=F, width=60)
-
-  temp_cou=0
+  pb=progress_bar$new(format="(:spin) [:bar] :percent  ", total=length(address), clear=F, width=80)
   address_record=data.frame()
+  record_fail=c()
 
   for (i in c(1:length(address))){
     pb$tick()
-    tryCatch({
-      # 改版後無法辨識「一」
-      address_temp=gsub("一", 1, address[i])%>%
-        url_encode()
+    nexti=F
+    while (!nexti){
+      tryCatch({
+        # TDX改版後無法辨識「一」
+        address_temp=gsub("一", 1, address[i])%>%
+          url_encode()
 
-      url=paste0("https://tdx.transportdata.tw/api/advanced/V3/Map/GeoCode/Coordinate/Address/", address_temp, "?&$format=JSON")
-      add_temp=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))%>%
-        content()
+        url=paste0("https://tdx.transportdata.tw/api/advanced/V3/Map/GeoCode/Coordinate/Address/", address_temp, "?&$format=JSON")
+        add_temp=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))%>%
+          content()
 
-      if (length(add_temp)==0){
-        cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
-      }else{
-        add_temp=data.frame(AddressOriginal=address[i],
-                            AddressNew=add_temp[[1]]$Address,
-                            Geometry=add_temp[[1]]$Geometry)
-        address_record=rbind(address_record, add_temp)
-      }
+        if (length(add_temp)==0){
+          cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
+          record_fail=c(record_fail, address[i])
+        }else{
+          add_temp=data.frame(AddressOriginal=address[i],
+                              AddressNew=add_temp[[1]]$Address,
+                              Geometry=add_temp[[1]]$Geometry)
+          address_record=rbind(address_record, add_temp)
+        }
+        nexti=T
+        # if((i %% 10==0 | i==length(address))){
+        #   cat(paste0(i, "/", length(address), "\n"))
+        # }
 
-      # if((i %% 10==0 | i==length(address))){
-      #   cat(paste0(i, "/", length(address), "\n"))
-      # }
-
-      temp_cou=i
-    }, error=function(err){
-      cat(paste0("ERROR:", conditionMessage(err), "\n"))
-      if (grepl("Timeout was reached", conditionMessage(err))){
-        i=temp_cou-1
-      }else if (grepl("atomic vectors", conditionMessage(err))){
-        stop(paste0("Your access token is invalid!"))
-      }else{
-        cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
-      }
-    })
+      }, error=function(err){
+        # cat(paste0("ERROR:", conditionMessage(err), "\n"))
+        if (grepl("externalptr", conditionMessage(err))){
+          cat(paste0("Reconnect!\n"))
+          nexti=F
+        }else if (grepl("atomic vectors", conditionMessage(err))){
+          stop(paste0("Your access token is invalid!"))
+        }else{
+          cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
+          record_fail=c(record_fail, address[i])
+          nexti=T
+        }
+      })
+    }
   }
 
+  datanum_ori=nrow(address_record)
   address_record=distinct(address_record)
+  datanum_rev=nrow(address_record)
+
+  cat("Geocoding Summary",
+      paste0("Total:      ", length(address)),
+      paste0("Success:    ", datanum_rev),
+      paste0("Duplicated: ", datanum_ori-datanum_rev),
+      paste0("Fail:        ", length(record_fail)),
+      sep="\n")
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
       write.csv(address_record, out, row.names=F)
     }
-    return(address_record)
+    return(list(SUCCESS=address_record, FAIL=record_fail))
   }else if (dtype=="sf"){
     address_record$Geometry=st_as_sfc(address_record$Geometry)
     address_record=st_sf(address_record, crs=4326)
@@ -747,7 +761,7 @@ Geocoding=function(access_token, address, dtype="text", out=F){
       stop("The file name must contain '.shp'")
     }
 
-    return(address_record)
+    return(list(SUCCESS=address_record, FAIL=record_fail))
   }else{
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
   }
