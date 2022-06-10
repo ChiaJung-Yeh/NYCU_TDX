@@ -686,7 +686,7 @@ Geocoding=function(access_token, address, dtype="text", out=F){
   if (!require(sf)) install.packages("sf")
   if (!require(urltools)) install.packages("urltools")
   if (!require(httr)) install.packages("httr")
-  # if (!require(progress)) install.packages("progress")
+  if (!require(progress)) install.packages("progress")
 
   pb=progress_bar$new(format = "(:spin) [:bar] :percent", total=length(address), clear=F, width=60)
 
