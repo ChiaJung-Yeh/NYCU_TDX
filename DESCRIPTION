@@ -16,4 +16,5 @@ Imports:
     dplyr,
     httr,
     sf,
-    urltools
+    urltools,
+    progress

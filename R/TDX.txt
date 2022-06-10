@@ -3,12 +3,14 @@ library(xml2)
 library(httr)
 library(sf)
 library(urltools)
+library(progress)
 
 usethis::use_package("dplyr")
 usethis::use_package("xml2")
 usethis::use_package("httr")
 usethis::use_package("sf")
 usethis::use_package("urltools")
+usethis::use_package("progress")
 
 # TDX_County=read_xml(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
 # TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = ".//d1:CityName")),
@@ -23,6 +25,7 @@ usethis::use_package("urltools")
 # TDX_RoadClass=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
 #                          RoadClass=c(0,1,3,"ALL"))
 # usethis::use_data(TDX_Railway, overwrite=T)
+
 
 
 #---get the token---#
@@ -683,11 +686,15 @@ Geocoding=function(access_token, address, dtype="text", out=F){
   if (!require(sf)) install.packages("sf")
   if (!require(urltools)) install.packages("urltools")
   if (!require(httr)) install.packages("httr")
+  # if (!require(progress)) install.packages("progress")
+
+  pb=progress_bar$new(format = "(:spin) [:bar] :percent", total=length(address), clear=F, width=60)
 
   temp_cou=0
   address_record=data.frame()
 
   for (i in c(1:length(address))){
+    pb$tick()
     tryCatch({
       # 改版後無法辨識「一」
       address_temp=gsub("一", 1, address[i])%>%
@@ -698,7 +705,7 @@ Geocoding=function(access_token, address, dtype="text", out=F){
         content()
 
       if (length(add_temp)==0){
-        cat(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
+        cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
       }else{
         add_temp=data.frame(AddressOriginal=address[i],
                             AddressNew=add_temp[[1]]$Address,
@@ -706,9 +713,9 @@ Geocoding=function(access_token, address, dtype="text", out=F){
         address_record=rbind(address_record, add_temp)
       }
 
-      if((i %% 10==0 | i==length(address))){
-        cat(paste0(i, "/", length(address), "\n"))
-      }
+      # if((i %% 10==0 | i==length(address))){
+      #   cat(paste0(i, "/", length(address), "\n"))
+      # }
 
       temp_cou=i
     }, error=function(err){
@@ -776,7 +783,7 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
     }else if (county!="ALL" & roadclass %in% c(0,1,3)){
       # 指定縣市指定道路層級資料
-      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", 0, "'&$format=xml")
+      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", roadclass, "'&$format=xml")
       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
       tryCatch({
@@ -1233,7 +1240,7 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
     }
   })
 
-  # write_xml(x, "./temp.xml")
+
   if (poi=="ScenicSpot"){
     xml_node=c("ScenicSpotTourismInfo//d1:ScenicSpotID","ScenicSpotTourismInfo//d1:ScenicSpotName","ScenicSpotTourismInfo//d1:City",
                "ScenicSpotTourismInfo//d1:Address","ScenicSpotTourismInfo//d1:Phone","ScenicSpotTourismInfo//d1:OpenTime","ScenicSpotTourismInfo//d1:DescriptionDetail",
@@ -1659,6 +1666,8 @@ Ship_StopOfRoute=function(access_token, county, out=F){
                          StopSequence=xml_text(xml_find_all(x, xpath=".//d1:StopSequence")),
                          PortID=xml_text(xml_find_all(x, xpath=".//d1:PortID")),
                          PortName=xml_text(xml_find_all(x, xpath=".//d1:PortName//d1:Zh_tw")))
+
+  stopofroute=arrange(stopofroute, RouteID, Direction, StopSequence)
 
   if (nchar(out)!=0 & out!=F){
     write.csv(stopofroute, out, row.names=F)

@@ -10,7 +10,7 @@ usethis::use_package("xml2")
 usethis::use_package("httr")
 usethis::use_package("sf")
 usethis::use_package("urltools")
-# usethis::use_package("progress")
+usethis::use_package("progress")
 
 # TDX_County=read_xml(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
 # TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = ".//d1:CityName")),
