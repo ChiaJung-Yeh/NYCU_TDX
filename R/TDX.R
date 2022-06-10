@@ -3,12 +3,14 @@ library(xml2)
 library(httr)
 library(sf)
 library(urltools)
+library(progress)
 
 usethis::use_package("dplyr")
 usethis::use_package("xml2")
 usethis::use_package("httr")
 usethis::use_package("sf")
 usethis::use_package("urltools")
+# usethis::use_package("progress")
 
 # TDX_County=read_xml(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
 # TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = ".//d1:CityName")),
@@ -684,11 +686,15 @@ Geocoding=function(access_token, address, dtype="text", out=F){
   if (!require(sf)) install.packages("sf")
   if (!require(urltools)) install.packages("urltools")
   if (!require(httr)) install.packages("httr")
+  # if (!require(progress)) install.packages("progress")
+
+  pb=progress_bar$new(format = "(:spin) [:bar] :percent", total=length(address), clear=F, width=60)
 
   temp_cou=0
   address_record=data.frame()
 
   for (i in c(1:length(address))){
+    pb$tick()
     tryCatch({
       # 改版後無法辨識「一」
       address_temp=gsub("一", 1, address[i])%>%
@@ -699,7 +705,7 @@ Geocoding=function(access_token, address, dtype="text", out=F){
         content()
 
       if (length(add_temp)==0){
-        cat(paste0("CANNOT Geocode ", AddressOriginal=address[i]))
+        cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
       }else{
         add_temp=data.frame(AddressOriginal=address[i],
                             AddressNew=add_temp[[1]]$Address,
@@ -707,9 +713,9 @@ Geocoding=function(access_token, address, dtype="text", out=F){
         address_record=rbind(address_record, add_temp)
       }
 
-      if((i %% 10==0 | i==length(address))){
-        cat(paste0(i, "/", length(address), "\n"))
-      }
+      # if((i %% 10==0 | i==length(address))){
+      #   cat(paste0(i, "/", length(address), "\n"))
+      # }
 
       temp_cou=i
     }, error=function(err){
