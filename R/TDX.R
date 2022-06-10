@@ -743,7 +743,7 @@ Geocoding=function(access_token, address, dtype="text", out=F){
       paste0("Total:      ", length(address)),
       paste0("Success:    ", datanum_rev),
       paste0("Duplicated: ", datanum_ori-datanum_rev),
-      paste0("Fail:        ", length(record_fail)),
+      paste0("Fail:       ", length(record_fail)),
       sep="\n")
 
   if (dtype=="text"){
