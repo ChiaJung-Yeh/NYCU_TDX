@@ -633,7 +633,7 @@ Bike_Station=function(access_token, county, dtype="text", out=F){
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bike/Station/", county, "?&$format=XML")
+  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bike/Station/City/", county, "?&$format=XML")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   tryCatch({
