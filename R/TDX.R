@@ -1090,7 +1090,7 @@ Bike_Shape=function(access_token, county, dtype="text", out=F){
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Cycling/Shape/", county, "?&$format=XML")
+  url=paste0("https://tdx.transportdata.tw/api/basic/v3/Map/Bike/Network/CityBike/City/", county, "?&$format=XML")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   tryCatch({
