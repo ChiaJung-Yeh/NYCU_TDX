@@ -219,23 +219,39 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
     }
   })
 
-  SubRouteUID=xml_text(xml_find_all(x, xpath=".//d1:SubRouteUID"))
-  SubRouteUID=data.frame(id=which(grepl("SubRouteUID", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteUID)
-  temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteUID)%>%
-    dplyr::select(-id)
+  # SubRouteUID=xml_text(xml_find_all(x, xpath=".//d1:SubRouteUID"))
+  # SubRouteUID=data.frame(id=which(grepl("SubRouteUID", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteUID)
+  # temp1=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteUID)%>%
+  #   dplyr::select(-id)
+  #
+  # SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName//d1:Zh_tw"))
+  # SubRouteName=data.frame(id=which(grepl("SubRouteName", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteName)
+  # SubRouteName$SubRouteName=substr(SubRouteName$SubRouteName, 1, 5)
+  # temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteName)%>%
+  #   dplyr::select(-id)
+  #
+  # bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
+  #                      RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
+  #                      temp1,
+  #                      temp2,
+  #                      Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
+  #                      Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
-  SubRouteName=xml_text(xml_find_all(x, xpath=".//d1:SubRouteName//d1:Zh_tw"))
-  SubRouteName=data.frame(id=which(grepl("SubRouteName", xml_find_all(x, xpath=".//d1:BusShape"))), SubRouteName)
-  SubRouteName$SubRouteName=substr(SubRouteName$SubRouteName, 1, 5)
-  temp2=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:BusShape"))))), SubRouteName)%>%
-    dplyr::select(-id)
+  xml_node=c("RouteUID","RouteName//d1:Zh_tw","SubRouteUID","SubRouteName//d1:Zh_tw","Geometry")
+  xml_node_name=c("RouteUID","RouteName","SubRouteUID","SubRouteName","Geometry")
 
-  bus_shape=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
-                       RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
-                       temp1,
-                       temp2,
-                       Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
-                       Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
+  bus_shape=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:BusShape//d1:RouteUID"))))
+  for (i in xml_node){
+    node_name=xml_node_name[which(xml_node==i)]
+    temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
+    temp_id=grepl(ifelse(node_name=="SubRouteName", "SubRouteUID", node_name), xml_find_all(x, xpath=".//d1:BusShape"))
+    temp_id=which(temp_id)
+    temp=data.frame(temp_id, temp)
+    colnames(temp)[2]=node_name
+    bus_shape=left_join(bus_shape, temp, by="temp_id")
+    cat(paste0("Attribute '", node_name, "' is parsed\n"))
+  }
+  bus_shape=select(bus_shape, -temp_id)
 
   cat(paste0("#---", county, " Bus Route Downloaded---#\n"))
 
