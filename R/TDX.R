@@ -251,7 +251,7 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
     bus_shape=left_join(bus_shape, temp, by="temp_id")
     cat(paste0("Attribute '", node_name, "' is parsed\n"))
   }
-  bus_shape=select(bus_shape, -temp_id)
+  bus_shape=dplyr::select(bus_shape, -temp_id)
 
   cat(paste0("#---", county, " Bus Route Downloaded---#\n"))
 
@@ -1288,7 +1288,7 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
       poidf=left_join(poidf, temp, by="temp_id")
       cat(paste0("Attribute '", node_name, "' is parsed\n"))
     }
-    poidf=select(poidf, -temp_id)
+    poidf=dplyr::select(poidf, -temp_id)
   }else if (poi=="Restaurant"){
     xml_node=c("RestaurantTourismInfo//d1:RestaurantID","RestaurantTourismInfo//d1:RestaurantName","RestaurantTourismInfo//d1:Class",
                "RestaurantTourismInfo//d1:Address","RestaurantTourismInfo//d1:Phone","RestaurantTourismInfo//d1:OpenTime","RestaurantTourismInfo//d1:Description",
@@ -1306,7 +1306,7 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
       poidf=left_join(poidf, temp, by="temp_id")
       cat(paste0("Attribute '", node_name, "' is parsed\n"))
     }
-    poidf=select(poidf, -temp_id)
+    poidf=dplyr::select(poidf, -temp_id)
   }else if (poi=="Hotel"){
     xml_node=c("HotelTourismInfo//d1:HotelID","HotelTourismInfo//d1:HotelName","HotelTourismInfo//d1:Class","HotelTourismInfo//d1:City",
                "HotelTourismInfo//d1:Address","HotelTourismInfo//d1:Phone","HotelTourismInfo//d1:OpenTime","HotelTourismInfo//d1:Description","HotelTourismInfo//d1:ParkingInfo",
