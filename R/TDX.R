@@ -1812,7 +1812,7 @@ Bus_RouteFare=function(access_token, county, out=F){
 
 
 
-bike_remain_his=function(access_token, county, dates, out=F){
+Bike_Remain_His=function(access_token, county, dates, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(httr)) install.packages("httr")
 
