@@ -32,8 +32,8 @@ Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-Bike_Remain_His(access_token, "Taipei")
-Bike_Remain_His(access_token, "Hsinchu", out="./hsinchu_youbike_availability.shp")
+Bike_Remain_His(access_token, "Taipei", dates="2022-10-30")
+Bike_Remain_His(access_token, "Hsinchu", dates="2022-09-01~2022-09-30", out="./hsinchu_youbike_availability.csv")
 }
 \keyword{datasets}
 
