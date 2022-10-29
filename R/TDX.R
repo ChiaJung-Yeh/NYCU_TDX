@@ -15,14 +15,14 @@ usethis::use_package("progress")
 # TDX_County=read_xml(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
 # TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = ".//d1:CityName")),
 #                       Code=xml_text(xml_find_all(TDX_County, xpath = ".//d1:City")))
-# TDX_County=rbind(TDX_County, cbind(County="å…¬è·¯å®¢é‹", Code="Intercity"))
+# TDX_County=rbind(TDX_County, cbind(County="¤½¸ô«È¹B", Code="Intercity"))
 # usethis::use_data(TDX_County, overwrite=T)
 
-# TDX_Railway=data.frame(Operator=c("è‡ºéµ","é«˜éµ","è‡ºåŒ—æ·é‹","é«˜é›„æ·é‹","æ¡ƒåœ’æ·é‹","æ–°åŒ—æ·é‹","è‡ºä¸­æ·é‹","é«˜é›„è¼•è»Œ","é˜¿é‡Œå±±æž—æ¥­éµè·¯"),
+# TDX_Railway=data.frame(Operator=c("»OÅK","°ªÅK","»O¥_±¶¹B","°ª¶¯±¶¹B","®ç¶é±¶¹B","·s¥_±¶¹B","»O¤¤±¶¹B","°ª¶¯»´­y","ªü¨½¤sªL·~ÅK¸ô"),
 #                        Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT","AFR"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
-# TDX_RoadClass=data.frame(RoadClassName=c("åœ‹é“","çœé“å¿«é€Ÿå…¬è·¯","çœé“ä¸€èˆ¬å…¬è·¯","ä»¥ä¸Šå…¨éƒ¨"),
+# TDX_RoadClass=data.frame(RoadClassName=c("°ê¹D","¬Ù¹D§Ö³t¤½¸ô","¬Ù¹D¤@¯ë¤½¸ô","¥H¤W¥þ³¡"),
 #                          RoadClass=c(0,1,3,"ALL"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
@@ -319,7 +319,7 @@ Bus_Schedule=function(access_token, county, out=F){
     cat(paste0("#---Timetables Downloading---#\n"))
     cat(paste0(length(timetable), " Routes\n"))
 
-    # å°å—æ²’æœ‰TripID
+    # ¥x«n¨S¦³TripID
     if (!(county %in% c("Tainan","KinmenCounty"))){
       bus_schedule_1=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:TripID"))), TripID=xml_text(xml_find_all(x, xpath = ".//d1:TripID")))
     }else{
@@ -346,7 +346,7 @@ Bus_Schedule=function(access_token, county, out=F){
       cat(paste0("Attribute '", node_name, "' is parsed\n"))
     }
 
-    # StopTime (å°ä¸­çš„StopTimeé‡è¤‡ç´€éŒ„)
+    # StopTime (¥x¤¤ªºStopTime­«½Æ¬ö¿ý)
     StopTimes_cumsum=xml_length(xml_find_all(x, xpath=".//d1:Timetable//d1:StopTimes"))
     StopTimes_cumsum=cumsum(StopTimes_cumsum)
     for (i in xml_node[10:14]){
@@ -713,8 +713,8 @@ Geocoding=function(access_token, address, dtype="text", out=F){
     nexti=F
     while (!nexti){
       tryCatch({
-        # TDXæ”¹ç‰ˆå¾Œç„¡æ³•è¾¨è­˜ã€Œä¸€ã€
-        address_temp=gsub("ä¸€", 1, address[i])%>%
+        # TDX§ïª©«áµLªk¿ëÃÑ¡u¤@¡v
+        address_temp=gsub("¤@", 1, address[i])%>%
           url_encode()
 
         url=paste0("https://tdx.transportdata.tw/api/advanced/V3/Map/GeoCode/Coordinate/Address/", address_temp, "?&$format=JSON")
@@ -794,7 +794,7 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
   if (county %in% c(TDX_County$Code[1:22], "ALL") & roadclass %in% c(0,1,3,"ALL")){
 
     if (county!="ALL" & roadclass=="ALL"){
-      # æŒ‡å®šç¸£å¸‚æ‰€æœ‰é“è·¯å±¤ç´šè³‡æ–™
+      # «ü©w¿¤¥«©Ò¦³¹D¸ô¼h¯Å¸ê®Æ
       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?&%24format=XML")
       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
@@ -812,7 +812,7 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
                       RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
     }else if (county!="ALL" & roadclass %in% c(0,1,3)){
-      # æŒ‡å®šç¸£å¸‚æŒ‡å®šé“è·¯å±¤ç´šè³‡æ–™
+      # «ü©w¿¤¥««ü©w¹D¸ô¼h¯Å¸ê®Æ
       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", roadclass, "'&$format=xml")
       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
@@ -830,7 +830,7 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
                       RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
     }else if (county=="ALL" & roadclass %in% c(0,1,3)){
-      # æ‰€æœ‰ç¸£å¸‚æŒ‡å®šé“è·¯å±¤ç´šè³‡æ–™
+      # ©Ò¦³¿¤¥««ü©w¹D¸ô¼h¯Å¸ê®Æ
       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", roadclass, "?&$format=XML")
       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
@@ -848,7 +848,7 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
                       RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
     }else if (county=="ALL" & roadclass=="ALL"){
-      # æ‰€æœ‰ç¸£å¸‚æ‰€æœ‰é“è·¯å±¤ç´šè³‡æ–™
+      # ©Ò¦³¿¤¥«©Ò¦³¹D¸ô¼h¯Å¸ê®Æ
       road=data.frame()
       for (i in c(0,1,3)){
         url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", i, "?&$format=XML")
@@ -1057,7 +1057,8 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
     }else if (operator=="AFR"){
       afr_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
                           RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
-                          Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),                          Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
+                          Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
+                          Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
                           TrainTypeID=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeID")),
                           TrainTypeCode=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeCode")),
                           TrainTypeName=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeName//d1:Zh_tw")),
@@ -1810,6 +1811,30 @@ Bus_RouteFare=function(access_token, county, out=F){
 }
 
 
+
+bike_remain_his=function(access_token, county, dates, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(httr)) install.packages("httr")
+
+  url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/Bike/Availability/", county, "?Dates=", dates, "&%24format=JSONL")
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  bike_remain=read.csv(textConnection(content(x, 'text')), header=F)%>%
+    select(-V7)
+  bike_remain$V1=substr(bike_remain$V1, regexpr(":", bike_remain$V1)+1, 1000)
+  bike_remain$V2=substr(bike_remain$V2, regexpr(":", bike_remain$V2)+1, 1000)
+  bike_remain$V3=substr(bike_remain$V3, regexpr(":", bike_remain$V3)+1, 1000)
+  bike_remain$V4=substr(bike_remain$V4, regexpr(":", bike_remain$V4)+1, 1000)
+  bike_remain$V5=substr(bike_remain$V5, regexpr(":", bike_remain$V5)+1, 1000)
+  bike_remain$V6=substr(bike_remain$V6, regexpr(":", bike_remain$V6)+1, 1000)
+
+  colnames(bike_remain)=c("StationUID","StationID","ServiceAvailable","AvailableRentBikes","AvailableReturnBikes","SrcUpdateTime")
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(bike_remain, out, row.names=F)
+  }
+  return(bike_remain)
+}
 
 
 
