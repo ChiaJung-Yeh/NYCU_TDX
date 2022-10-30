@@ -1658,7 +1658,7 @@ Ship_Port=function(access_token, dtype="text", out=F){
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  url="https://tdx.transportdata.tw/api/basic/v3/Ship/Basic/Port?&%24format=XML"
+  url="https://tdx.transportdata.tw/api/basic/v3/Ship/Port?&%24format=XML"
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   tryCatch({
