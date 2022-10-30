@@ -5,10 +5,10 @@
 Retrieve the parking lot information and location
 }
 \description{
-The function is used to download the datail description and location of parking lot given by a specific county.
+The function is used to download the datail description and location of parking lot (off street) or side parking (on street) given by a specific county.
 }
 \usage{
-Car_Park(access_token, county, dtype="text", out=F)
+Car_Park(access_token, county, street, dtype="text", out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
@@ -16,11 +16,12 @@ Car_Park(access_token, county, dtype="text", out=F)
 \arguments{
   \item{access_token}{Your access token given by TDX platform. This can be derived from the function \code{get_token()}.}
   \item{county}{Please fill in the English county name. Checking out the appropriate county name in dataframe \code{TDX_County}.}
+  \item{street}{Please fill in \code{on} or \code{off}. 'On street' means the parking area is along the road, while 'off street' represents the parking lot. Note that there are few counties provide on street parking data.}
   \item{dtype}{The class of data, including \code{text} (data frame) and \code{sf} (simple feature). The default value is \code{text}.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data. Note that the directory must contain ".shp" when exporting simple feature. And the directory must contain ".csv" or ".txt" when exporting text file.}
 }
 \value{
-Some columns definition are listed below.
+Some columns definition in off street data are listed below.
   \tabular{rlll}{
       \tab \strong{Description}   \tab Detailed information regarding number of parking grid for each type of vehicles (in words).\cr
       \tab \strong{FareDescription} \tab Detailed information regarding the fare (in words).\cr
@@ -48,8 +49,8 @@ Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-Car_Park(access_token, "Taipei")
-Car_Park(access_token, "Hsinchu", dtype="sf", out="./Hsinchu_parkinglot.shp")
+Car_Park(access_token, "Taipei", street="off")
+Car_Park(access_token, "Tainan", street="on", dtype="sf", out="./TainanParking.shp")
 }
 \keyword{datasets}
 

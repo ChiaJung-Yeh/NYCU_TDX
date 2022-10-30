@@ -123,12 +123,12 @@ Bus_StopOfRoute=function(access_token, county, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(bus_stop, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(bus_stop)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -267,12 +267,12 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(bus_shape, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(bus_shape)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -576,12 +576,12 @@ Rail_Station=function(access_token, operator, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(rail_station, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(rail_station)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -632,12 +632,12 @@ Rail_Shape=function(access_token, operator, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(rail_shape, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(rail_shape)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -685,12 +685,12 @@ Bike_Station=function(access_token, county, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(bike_station, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(bike_station)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -774,12 +774,12 @@ Geocoding=function(access_token, address, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(address_record, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(list(SUCCESS=address_record, FAIL=record_fail))
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -891,12 +891,12 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(road, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(road)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -1155,12 +1155,12 @@ Bike_Shape=function(access_token, county, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(bike_shape, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(bike_shape)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -1341,12 +1341,12 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(poidf, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(poidf)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -1522,64 +1522,131 @@ Rail_ODFare=function(access_token, operator, out=F){
 
 
 
-Car_Park=function(access_token, county, dtype="text", out=F){
+Car_Park=function(access_token, county, street, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  url=paste0("https://tdx.transportdata.tw/api/basic/v1/Parking/OffStreet/CarPark/City/", county, "?&%24format=XML")
-  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  if(street=="off"){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v1/Parking/OffStreet/CarPark/City/", county, "?&%24format=XML")
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
-  tryCatch({
-    x=read_xml(x)
-  }, error=function(err){
-    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
 
-    if (grepl("Unauthorized", conditionMessage(err))){
-      stop(paste0("Your access token is invalid!"))
+      if (grepl("Unauthorized", conditionMessage(err))){
+        stop(paste0("Your access token is invalid!"))
+      }else{
+        print(TDX_County)
+        stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+      }
+    })
+
+    xml_node=c("CarParkID","CarParkName//d1:Zh_tw","OperatorID","Description","Telephone","PositionLat","PositionLon","Address","FareDescription","IsPublic","OperationType",
+               "LiveOccuppancyAvailable","EVRechargingAvailable","MonthlyTicketAvailable","SeasonTicketAvailable","ReservationAvailable","WheelchairAccessible","OvernightPermitted")
+    xml_node_name=c("CarParkID","CarParkName","OperatorID","Description","Telephone","PositionLat","PositionLon","Address","FareDescription","IsPublic","OperationType",
+                    "LiveOccuppancyAvailable","EVRechargingAvailable","MonthlyTicketAvailable","SeasonTicketAvailable","ReservationAvailable","WheelchairAccessible","OvernightPermitted")
+
+    carpark=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:CarPark"))))
+    for (i in xml_node){
+      node_name=xml_node_name[which(xml_node==i)]
+      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
+      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:CarPark"))
+      temp_id=which(temp_id)
+      temp=data.frame(temp_id, temp)
+      colnames(temp)[2]=node_name
+      carpark=left_join(carpark, temp, by="temp_id")
+      cat(paste0("Attribute '", node_name, "' is parsed\n"))
+    }
+    carpark=select(carpark, -temp_id)
+
+    if (dtype=="text"){
+      if (nchar(out)!=0 & out!=F){
+        write.csv(carpark, out, row.names=F)
+      }
+      return(carpark)
+    }else if (dtype=="sf"){
+      carpark$Geometry=st_as_sfc(paste0("POINT(", carpark$PositionLon, " ", carpark$PositionLat, ")"))
+      carpark=st_sf(carpark, crs=4326)
+
+      if (grepl(".shp", out) & out!=F){
+        write_sf(carpark, out, layer_options="ENCODING=UTF-8")
+      }else if (!(grepl(".shp", out)) & out!=F){
+        stop("The file name must contain '.shp'\n")
+      }
+
+      return(carpark)
     }else{
-      print(TDX_County)
-      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+      stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
     }
-  })
+  }else if(street=="on"){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v1/Parking/OnStreet/ParkingSpot/City/", county, "?%24format=XML")
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
-  xml_node=c("CarParkID","CarParkName//d1:Zh_tw","OperatorID","Description","Telephone","PositionLat","PositionLon","Address","FareDescription","IsPublic","OperationType",
-             "LiveOccuppancyAvailable","EVRechargingAvailable","MonthlyTicketAvailable","SeasonTicketAvailable","ReservationAvailable","WheelchairAccessible","OvernightPermitted")
-  xml_node_name=c("CarParkID","CarParkName","OperatorID","Description","Telephone","PositionLat","PositionLon","Address","FareDescription","IsPublic","OperationType",
-                  "LiveOccuppancyAvailable","EVRechargingAvailable","MonthlyTicketAvailable","SeasonTicketAvailable","ReservationAvailable","WheelchairAccessible","OvernightPermitted")
+    tryCatch({
+      x=read_xml(x)
+    }, error=function(err){
+      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
 
-  carpark=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:CarPark"))))
-  for (i in xml_node){
-    node_name=xml_node_name[which(xml_node==i)]
-    temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
-    temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:CarPark"))
-    temp_id=which(temp_id)
-    temp=data.frame(temp_id, temp)
-    colnames(temp)[2]=node_name
-    carpark=left_join(carpark, temp, by="temp_id")
-    cat(paste0("Attribute '", node_name, "' is parsed\n"))
-  }
-  carpark=select(carpark, -temp_id)
+      if (grepl("Unauthorized", conditionMessage(err))){
+        stop(paste0("Your access token is invalid!"))
+      }else{
+        print(TDX_County)
+        stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+      }
+    })
 
-  if (dtype=="text"){
-    if (nchar(out)!=0 & out!=F){
-      write.csv(carpark, out, row.names=F)
+    xml_node=c("ParkingSegmentID","ParkingSpotID","PositionLat","PositionLon","SpaceType","HasChargingPoint","Geometry")
+
+    carpark=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:ParkingSegmentSpot"))))
+    for (i in xml_node){
+      node_name=xml_node[which(xml_node==i)]
+      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
+      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:ParkingSegmentSpot"))
+      temp_id=which(temp_id)
+      temp=data.frame(temp_id, temp)
+      colnames(temp)[2]=node_name
+      carpark=left_join(carpark, temp, by="temp_id")
+      cat(paste0("Attribute '", node_name, "' is parsed\n"))
     }
-    return(carpark)
-  }else if (dtype=="sf"){
-    carpark$Geometry=st_as_sfc(paste0("POINT(", carpark$PositionLon, " ", carpark$PositionLat, ")"))
-    carpark=st_sf(carpark, crs=4326)
+    carpark=select(carpark, -temp_id)%>%
+      filter(!is.na(ParkingSegmentID))
 
-    if (grepl(".shp", out) & out!=F){
-      write_sf(carpark, out, layer_options="ENCODING=UTF-8")
-    }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+    if(nrow(carpark)==0){
+      stop(paste0("Data of on street parking in '", county, "' has not been uploaded up to now."))
     }
 
-    return(carpark)
+    if (dtype=="text"){
+      if (nchar(out)!=0 & out!=F){
+        write.csv(carpark, out, row.names=F)
+      }
+      return(carpark)
+    }else if (dtype=="sf"){
+      if(sum(is.na(carpark$Geometry))>0){
+        cat("Data provides 'POINT' geometry.\n")
+        carpark$Geometry=st_as_sfc(paste0("POINT(", carpark$PositionLon, " ", carpark$PositionLat, ")"))
+        carpark=st_sf(carpark, crs=4326)
+      }else{
+        cat("Data provides 'POLYGON' geometry.\n")
+        carpark$Geometry=st_as_sfc(carpark$Geometry)
+        carpark=st_sf(carpark, crs=3826)
+      }
+
+      if (grepl(".shp", out) & out!=F){
+        write_sf(carpark, out, layer_options="ENCODING=UTF-8")
+      }else if (!(grepl(".shp", out)) & out!=F){
+        stop("The file name must contain '.shp'\n")
+      }
+
+      return(carpark)
+    }else{
+      stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+    }
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop("'street' must be 'on' or 'off'.")
   }
 }
 
@@ -1619,12 +1686,12 @@ Ship_Port=function(access_token, dtype="text", out=F){
     if (grepl(".shp", out) & out!=F){
       write_sf(shipport, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'")
+      stop("The file name must contain '.shp'\n")
     }
 
     return(shipport)
   }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'."))
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
@@ -1835,6 +1902,134 @@ Bike_Remain_His=function(access_token, county, dates, out=F){
   }
   return(bike_remain)
 }
+
+
+
+Freeway_Shape=function(geotype, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
+
+  if(geotype=="section"){
+    # SectionID
+    x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/Section.xml")
+    freeway_section=data.frame(SectionID=xml_text(xml_find_all(x, xpath = ".//d1:SectionID")),
+                               SubAuthorityCode=xml_text(xml_find_all(x, xpath = ".//d1:SubAuthorityCode")),
+                               SectionName=xml_text(xml_find_all(x, xpath = ".//d1:SectionName")),
+                               RoadID=xml_text(xml_find_all(x, xpath = ".//d1:RoadID")),
+                               RoadName=xml_text(xml_find_all(x, xpath = ".//d1:RoadName")),
+                               RoadClass=xml_text(xml_find_all(x, xpath = ".//d1:RoadClass")),
+                               RoadDirection=xml_text(xml_find_all(x, xpath = ".//d1:RoadDirection")),
+                               RoadSection_start=xml_text(xml_find_all(x, xpath = ".//d1:Start")),
+                               RoadSection_end=xml_text(xml_find_all(x, xpath = ".//d1:End")),
+                               SectionLength=xml_text(xml_find_all(x, xpath = ".//d1:SectionLength")),
+                               SectionMile_start=xml_text(xml_find_all(x, xpath = ".//d1:StartKM")),
+                               SectionMile_end=xml_text(xml_find_all(x, xpath = ".//d1:EndKM")),
+                               SpeedLimit=xml_text(xml_find_all(x, xpath = ".//d1:SpeedLimit")))
+
+    # SectionID shape
+    x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/SectionShape.xml")
+    freeway_section_shape=data.frame(SectionID=xml_text(xml_find_all(x, xpath = ".//d1:SectionID")),
+                                     Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
+    freeway_shape=left_join(freeway_section, freeway_section_shape)%>%
+      filter(!is.na(Geometry))
+
+    if(dtype=="sf"){
+      freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(Geometry))%>%
+        st_sf(crs=4326)
+    }
+
+  }else if(geotype=="link"){
+    # LinkID
+    x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/SectionLink.xml")
+    freeway_shape=data.frame(SectionID=rep(xml_text(xml_find_all(x, xpath = ".//d1:SectionID")), times=xml_length(xml_find_all(x, xpath = ".//d1:LinkIDs"))),
+                             LinkID=xml_text(xml_find_all(x, xpath = ".//d1:LinkID")))
+    temp_id=paste0('"', freeway_shape$LinkID, '"')
+    temp_id=paste0("[", paste(temp_id, collapse=","), "]")
+
+    # LinkID
+    x=POST("https://link.motc.gov.tw/v2/Road/Link/Shape/Geometry/WKT?$format=JSON",
+           content_type("application/json"),
+           body=temp_id)
+    temp=content(x)
+    temp=data.frame(LinkID=do.call(rbind, lapply(c(1:length(temp)), function (i) temp[[i]]$LinkID)),
+                    Geometry=do.call(rbind, lapply(c(1:length(temp)), function (i) temp[[i]]$Geometry)))%>%
+      distinct()
+    freeway_shape=left_join(freeway_shape, temp)%>%
+      filter(!(is.na(Geometry)))
+
+    if(dtype=="sf"){
+      freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(Geometry))%>%
+        st_sf(crs=4326)
+    }
+
+  }else if(geotype=="gantry"){
+    # GantryID
+    x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/ETag.xml")
+    freeway_shape=data.frame(ETagGantryID=xml_text(xml_find_all(x, xpath = ".//d1:ETagGantryID")),
+                             LinkID=xml_text(xml_find_all(x, xpath = ".//d1:LinkID")),
+                             LocationType=xml_text(xml_find_all(x, xpath = ".//d1:LocationType")),
+                             PositionLon=xml_text(xml_find_all(x, xpath = ".//d1:PositionLon")),
+                             PositionLat=xml_text(xml_find_all(x, xpath = ".//d1:PositionLat")),
+                             RoadID=xml_text(xml_find_all(x, xpath = ".//d1:RoadID")),
+                             RoadName=xml_text(xml_find_all(x, xpath = ".//d1:RoadName")),
+                             RoadClass=xml_text(xml_find_all(x, xpath = ".//d1:RoadClass")),
+                             RoadDirection=xml_text(xml_find_all(x, xpath = ".//d1:RoadDirection")),
+                             Start=xml_text(xml_find_all(x, xpath = ".//d1:RoadSection//d1:Start")),
+                             End=xml_text(xml_find_all(x, xpath = ".//d1:RoadSection//d1:End")),
+                             LocationMile=xml_text(xml_find_all(x, xpath = ".//d1:LocationMile")))
+
+    if(dtype=="sf"){
+      freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(paste0("POINT(", PositionLon, " ", PositionLat, ")")))%>%
+        st_sf(crs=4326)
+    }
+
+  }else if(geotype=="gantryod"){
+    x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/ETagPair.xml")
+    freeway_shape=data.frame(ETagPairID=xml_text(xml_find_all(x, xpath = ".//d1:ETagPairID")),
+                             StartETagGantryID=xml_text(xml_find_all(x, xpath = ".//d1:StartETagGantryID")),
+                             EndETagGantryID=xml_text(xml_find_all(x, xpath = ".//d1:EndETagGantryID")),
+                             Description=xml_text(xml_find_all(x, xpath = ".//d1:Description")),
+                             Distance=xml_text(xml_find_all(x, xpath = ".//d1:Distance")),
+                             StartLinkID=xml_text(xml_find_all(x, xpath = ".//d1:StartLinkID")),
+                             EndLinkID=xml_text(xml_find_all(x, xpath = ".//d1:EndLinkID")),
+                             Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
+
+    if(dtype=="sf"){
+      freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(Geometry))%>%
+        st_sf(crs=4326)
+    }
+  }else{
+    stop("'geotype' must be 'section', 'link', 'ganty', or, 'gantryod'.\n")
+  }
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(freeway_shape, out, row.names=F)
+    }
+    return(freeway_shape)
+  }else if (dtype=="sf"){
+    if (grepl(".shp", out) & out!=F){
+      write_sf(freeway_shape, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      stop("The file name must contain '.shp'\n")
+    }
+
+    return(freeway_shape)
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+}
+
+
+
+
+
+
+
+
+
 
 
 
