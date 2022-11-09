@@ -41,7 +41,7 @@ get_token=function(client_id, client_secret){
   if (is.null(content(x)$access_token)){
     stop("Your 'client_id' or 'client_secret' is WRONG!!")
   }else{
-    cat("Connect Successfully! This token will expire in 1 day.")
+    cat("Connect Successfully! This token will expire in 1 day.\n")
     return(content(x)$access_token)
   }
 }
@@ -2035,15 +2035,81 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
 }
 
 
+District_Shape=function(access_token, district, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
+
+  url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/District/Boundary/", district, "?%24format=XML")
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    x=read_xml(x)
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }else{
+      stop(paste0("Parameter 'district' should be 'City', 'Town', or 'Village'."))
+    }
+  })
+
+  if(district=="City"){
+    district=data.frame(CityName=xml_text(xml_find_all(x, xpath = ".//CityName")),
+                        City=xml_text(xml_find_all(x, xpath = ".//City")),
+                        Geometry=xml_text(xml_find_all(x, xpath = ".//Geometry")))
+  }else if(district=="Town"){
+    district=data.frame(CityName=xml_text(xml_find_all(x, xpath = ".//CityName")),
+                        City=xml_text(xml_find_all(x, xpath = ".//City")),
+                        TownCode=xml_text(xml_find_all(x, xpath = ".//TownCode")),
+                        TownName=xml_text(xml_find_all(x, xpath = ".//TownName")),
+                        Geometry=xml_text(xml_find_all(x, xpath = ".//Geometry")))
+  }else if(district=="Village"){
+    district=data.frame(CityName=xml_text(xml_find_all(x, xpath = ".//CityName")),
+                        City=xml_text(xml_find_all(x, xpath = ".//City")),
+                        TownCode=xml_text(xml_find_all(x, xpath = ".//TownCode")),
+                        TownName=xml_text(xml_find_all(x, xpath = ".//TownName")),
+                        VillageCode=xml_text(xml_find_all(x, xpath = ".//VillageCode")),
+                        VillageName=xml_text(xml_find_all(x, xpath = ".//VillageName")),
+                        Geometry=xml_text(xml_find_all(x, xpath = ".//Geometry")))
+  }
+
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(district, out, row.names=F)
+    }
+    return(district)
+  }else if (dtype=="sf"){
+    district$Geometry=st_as_sfc(district$Geometry)
+    district=st_sf(district, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(district, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      stop("The file name must contain '.shp'\n")
+    }
+
+    return(district)
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+}
 
 
 
 
 
-
-
-
-
+# url="https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF10291E7900044046FD3&STTIME=111Y06M&STUNIT=U01VI&BOUNDARY=¥þ°ê&SUBBOUNDARY=&TYPE=CSV"
+# download.file(url, "./temp_pop.zip", mode="wb")
+#
+# untar("temp_pop.zip", exdir="temp_pop")
+# dir_file=paste0(dir("temp_pop", full.names=T), "/", dir(dir("temp_pop", full.names=T)))
+# dir_file=dir_file[grepl(".csv", dir_file)]
+# population=read.csv(dir_file)
+# population=population[-1, ]
 
 
 
