@@ -929,6 +929,7 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
       stop(paste0("Your access token is invalid!"))
     })
 
+
     if (operator=="TRA"){
       station=data.frame(StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
                          StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
@@ -955,13 +956,24 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
                          StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
                          Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
                          DestinationStaionID=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStaionID")),
-                         DestinationStationName=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStationName/d1:Zh_tw")))
+                         DestinationStationName=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStationName/d1:Zh_tw")),
+                         ServiceTag=xml_text(xml_find_all(x, xpath = ".//d1:ServiceTag")),
+                         Monday=xml_text(xml_find_all(x, xpath = ".//d1:Monday")),
+                         Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Tuesday")),
+                         Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Wednesday")),
+                         Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Thursday")),
+                         Friday=xml_text(xml_find_all(x, xpath = ".//d1:Friday")),
+                         Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Saturday")),
+                         Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Sunday")),
+                         NationalHolidays=xml_text(xml_find_all(x, xpath = ".//d1:NationalHolidays")))
+
 
       num_of_table=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
 
       rail_timetable_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
                                      ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
-                                     DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")))
+                                     DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")),
+                                     TrainType=xml_text(xml_find_all(x, xpath = ".//d1:TrainType")))
 
       station=as.data.frame(lapply(station, rep, num_of_table))
       rail_timetable=cbind(station, rail_timetable_temp)
