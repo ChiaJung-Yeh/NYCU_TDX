@@ -2106,39 +2106,33 @@ District_Shape=function(access_token, district, dtype="text", out=F){
 
 
 
+Population=function(district, time, out=F){
+  time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+  if(district=="County"){
+    url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&STTIME=", time_rev, "&code=3025FF02BBFBF1024A2ACA584EFA2EF4&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=CSV")
+  }else if(district=="Town"){
+    url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1025C84B70DD22071F5&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
+  }else if(district=="Village"){
+    url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF10291E7900044046FD3&STTIME=", time_rev, "&STUNIT=U01VI&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
+  }
+  download.file(url, "./temp_pop.zip", mode="wb")
 
+  untar("temp_pop.zip", exdir="temp_pop")
+  dir_file=paste0(dir("temp_pop", full.names=T), "/", dir(dir("temp_pop", full.names=T)))
+  dir_file=dir_file[grepl(".csv", dir_file)]
+  population=read.csv(dir_file)
+  population=population[-1, ]
+  unlink('temp_pop', recursive=TRUE)
+  file.remove("temp_pop.zip")
+  # file.remove("temp_pop")
+  colnames(population)[c(1:6)]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLCODE","VILLNAME")
+  population$VILLCODE=gsub("-", "", population$VILLCODE)
 
-# temp=Population(district="Village", time="2022-03")
-#
-# time="2020-09"
-#
-# Population=function(district, time, out=F){
-#   time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
-#   if(district=="County"){
-#     url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1024A2ACA584EFA2EF4&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=全國&TYPE=CSV")
-#   }else if(district=="Town"){
-#     url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1025C84B70DD22071F5&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=全國&SUBBOUNDARY=&TYPE=CSV")
-#   }else if(district=="Village"){
-#     url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF10291E7900044046FD3&STTIME=", time_rev, "&STUNIT=U01VI&BOUNDARY=全國&SUBBOUNDARY=&TYPE=CSV")
-#   }
-#   download.file(url, "./temp_pop.zip", mode="wb")
-#
-#   untar("temp_pop.zip", exdir="temp_pop")
-#   dir_file=paste0(dir("temp_pop", full.names=T), "/", dir(dir("temp_pop", full.names=T)))
-#   dir_file=dir_file[grepl(".csv", dir_file)]
-#   population=read.csv(dir_file)
-#   population=population[-1, ]
-#   unlink('temp_pop', recursive=TRUE)
-#   file.remove("temp_pop.zip")
-#   file.remove("temp_pop")
-#   colnames(population)[c(1:6)]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLCODE","VILLNAME")
-#   population$VILLCODE=gsub("-", "", population$VILLCODE)
-#
-#   if (nchar(out)!=0 & out!=F){
-#     write.csv(population, out, row.names=F)
-#   }
-#   return(population)
-# }
+  if (nchar(out)!=0 & out!=F){
+    write.csv(population, out, row.names=F)
+  }
+  return(population)
+}
 
 
 
