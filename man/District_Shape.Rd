@@ -1,5 +1,5 @@
-\name{District}
-\alias{District}
+\name{District_Shape}
+\alias{District_Shape}
 \docType{data}
 \title{
 Retrieve the geometry of district
@@ -8,7 +8,7 @@ Retrieve the geometry of district
 The function is used to download the geometry of districts in Taiwan, including city, town, and village.
 }
 \usage{
-District(access_token, district, dtype="text", out=F)
+District_Shape(access_token, district, dtype="text", out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
@@ -32,8 +32,8 @@ Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-District(access_token, "City")
-District(access_token, "Village", dtype="sf", out="./taiwan_village.shp")
+District_Shape(access_token, "City")
+District_Shape(access_token, "Village", dtype="sf", out="./taiwan_village.shp")
 }
 \keyword{datasets}
 

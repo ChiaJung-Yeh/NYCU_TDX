@@ -2035,13 +2035,16 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
 }
 
 
+
 District_Shape=function(access_token, district, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/District/Boundary/", district, "?%24format=XML")
+  cat("Please wait for a while!\n")
+
+  url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/District/Boundary/", ifelse(district=="County", "City", district), "?%24format=XML")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   tryCatch({
@@ -2052,47 +2055,50 @@ District_Shape=function(access_token, district, dtype="text", out=F){
     if (grepl("Unauthorized", conditionMessage(err))){
       stop(paste0("Your access token is invalid!"))
     }else{
-      stop(paste0("Parameter 'district' should be 'City', 'Town', or 'Village'."))
+      stop(paste0("Parameter 'district' should be 'County', 'Town', or 'Village'."))
     }
   })
 
-  if(district=="City"){
-    district=data.frame(CityName=xml_text(xml_find_all(x, xpath = ".//CityName")),
-                        City=xml_text(xml_find_all(x, xpath = ".//City")),
-                        Geometry=xml_text(xml_find_all(x, xpath = ".//Geometry")))
+  if(district=="County"){
+    district_shape=data.frame(COUNTYNAME=xml_text(xml_find_all(x, xpath = ".//CityName")),
+                              Geometry=xml_text(xml_find_all(x, xpath = ".//Geometry")))
   }else if(district=="Town"){
-    district=data.frame(CityName=xml_text(xml_find_all(x, xpath = ".//CityName")),
-                        City=xml_text(xml_find_all(x, xpath = ".//City")),
-                        TownCode=xml_text(xml_find_all(x, xpath = ".//TownCode")),
-                        TownName=xml_text(xml_find_all(x, xpath = ".//TownName")),
-                        Geometry=xml_text(xml_find_all(x, xpath = ".//Geometry")))
+    district_shape=data.frame(COUNTYNAME=xml_text(xml_find_all(x, xpath = ".//CityName")),
+                              TOWNCODE=xml_text(xml_find_all(x, xpath = ".//TownCode")),
+                              TownName=xml_text(xml_find_all(x, xpath = ".//TownName")),
+                              Geometry=xml_text(xml_find_all(x, xpath = ".//Geometry")))
   }else if(district=="Village"){
-    district=data.frame(CityName=xml_text(xml_find_all(x, xpath = ".//CityName")),
-                        City=xml_text(xml_find_all(x, xpath = ".//City")),
-                        TownCode=xml_text(xml_find_all(x, xpath = ".//TownCode")),
-                        TownName=xml_text(xml_find_all(x, xpath = ".//TownName")),
-                        VillageCode=xml_text(xml_find_all(x, xpath = ".//VillageCode")),
-                        VillageName=xml_text(xml_find_all(x, xpath = ".//VillageName")),
-                        Geometry=xml_text(xml_find_all(x, xpath = ".//Geometry")))
+    district_shape=data.frame(COUNTYNAME=xml_text(xml_find_all(x, xpath = ".//CityName")),
+                              TOWNCODE=xml_text(xml_find_all(x, xpath = ".//TownCode")),
+                              TOWNNAME=xml_text(xml_find_all(x, xpath = ".//TownName")),
+                              VILLCODE=xml_text(xml_find_all(x, xpath = ".//VillageCode")),
+                              VILLNAME=xml_text(xml_find_all(x, xpath = ".//VillageName")),
+                              Geometry=xml_text(xml_find_all(x, xpath = ".//Geometry")))
   }
+
+  temp=data.frame(COUNTYNAME=TDX_County$County[1:22],
+                  COUNTYCODE=c("63000","65000","68000","66000","67000","64000","10017","10018","10004","10005","10007","10008","10009","10010","10020","10013","10002","10015","10014","09020","10016","09007"))
+
+  district_shape=left_join(district_shape, temp, by="COUNTYNAME")
+  district_shape=dplyr::select(district_shape, all_of(c("COUNTYCODE", "COUNTYNAME", names(district_shape)[2:(ncol(district_shape)-1)])))
 
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
-      write.csv(district, out, row.names=F)
+      write.csv(district_shape, out, row.names=F)
     }
-    return(district)
+    return(district_shape)
   }else if (dtype=="sf"){
-    district$Geometry=st_as_sfc(district$Geometry)
-    district=st_sf(district, crs=4326)
+    district_shape$Geometry=st_as_sfc(district_shape$Geometry)
+    district_shape=st_sf(district_shape, crs=4326)
 
     if (grepl(".shp", out) & out!=F){
-      write_sf(district, out, layer_options="ENCODING=UTF-8")
+      write_sf(district_shape, out, layer_options="ENCODING=UTF-8")
     }else if (!(grepl(".shp", out)) & out!=F){
       stop("The file name must contain '.shp'\n")
     }
 
-    return(district)
+    return(district_shape)
   }else{
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
@@ -2102,14 +2108,39 @@ District_Shape=function(access_token, district, dtype="text", out=F){
 
 
 
-# url="https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF10291E7900044046FD3&STTIME=111Y06M&STUNIT=U01VI&BOUNDARY=全國&SUBBOUNDARY=&TYPE=CSV"
-# download.file(url, "./temp_pop.zip", mode="wb")
+# temp=Population(district="Village", time="2022-03")
 #
-# untar("temp_pop.zip", exdir="temp_pop")
-# dir_file=paste0(dir("temp_pop", full.names=T), "/", dir(dir("temp_pop", full.names=T)))
-# dir_file=dir_file[grepl(".csv", dir_file)]
-# population=read.csv(dir_file)
-# population=population[-1, ]
+# time="2020-09"
+#
+# Population=function(district, time, out=F){
+#   time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+#   if(district=="County"){
+#     url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1024A2ACA584EFA2EF4&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=全國&TYPE=CSV")
+#   }else if(district=="Town"){
+#     url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1025C84B70DD22071F5&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=全國&SUBBOUNDARY=&TYPE=CSV")
+#   }else if(district=="Village"){
+#     url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF10291E7900044046FD3&STTIME=", time_rev, "&STUNIT=U01VI&BOUNDARY=全國&SUBBOUNDARY=&TYPE=CSV")
+#   }
+#   download.file(url, "./temp_pop.zip", mode="wb")
+#
+#   untar("temp_pop.zip", exdir="temp_pop")
+#   dir_file=paste0(dir("temp_pop", full.names=T), "/", dir(dir("temp_pop", full.names=T)))
+#   dir_file=dir_file[grepl(".csv", dir_file)]
+#   population=read.csv(dir_file)
+#   population=population[-1, ]
+#   unlink('temp_pop', recursive=TRUE)
+#   file.remove("temp_pop.zip")
+#   file.remove("temp_pop")
+#   colnames(population)[c(1:6)]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLCODE","VILLNAME")
+#   population$VILLCODE=gsub("-", "", population$VILLCODE)
+#
+#   if (nchar(out)!=0 & out!=F){
+#     write.csv(population, out, row.names=F)
+#   }
+#   return(population)
+# }
+
+
 
 
 
