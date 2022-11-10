@@ -26,11 +26,12 @@ usethis::use_package("progress")
 #                          RoadClass=c(0,1,3,"ALL"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
-
+access_token=get_token(client_id, client_secret, store="C:/Users/ASUS/Desktop/TDX_TEST")
 
 #---get the token---#
 get_token=function(client_id, client_secret, store=NA){
   if (!require(httr)) install.packages("httr")
+  if (!require(xml2)) install.packages("xml2")
 
   if(!is.na(store) & sum(grepl("access_token.txt", dir(store)))==1){
     act=read.table(paste0(store, "/access_token.txt"))$V1
