@@ -33,18 +33,20 @@ get_token=function(client_id, client_secret, store=NA){
   if (!require(httr)) install.packages("httr")
   if (!require(xml2)) install.packages("xml2")
 
-  if(!is.na(store) & sum(grepl("access_token.txt", dir(store)))==1){
-    act=read.table(paste0(store, "/access_token.txt"))$V1
-    x=GET("https://tdx.transportdata.tw/api/basic/v2/Basic/County?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", act)))
+  if(!is.na(store)){
+    if(sum(grepl("access_token.txt", dir(store)))==1){
+      act=read.table(paste0(store, "/access_token.txt"))$V1
+      x=GET("https://tdx.transportdata.tw/api/basic/v2/Basic/County?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", act)))
 
-    tryCatch({
-      x=read_xml(x)
-      cat(paste0("The access token stored in ", store, " is valid. Use it!\n"))
-      return(act)
-      break
-    }, error=function(err){
-      cat(paste0("The access token is expired or invalid. Get newer one!\n"))
-    })
+      tryCatch({
+        x=read_xml(x)
+        cat(paste0("The access token stored in ", store, " is valid. Use it!\n"))
+        return(act)
+        break
+      }, error=function(err){
+        cat(paste0("The access token is expired or invalid. Get newer one!\n"))
+      })
+    }
   }
 
   x=POST("https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token",
@@ -66,6 +68,8 @@ get_token=function(client_id, client_secret, store=NA){
     return(act)
   }
 }
+
+# access_token=get_token(client_id, client_secret)
 
 
 
