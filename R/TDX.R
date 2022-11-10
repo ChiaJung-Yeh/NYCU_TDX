@@ -32,7 +32,7 @@ usethis::use_package("progress")
 get_token=function(client_id, client_secret, store=NA){
   if (!require(httr)) install.packages("httr")
 
-  if(!is.na(store)){
+  if(!is.na(store) & sum(grepl("access_token.txt", dir(store)))==1){
     act=read.table(paste0(store, "/access_token.txt"))$V1
     x=GET("https://tdx.transportdata.tw/api/basic/v2/Basic/County?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", act)))
 
