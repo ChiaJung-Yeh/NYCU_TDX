@@ -26,7 +26,7 @@ usethis::use_package("progress")
 #                          RoadClass=c(0,1,3,"ALL"))
 # usethis::use_data(TDX_Railway, overwrite=T)
 
-access_token=get_token(client_id, client_secret, store="C:/Users/ASUS/Desktop/TDX_TEST")
+
 
 #---get the token---#
 get_token=function(client_id, client_secret, store=NA){
