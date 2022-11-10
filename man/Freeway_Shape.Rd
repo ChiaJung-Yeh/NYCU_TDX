@@ -14,8 +14,16 @@ Freeway_Shape(geotype, dtype="text", out=F)
 %%  ~~ If necessary, more details than the __description__ above ~~
 }
 \arguments{
-  \item{geotype}{Please fill in the geometry type of freeway. The argument includes \code{section}, \code{link}, \code{gantry}, and \code{gantryod}. \code{section} means the section between each adjacent interchanges. \code{link} means the detailed geometry in each section. \code{gantry} is "POINT" geometry type, which shows the location of etag gantry. \code{gantryod} repesents the "LINE" shape of each adjacent etag gantries.}
-  \item{dtype}{The class of data, including \code{text} (data frame) and \code{sf} (simple feature). The default value is \code{text}. Note that all of the geometry type is "LINESTRING", expect for the \code{gantry} is "POINT".}
+  \item{geotype}{Please fill in the geometry type of freeway. The argument includes \code{section}, \code{link}, \code{gantry}, \code{gantryod}, and \code{vd}. Each of argument is summarised below.
+  \tabular{rll}{
+    \strong{\code{section}}   \tab the section between each adjacent interchanges (LINESTRING)\cr
+    \strong{\code{link}}   \tab  the detailed geometry in each section (LINESTRING)\cr
+    \strong{\code{gantry}}   \tab the location of etag gantry (POINT)\cr
+    \strong{\code{gantryod}}   \tab the geometry of each adjacent etag gantries (LINESTRING)\cr
+    \strong{\code{vd}}   \tab the location of vehicle detector (POINT)\cr
+  }
+}
+  \item{dtype}{The class of data, including \code{text} (data frame) and \code{sf} (simple feature). The default value is \code{text}. Note that most of the geometry type is "LINESTRING", expect for the \code{gantry} and \code{vd} are "POINT".}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data. Note that the directory must contain ".shp" when exporting simple feature. And the directory must contain ".csv" or ".txt" when exporting text file.}
 }
 \author{

@@ -2012,8 +2012,30 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
       freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(Geometry))%>%
         st_sf(crs=4326)
     }
+  }else if(geotype=="vd"){
+    x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/VD.xml")
+
+    xml_node=c("VDID","SubAuthorityCode","BiDirectional","LinkID","Bearing","RoadDirection","LaneNum","ActualLaneNum","VDType",
+               "LocationType","DetectionType","PositionLon","PositionLat","RoadID","RoadName","RoadClass","Start","End","LocationMile")
+
+    freeway_shape=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:VD"))))
+    for (i in c(1:length(xml_node))){
+      node_name=xml_node[i]
+      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", xml_node[i])))
+      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:VD"))
+      temp_id=which(temp_id)
+      temp=data.frame(temp_id, temp)
+      colnames(temp)[2]=node_name
+      freeway_shape=left_join(freeway_shape, temp, by="temp_id")
+    }
+    freeway_shape=dplyr::select(freeway_shape, -temp_id)
+
+    if(dtype=="sf"){
+      freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(paste0("POINT(", PositionLon, " ", PositionLat, ")")))%>%
+        st_sf(crs=4326)
+    }
   }else{
-    stop("'geotype' must be 'section', 'link', 'ganty', or, 'gantryod'.\n")
+    stop("'geotype' must be 'section', 'link', 'gantry', or, 'gantryod'.\n")
   }
 
   if (dtype=="text"){
@@ -2106,14 +2128,37 @@ District_Shape=function(access_token, district, dtype="text", out=F){
 
 
 
-Population=function(district, time, out=F){
+Population=function(district, time, age=F, out=F){
   time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+
+  # check if the month is March, June, September, December
+  if(!substr(time, regexpr("-", time)+1, 10) %in% c("03","06","09","12")){
+    stop("The month must be March, June, September, or December. Note that the demographic data in Taiwan is updated every three months!")
+  }
+  if(as.numeric(substr(time, 1, regexpr("-", time)-1))<2008){
+    stop("Only year after 2008 is provided!")
+  }
+
   if(district=="County"){
-    url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&STTIME=", time_rev, "&code=3025FF02BBFBF1024A2ACA584EFA2EF4&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=CSV")
+    if(age){
+      url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF102CCDA8BAA874B0F4E&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=CSV")
+    }else{
+      url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1024A2ACA584EFA2EF4&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=CSV")
+    }
   }else if(district=="Town"){
-    url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1025C84B70DD22071F5&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
+    if(age){
+      url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1026E41E92D5357C450&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
+  }else{
+      url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1025C84B70DD22071F5&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
+    }
   }else if(district=="Village"){
-    url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF10291E7900044046FD3&STTIME=", time_rev, "&STUNIT=U01VI&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
+    if(age){
+      url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1026239FE8CBE94A3D3&STTIME=", time_rev, "&STUNIT=U01VI&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
+    }else{
+      url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF10291E7900044046FD3&STTIME=", time_rev, "&STUNIT=U01VI&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
+    }
+  }else{
+    stop("The argument of 'district' must be 'County', 'Town', or 'Village'.")
   }
   download.file(url, "./temp_pop.zip", mode="wb")
 
@@ -2122,17 +2167,26 @@ Population=function(district, time, out=F){
   dir_file=dir_file[grepl(".csv", dir_file)]
   population=read.csv(dir_file)
   population=population[-1, ]
-  unlink('temp_pop', recursive=TRUE)
+  unlink("temp_pop", recursive=T)
   file.remove("temp_pop.zip")
-  # file.remove("temp_pop")
-  colnames(population)[c(1:6)]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLCODE","VILLNAME")
-  population$VILLCODE=gsub("-", "", population$VILLCODE)
+
+  if(district=="County"){
+    colnames(population)[c(1:2)]=c("COUNTYCODE","COUNTYNAME")
+  }else if(district=="Town"){
+    colnames(population)[c(1:4)]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME")
+  }else if(district=="Village"){
+    colnames(population)[c(1:6)]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLCODE","VILLNAME")
+    population$VILLCODE=gsub("-", "", population$VILLCODE)
+  }
 
   if (nchar(out)!=0 & out!=F){
     write.csv(population, out, row.names=F)
   }
   return(population)
 }
+
+
+
 
 
 
