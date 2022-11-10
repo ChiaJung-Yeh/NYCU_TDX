@@ -2204,17 +2204,6 @@ Population=function(district, time, age=F, out=F){
 }
 
 
-url="https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=4D8A0570C09D2CC42C773BA190D57BD6&STTIME=109Y&STUNIT=U01VI&BOUNDARY=¥þ°ê&SUBBOUNDARY=&TYPE=CSV"
-download.file(url, "./temp_pop.zip", mode="wb")
-
-untar("temp_pop.zip", exdir="temp_pop")
-dir_file=paste0(dir("temp_pop", full.names=T), "/", dir(dir("temp_pop", full.names=T)))
-dir_file=dir_file[grepl(".csv", dir_file)]
-population=read.csv(dir_file)
-population=population[-1, ]
-unlink("temp_pop", recursive=T)
-file.remove("temp_pop.zip")
-
 
 
 
