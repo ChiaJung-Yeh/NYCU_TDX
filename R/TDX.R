@@ -29,8 +29,23 @@ usethis::use_package("progress")
 
 
 #---get the token---#
-get_token=function(client_id, client_secret){
+get_token=function(client_id, client_secret, store=NA){
   if (!require(httr)) install.packages("httr")
+
+  if(!is.na(store)){
+    act=read.table(paste0(store, "/access_token.txt"))$V1
+    x=GET("https://tdx.transportdata.tw/api/basic/v2/Basic/County?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", act)))
+
+    tryCatch({
+      x=read_xml(x)
+      cat(paste0("The access token stored in ", store, " is valid. Use it!\n"))
+      return(act)
+      break
+    }, error=function(err){
+      cat(paste0("The access token is expired or invalid. Get newer one!\n"))
+    })
+  }
+
   x=POST("https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token",
          encode="form",
          body=list(
@@ -38,15 +53,18 @@ get_token=function(client_id, client_secret){
            client_id=client_id,
            client_secret=client_secret
          ))
-  if (is.null(content(x)$access_token)){
+  act=content(x)$access_token
+  if (is.null(act)){
     stop("Your 'client_id' or 'client_secret' is WRONG!!")
   }else{
     cat("Connect Successfully! This token will expire in 1 day.\n")
-    return(content(x)$access_token)
+    if(!is.na(store)){
+      cat(paste0("The access token is stored in '", store, "'.\n"))
+      write.table(act, paste0(store, "/access_token.txt"), col.names=F, row.names=F)
+    }
+    return(act)
   }
 }
-
-# access_token=get_token(client_id, client_secret)
 
 
 
@@ -2186,8 +2204,16 @@ Population=function(district, time, age=F, out=F){
 }
 
 
+url="https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=4D8A0570C09D2CC42C773BA190D57BD6&STTIME=109Y&STUNIT=U01VI&BOUNDARY=¥þ°ê&SUBBOUNDARY=&TYPE=CSV"
+download.file(url, "./temp_pop.zip", mode="wb")
 
-
+untar("temp_pop.zip", exdir="temp_pop")
+dir_file=paste0(dir("temp_pop", full.names=T), "/", dir(dir("temp_pop", full.names=T)))
+dir_file=dir_file[grepl(".csv", dir_file)]
+population=read.csv(dir_file)
+population=population[-1, ]
+unlink("temp_pop", recursive=T)
+file.remove("temp_pop.zip")
 
 
 

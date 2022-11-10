@@ -5,7 +5,7 @@
 Retrieve the demographic data with given month
 }
 \description{
-The function is used to download the demographic data of districts in Taiwan, including County, town, and village.
+The function is used to download the demographic data of districts in Taiwan, including County, town, and village. The data is downloaded from \href{https://segis.moi.gov.tw/STAT/Web/Portal/STAT_PortalHome.aspx}{Social Economic Geographic Information System (SEGIS)} by Ministry of the Interior.
 }
 \usage{
 Population(district, time, age=F, out=F)
