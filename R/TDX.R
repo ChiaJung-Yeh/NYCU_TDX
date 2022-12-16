@@ -4,6 +4,7 @@ library(httr)
 library(sf)
 library(urltools)
 library(progress)
+library(data.table)
 
 usethis::use_package("dplyr")
 usethis::use_package("xml2")
@@ -11,6 +12,7 @@ usethis::use_package("httr")
 usethis::use_package("sf")
 usethis::use_package("urltools")
 usethis::use_package("progress")
+usethis::use_package("data.table")
 
 # TDX_County=read_xml(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
 # TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = ".//d1:CityName")),
@@ -2087,7 +2089,7 @@ District_Shape=function(access_token, district, dtype="text", out=F){
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  cat("Please wait for a while!\n")
+  cat("Please wait for a while...\n")
 
   url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/District/Boundary/", ifelse(district=="County", "City", district), "?%24format=XML")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
@@ -2183,15 +2185,15 @@ Population=function(district, time, age=F, out=F){
   }else{
     stop("The argument of 'district' must be 'County', 'Town', or 'Village'.")
   }
-  download.file(url, "./temp_pop.zip", mode="wb")
+  download.file(url, "./temp_pop_TDX.zip", mode="wb")
 
-  untar("temp_pop.zip", exdir="temp_pop")
-  dir_file=paste0(dir("temp_pop", full.names=T), "/", dir(dir("temp_pop", full.names=T)))
+  untar("temp_pop_TDX.zip", exdir="temp_pop_TDX")
+  dir_file=paste0(dir("temp_pop_TDX", full.names=T), "/", dir(dir("temp_pop_TDX", full.names=T)))
   dir_file=dir_file[grepl(".csv", dir_file)]
   population=read.csv(dir_file)
   population=population[-1, ]
-  unlink("temp_pop", recursive=T)
-  file.remove("temp_pop.zip")
+  unlink("temp_pop_TDX", recursive=T)
+  file.remove("temp_pop_TDX.zip")
 
   if(district=="County"){
     colnames(population)[c(1:2)]=c("COUNTYCODE","COUNTYNAME")
@@ -2208,6 +2210,123 @@ Population=function(district, time, age=F, out=F){
   return(population)
 }
 
+
+
+Freeway_History=function(file, date, out=F){
+  if(sum(dir() %in% c("temp_freeway_TDX.zip","temp_freeway_TDX"))){
+    stop(paste0("Please remove or rename the directory 'temp_freeway_TDX.zip' and 'temp_freeway_TDX.zip' in advance!!\n"))
+  }
+
+  freeway_data=data.frame()
+  if(file %in% c("M03A","M04A","M05A","M08A")){
+    url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", gsub("-", "", date), "/00/TDCS_", file, "_", gsub("-", "", date), "_000000.csv")
+    if(suppressWarnings(ncol(fread(url)))!=0){
+      pb=progress_bar$new(format="(:spin) [:bar] :percent  ", total=24*12, clear=F, width=80)
+      for(hr in c(0:23)){
+        for(minu in seq(0, 55, 5)){
+          pb$tick()
+          url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", gsub("-", "", date), "/",
+                     ifelse(nchar(hr)==1, paste0("0", hr), hr), "/TDCS_", file, "_", gsub("-", "", date), "_",
+                     ifelse(nchar(hr)==1, paste0("0", hr), hr), ifelse(nchar(minu)==1, paste0("0", minu), minu), "00.csv")
+          temp=fread(url, showProgress=F)
+          if(file=="M03A"){
+            colnames(temp)=c("TimeInterval","GantryID","Direction","VehicleType","Flow")
+          }else if(file=="M04A"){
+            colnames(temp)=c("TimeInterval","GantryFrom","GantryTo","VehicleType","TravelTime","Flow")
+          }else if(file=="M05A"){
+            colnames(temp)=c("TimeInterval","GantryFrom","GantryTo","VehicleType","SpaceMeanSpeed","Flow")
+          }else if(file=="M08A"){
+            colnames(temp)=c("TimeInterval","GantryFrom","GantryTo","VehicleType","Flow")
+          }
+          freeway_data=rbind(freeway_data, temp)
+          cat(paste0(date, " ", ifelse(nchar(hr)==1, paste0("0", hr), hr), ":", ifelse(nchar(minu)==1, paste0("0", minu), minu)))
+        }
+      }
+    }else{
+      url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
+      download.file(url, "./temp_freeway_TDX.zip", quiet=T)
+      untar("temp_freeway_TDX.zip", exdir="temp_freeway_TDX")
+      dir_file=paste0(dir("temp_freeway_TDX", full.names=T))
+      dir_file=dir(dir_file, full.names=T)
+      dir_file=dir(dir_file, full.names=T)
+      dir_file=dir(dir_file, full.names=T)
+      if(length(dir_file)==0){
+        unlink("temp_freeway_TDX", recursive=T)
+        file.remove("temp_freeway_TDX.zip")
+        stop(paste0("Data of ", date, " is not updated to Traffic Database, Freeway Bureau, MOTC\n Or please check out if your date format is valid!"))
+      }
+      freeway_data=rbindlist(lapply(dir_file, fread))
+
+      if(file=="M03A"){
+        colnames(freeway_data)=c("TimeInterval","GantryID","Direction","VehicleType","Flow")
+      }else if(file=="M04A"){
+        colnames(freeway_data)=c("TimeInterval","GantryFrom","GantryTo","VehicleType","TravelTime","Flow")
+      }else if(file=="M05A"){
+        colnames(freeway_data)=c("TimeInterval","GantryFrom","GantryTo","VehicleType","SpaceMeanSpeed","Flow")
+      }else if(file=="M08A"){
+        colnames(freeway_data)=c("TimeInterval","GantryFrom","GantryTo","VehicleType","Flow")
+      }
+
+      unlink("temp_freeway_TDX", recursive=T)
+      file.remove("temp_freeway_TDX.zip")
+    }
+  }else if(file %in% c("M06A","M07A")){
+    url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", gsub("-", "", date), "/00/TDCS_", file, "_", gsub("-", "", date), "_000000.csv")
+
+    if(suppressWarnings(ncol(fread(url)))!=0){
+      pb=progress_bar$new(format="(:spin) [:bar] :percent  ", total=24, clear=F, width=80)
+      for(hr in c(0:23)){
+        pb$tick()
+        url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", gsub("-", "", date), "/",
+                   ifelse(nchar(hr)==1, paste0("0", hr), hr), "/TDCS_", file, "_", gsub("-", "", date), "_",
+                   ifelse(nchar(hr)==1, paste0("0", hr), hr), "0000.csv")
+        temp=fread(url, showProgress=F)
+
+        if(file=="M06A"){
+          colnames(temp)=c("VehicleType","DetectionTime_O","GantryID_O","DetectionTime_D","GantryID_D","TripLength","TripEnd","TripInformation")
+        }else if(file=="M07A"){
+          colnames(temp)=c("TimeInterval","GantryFrom","VehicleType","TripDistance","Flow")
+        }
+        freeway_data=rbind(freeway_data, temp)
+        cat(paste0(date, " Hour:", ifelse(nchar(hr)==1, paste0("0", hr), hr)))
+      }
+    }else{
+      if(file=="M06A"){
+        cat("Please wait for a while...\n")
+      }
+      url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
+      download.file(url, "./temp_freeway_TDX.zip", quiet=T)
+      untar("temp_freeway_TDX.zip", exdir="temp_freeway_TDX")
+      dir_file=paste0(dir("temp_freeway_TDX", full.names=T))
+      dir_file=dir(dir_file, full.names=T)
+      dir_file=dir(dir_file, full.names=T)
+      dir_file=dir(dir_file, full.names=T)
+      if(length(dir_file)==0){
+        unlink("temp_freeway_TDX", recursive=T)
+        file.remove("temp_freeway_TDX.zip")
+        stop(paste0("Data of ", date, " is not updated to Traffic Database, Freeway Bureau, MOTC\n Or please check out if your date format is valid!"))
+      }
+
+      freeway_data=rbindlist(lapply(dir_file, fread))
+
+      if(file=="M06A"){
+        colnames(freeway_data)=c("VehicleType","DetectionTime_O","GantryID_O","DetectionTime_D","GantryID_D","TripLength","TripEnd","TripInformation")
+      }else if(file=="M07A"){
+        colnames(freeway_data)=c("TimeInterval","GantryFrom","VehicleType","TripDistance","Flow")
+      }
+
+      unlink("temp_freeway_TDX", recursive=T)
+      file.remove("temp_freeway_TDX.zip")
+    }
+  }else{
+    stop(paste0("Please use valid `file` parameter, including 'M03A`, 'M04A`, 'M05A`, 'M06A`, 'M07A` and 'M08A`\n"))
+  }
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(freeway_data, out, row.names=F)
+  }
+  return(freeway_data)
+}
 
 
 

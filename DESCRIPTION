@@ -17,4 +17,5 @@ Imports:
     httr,
     sf,
     urltools,
-    progress
+    progress,
+    data.table
