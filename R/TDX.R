@@ -2217,6 +2217,7 @@ Population=function(district, time, age=F, out=F){
 Freeway_History=function(file, date, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(data.table)) install.packages("data.table")
+  if (!require(progress)) install.packages("progress")
 
   if(sum(dir() %in% c("temp_freeway_TDX.zip","temp_freeway_TDX"))){
     stop(paste0("Please remove or rename the directory 'temp_freeway_TDX.zip' and 'temp_freeway_TDX.zip' in advance!!\n"))
