@@ -2154,6 +2154,8 @@ District_Shape=function(access_token, district, dtype="text", out=F){
 
 
 Population=function(district, time, age=F, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+
   time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
 
   # check if the month is March, June, September, December
@@ -2213,6 +2215,9 @@ Population=function(district, time, age=F, out=F){
 
 
 Freeway_History=function(file, date, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(data.table)) install.packages("data.table")
+
   if(sum(dir() %in% c("temp_freeway_TDX.zip","temp_freeway_TDX"))){
     stop(paste0("Please remove or rename the directory 'temp_freeway_TDX.zip' and 'temp_freeway_TDX.zip' in advance!!\n"))
   }
