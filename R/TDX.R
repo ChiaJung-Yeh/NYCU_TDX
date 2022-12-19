@@ -2187,15 +2187,16 @@ Population=function(district, time, age=F, out=F){
   }else{
     stop("The argument of 'district' must be 'County', 'Town', or 'Village'.")
   }
-  download.file(url, "./temp_pop_TDX.zip", mode="wb")
 
-  untar("temp_pop_TDX.zip", exdir="temp_pop_TDX")
-  dir_file=paste0(dir("temp_pop_TDX", full.names=T), "/", dir(dir("temp_pop_TDX", full.names=T)))
+  download.file(url, paste0(tempdir(), "./temp_pop_TDX.zip"), mode="wb")
+
+  untar(paste0(tempdir(), "./temp_pop_TDX.zip"), exdir=paste0(tempdir(), "./temp_pop_TDX"))
+  dir_file=paste0(dir(paste0(tempdir(), "./temp_pop_TDX"), full.names=T), "/", dir(dir(paste0(tempdir(), "./temp_pop_TDX"), full.names=T)))
   dir_file=dir_file[grepl(".csv", dir_file)]
   population=read.csv(dir_file)
   population=population[-1, ]
-  unlink("temp_pop_TDX", recursive=T)
-  file.remove("temp_pop_TDX.zip")
+  unlink(paste0(tempdir(), "./temp_pop_TDX"), recursive=T)
+  file.remove(paste0(tempdir(), "./temp_pop_TDX.zip"))
 
   if(district=="County"){
     colnames(population)[c(1:2)]=c("COUNTYCODE","COUNTYNAME")
