@@ -2182,16 +2182,17 @@ Population=function(district, time, age=F, out=F){
     if(age){
       url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF1026239FE8CBE94A3D3&STTIME=", time_rev, "&STUNIT=U01VI&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
     }else{
-      url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=3025FF02BBFBF10291E7900044046FD3&STTIME=", time_rev, "&STUNIT=U01VI&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
+      url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=0B74191C4E5CA476A7ED44A9BE7FA28C&STTIME=", time_rev, "&STUNIT=U01VI&BOUNDARY=%E5%85%A8%E5%9C%8B&SUBBOUNDARY=&TYPE=CSV")
     }
   }else{
     stop("The argument of 'district' must be 'County', 'Town', or 'Village'.")
   }
 
-  download.file(url, paste0(tempdir(), "/temp_pop_TDX.zip"), mode="wb")
+  unlink(list.files(tempdir(), full.names=T), recursive=T)
+  download.file(url, paste0(tempdir(), "/temp_pop_TDX.zip"), mode="wb", quiet=T)
 
   untar(paste0(tempdir(), "/temp_pop_TDX.zip"), exdir=paste0(tempdir(), "/temp_pop_TDX"))
-  dir_file=paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/", dir(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T)))
+  dir_file=dir(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), full.names=T)
   dir_file=dir_file[grepl(".csv", dir_file)]
   population=read.csv(dir_file)
   population=population[-1, ]
