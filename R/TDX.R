@@ -2338,6 +2338,49 @@ Freeway_History=function(file, date, out=F){
 
 
 
+Bus_RealTime=function(access_token, county, format, dates, out=F){
+
+  if (!(county %in% c(TDX_County$Code, "ALL"))){
+    print(TDX_County)
+    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+  }
+
+  if(format=="frequency"){
+    url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/Bus/RealTimeByFrequency/City/", county, "?Dates=", dates, "&%24format=CSV")
+  }else if(format=="stop"){
+    url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/Bus/RealTimeNearStop/City/", county, "?Dates=", dates, "&%24format=CSV")
+  }else{
+    stop("Parameter 'format' should be 'frequency' or 'stop'.")
+  }
+
+  tryCatch({
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  }, error=function(err){
+    if (grepl("Unauthorized", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }
+  })
+
+  if(x$status_code==400){
+    stop("Parameter 'dates' should not be more than 7 days!")
+  }
+
+  bus_real_time=content(x)
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(bus_real_time, out, row.names=F)
+  }
+  return(bus_real_time)
+}
+
+
+
+
+
+
+
+
+
 
 # Ship_Schedule=function(access_token, county, out=F){
 #   if (!require(dplyr)) install.packages("dplyr")
