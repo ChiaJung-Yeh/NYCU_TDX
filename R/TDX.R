@@ -2194,7 +2194,7 @@ Population=function(district, time, age=F, out=F){
   untar(paste0(tempdir(), "/temp_pop_TDX.zip"), exdir=paste0(tempdir(), "/temp_pop_TDX"))
   dir_file=dir(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), full.names=T)
   dir_file=dir_file[grepl(".csv", dir_file)]
-  population=read.csv(dir_file, fileEncoding="UTF-8")
+  population=read.csv(dir_file, fileEncoding="Big5")
   population=population[-1, ]
   unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
   file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
