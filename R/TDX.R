@@ -14,19 +14,15 @@ usethis::use_package("urltools")
 usethis::use_package("progress")
 usethis::use_package("data.table")
 
-# TDX_County=read_xml(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=XML", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
-# TDX_County=data.frame(County=xml_text(xml_find_all(TDX_County, xpath = ".//d1:CityName")),
-#                       Code=xml_text(xml_find_all(TDX_County, xpath = ".//d1:City")))
-# TDX_County=rbind(TDX_County, cbind(County="公路客運", Code="Intercity"))
+
+# TDX_County=read.csv("C:/Users/ASUS/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.csv", fileEncoding="Big5")
 # usethis::use_data(TDX_County, overwrite=T)
-
-# TDX_Railway=data.frame(Operator=c("臺鐵","高鐵","臺北捷運","高雄捷運","桃園捷運","新北捷運","臺中捷運","高雄輕軌","阿里山林業鐵路"),
-#                        Code=c("TRA","THSR","TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT","AFR"))
+#
+# TDX_Railway=read.csv("C:/Users/ASUS/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_railway.csv", fileEncoding="Big5")
 # usethis::use_data(TDX_Railway, overwrite=T)
-
-# TDX_RoadClass=data.frame(RoadClassName=c("國道","省道快速公路","省道一般公路","以上全部"),
-#                          RoadClass=c(0,1,3,"ALL"))
-# usethis::use_data(TDX_Railway, overwrite=T)
+#
+# TDX_RoadClass=read.csv("C:/Users/ASUS/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_roadclass.csv", fileEncoding="Big5")
+# usethis::use_data(TDX_RoadClass, overwrite=T)
 
 
 
