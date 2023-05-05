@@ -15,13 +15,13 @@ usethis::use_package("progress")
 usethis::use_package("data.table")
 
 
-# TDX_County=read.csv("C:/Users/ASUS/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.csv", fileEncoding="Big5")
+# TDX_County=read.csv("C:/Users/ASUS/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.csv")
 # usethis::use_data(TDX_County, overwrite=T)
 #
-# TDX_Railway=read.csv("C:/Users/ASUS/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_railway.csv", fileEncoding="Big5")
+# TDX_Railway=read.csv("C:/Users/ASUS/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_railway.csv")
 # usethis::use_data(TDX_Railway, overwrite=T)
 #
-# TDX_RoadClass=read.csv("C:/Users/ASUS/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_roadclass.csv", fileEncoding="Big5")
+# TDX_RoadClass=read.csv("C:/Users/ASUS/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_roadclass.csv")
 # usethis::use_data(TDX_RoadClass, overwrite=T)
 
 
