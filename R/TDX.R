@@ -329,6 +329,7 @@ Bus_Schedule=function(access_token, county, out=F){
   return(bus_schedule)
 }
 
+# wrong
 # temp=Bus_Schedule(access_token, TDX_County$Code[23])
 
 
