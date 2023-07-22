@@ -179,7 +179,6 @@ Bus_Route=function(access_token, county, out=F){
                             HolidayFirstBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$HolidayFirstBusTime)) bus_info$SubRoutes[[x]]$HolidayFirstBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))),
                             HolidayLastBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$HolidayLastBusTime)) bus_info$SubRoutes[[x]]$HolidayLastBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))))
 
-
   col_retain=c("RouteUID","RouteID","RouteName","BusRouteType","DepartureStopName","DestinationStopName","TicketPriceDescription","FareBufferZoneDescription")
   col_retain=col_retain[col_retain %in% names(bus_info)]
   bus_info=as.data.frame(lapply(bus_info[, col_retain], rep, num_of_subroute))
@@ -195,7 +194,6 @@ Bus_Route=function(access_token, county, out=F){
 }
 
 
-# usethis::use_git_config(user.name = "ChiaJung-Yeh", user.email = "robert1328.mg10@nycu.edu.tw")
 
 Bus_Shape=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
@@ -260,148 +258,80 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
 
 
 
-# Bus_Schedule=function(access_token, county, out=F){
-#   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(xml2)) install.packages("xml2")
-#   if (!require(httr)) install.packages("httr")
-#
-#   if (county=="Intercity"){
-#     url="https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/InterCity?&$format=XML"
-#   }else{
-#     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/City/", county, "?&$format=XML")
-#   }
-#   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#   tryCatch({
-#     x=read_xml(x)
-#   }, error=function(err){
-#     cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-#
-#     if (grepl("Unauthorized", conditionMessage(err))){
-#       stop(paste0("Your access token is invalid!"))
-#     }else{
-#       print(TDX_County)
-#       stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
-#     }
-#   })
-#
-#   bus_info=data.frame(RouteUID=xml_text(xml_find_all(x, xpath = ".//d1:RouteUID")),
-#                       RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName//d1:Zh_tw")),
-#                       SubRouteUID=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteUID")),
-#                       SubRouteName=xml_text(xml_find_all(x, xpath = ".//d1:SubRouteName//d1:Zh_tw")),
-#                       Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
-#
-#   # check whether the schedule is in timetable form or frequency form
-#   tt=as.character(xml_children(x))
-#   bus_info1=bus_info[grepl("Timetables", tt),]
-#   bus_info2=bus_info[grepl("Frequency", tt),]
-#
-#   if (nrow(bus_info1)!=0){
-#     timetable=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
-#     cat(paste0("#---Timetables Downloading---#\n"))
-#     cat(paste0(length(timetable), " Routes\n"))
-#
-#     # ?x?n?S??TripID
-#     if (!(county %in% c("Tainan","KinmenCounty"))){
-#       bus_schedule_1=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:TripID"))), TripID=xml_text(xml_find_all(x, xpath = ".//d1:TripID")))
-#     }else{
-#       bus_schedule_1=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:Timetable"))))
-#     }
-#
-#     xml_node=c("Timetable//d1:ServiceDay//d1:Sunday","Timetable//d1:ServiceDay//d1:Monday","Timetable//d1:ServiceDay//d1:Tuesday",
-#                "Timetable//d1:ServiceDay//d1:Wednesday","Timetable//d1:ServiceDay//d1:Thursday","Timetable//d1:ServiceDay//d1:Friday",
-#                "Timetable//d1:ServiceDay//d1:Saturday","Timetable//d1:SpecialDays//d1:SpecialDay//d1:Dates","Timetable//d1:SpecialDays//d1:SpecialDay//d1:ServiceStatus",
-#                "Timetable//d1:StopTimes//d1:StopTime//d1:StopSequence",
-#                "Timetable//d1:StopTimes//d1:StopTime//d1:StopUID","Timetable//d1:StopTimes//d1:StopTime//d1:StopName//d1:Zh_tw",
-#                "Timetable//d1:StopTimes//d1:StopTime//d1:ArrivalTime","Timetable//d1:StopTimes//d1:StopTime//d1:DepartureTime")
-#     xml_node_name=c("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Dates","ServiceStatus","StopSequence","StopUID","StopName","ArrivalTime","DepartureTime")
-#
-#
-#     for (i in xml_node[1:9]){
-#       node_name=xml_node_name[which(xml_node==i)]
-#       temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:Timetables//d1:", i)))
-#       temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Timetable"))
-#       temp_id=which(temp_id)
-#       temp=data.frame(temp_id, temp)
-#       colnames(temp)[2]=node_name
-#       bus_schedule_1=left_join(bus_schedule_1, temp, by="temp_id")
-#       cat(paste0("Attribute '", node_name, "' is parsed\n"))
-#     }
-#
-#     # StopTime (?x????StopTime???Ƭ???)
-#     StopTimes_cumsum=xml_length(xml_find_all(x, xpath=".//d1:Timetable//d1:StopTimes"))
-#     StopTimes_cumsum=cumsum(StopTimes_cumsum)
-#     for (i in xml_node[10:14]){
-#       node_name=xml_node_name[which(xml_node==i)]
-#       temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:Timetables//d1:", i)))
-#       temp=temp[StopTimes_cumsum]
-#       temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Timetable"))
-#       temp_id=which(temp_id)
-#       temp=data.frame(temp_id, temp)
-#       colnames(temp)[2]=node_name
-#       bus_schedule_1=left_join(bus_schedule_1, temp, by="temp_id")
-#       cat(paste0("Attribute '", node_name, "' is parsed\n"))
-#     }
-#
-#     bus_schedule_1=dplyr::select(bus_schedule_1, -temp_id)
-#
-#     table_num=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
-#     bus_info1=as.data.frame(lapply(bus_info1, rep, table_num))
-#     bus_schedule_timetable=cbind(bus_info1, bus_schedule_1)
-#
-#     if (sum(grepl("-", bus_schedule_timetable$TripID))==0 & !(county %in% c("Tainan","KinmenCounty"))){
-#       bus_schedule_timetable$TripID=as.numeric(bus_schedule_timetable$TripID)
-#       bus_schedule_timetable=arrange(bus_schedule_timetable, RouteUID, RouteName, SubRouteUID, SubRouteName, Direction, TripID)
-#     }
-#   }
-#
-#   if (nrow(bus_info2)!=0){
-#     freq=xml_length(xml_find_all(x, xpath = ".//d1:Frequencys"))
-#     cat(paste0("#---Frequencys Downloading---#\n"))
-#     cat(paste0(length(freq), " Routes\n"))
-#
-#     xml_node=c("Frequencys//d1:Frequency//d1:StartTime","Frequencys//d1:Frequency//d1:EndTime","Frequencys//d1:Frequency//d1:MinHeadwayMins",
-#                "Frequencys//d1:Frequency//d1:MaxHeadwayMins","Frequencys//d1:ServiceDay//d1:Sunday","Frequencys//d1:ServiceDay//d1:Monday",
-#                "Frequencys//d1:ServiceDay//d1:Tuesday","Frequencys//d1:ServiceDay//d1:Wednesday","Frequencys//d1:ServiceDay//d1:Thursday",
-#                "Frequencys//d1:ServiceDay//d1:Friday","Frequencys//d1:ServiceDay//d1:Saturday")
-#     xml_node_name=c("StartTime","EndTime","MinHeadwayMins","MaxHeadwayMins","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday")
-#
-#
-#     bus_schedule_2=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:StartTime"))))
-#     for (i in xml_node){
-#       node_name=xml_node_name[which(xml_node==i)]
-#       temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
-#       temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Frequency"))
-#       temp_id=which(temp_id)
-#       temp=data.frame(temp_id, temp)
-#       colnames(temp)[2]=node_name
-#       bus_schedule_2=left_join(bus_schedule_2, temp, by="temp_id")
-#       cat(paste0("Attribute '", node_name, "' is parsed\n"))
-#     }
-#     bus_schedule_2=dplyr::select(bus_schedule_2, -temp_id)
-#
-#     table_num=xml_length(xml_find_all(x, xpath = ".//d1:Frequencys"))
-#     bus_info2=as.data.frame(lapply(bus_info2, rep, table_num))
-#     bus_schedule_frequency=cbind(bus_info2, bus_schedule_2)
-#   }
-#
-#   cat(paste0("#---", county, " Bus Schedule Downloaded---#\n"))
-#   if (nrow(bus_info1)!=0 & nrow(bus_info2)!=0){
-#     bus_schedule=bind_rows(bus_schedule_timetable, bus_schedule_frequency)
-#   }else if (nrow(bus_info1)!=0){
-#     bus_schedule=bus_schedule_timetable
-#   }else if (nrow(bus_info2)!=0){
-#     bus_schedule=bus_schedule_frequency
-#   }
-#
-#   if (nchar(out)!=0 & out!=F){
-#     write.csv(bus_schedule, out, row.names=F)
-#   }
-#   return(bus_schedule)
-# }
-#
-#
-#
+Bus_Schedule=function(access_token, county, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(jsonlite)) install.packages("jsonlite")
+  if (!require(httr)) install.packages("httr")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  if (county=="Intercity"){
+    url="https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/InterCity?&$format=JSON"
+  }else{
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/City/", county, "?&$format=JSON")
+  }
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    bus_info=fromJSON(content(x, as="text"))
+  }, error=function(err){
+    if (grepl("invalid", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }
+  })
+  if("Message" %in% names(bus_info)){
+    print(TDX_County)
+    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+  }
+
+  bus_info$RouteName=bus_info$RouteName$Zh_tw
+  bus_info$SubRouteName=bus_info$SubRouteName$Zh_tw
+  bus_route=bus_info[, c("RouteUID","RouteID","RouteName","SubRouteUID","SubRouteID","SubRouteName","Direction")]
+
+  num_of_freq=unlist(mapply(function(x) ifelse(is.null(nrow(bus_info$Frequencys[[x]])), 0, nrow(bus_info$Frequencys[[x]])), c(1:nrow(bus_info))))
+  num_of_time=unlist(mapply(function(x) ifelse(is.null(nrow(bus_info$Timetables[[x]])), 0, nrow(bus_info$Timetables[[x]])), c(1:nrow(bus_info))))
+
+  bus_freq=data.frame(StartTime=unlist(mapply(function(x) bus_info$Frequencys[[x]]$StartTime, c(1:nrow(bus_info)))),
+                      EndTime=unlist(mapply(function(x) bus_info$Frequencys[[x]]$EndTime, c(1:nrow(bus_info)))),
+                      MinHeadwayMins=unlist(mapply(function(x) bus_info$Frequencys[[x]]$MinHeadwayMins, c(1:nrow(bus_info)))),
+                      MaxHeadwayMins=unlist(mapply(function(x) bus_info$Frequencys[[x]]$MaxHeadwayMins, c(1:nrow(bus_info)))),
+                      rbindlist(mapply(function(x) bus_info$Frequencys[[x]]$ServiceDay, c(1:nrow(bus_info)))))
+  bus_freq=cbind(bus_route[rep(c(1:nrow(bus_route)), times=num_of_freq),], bus_freq)
+
+  retrieve_first=function(dat){
+    temp=data.frame(t(mapply(function(x){
+      first_row=t(unlist(dat[[x]][1,]))
+      return(first_row)
+    }, c(1:length(dat)))))
+    return(temp)
+  }
+  bus_time=mapply(function(x) list(retrieve_first(bus_info$Timetables[[x]]$StopTimes)), which(num_of_time!=0))
+  bus_time=do.call(bind_rows, bus_time)%>%
+    data.frame()
+  bus_time=select(bus_time, -X5)
+  colnames(bus_time)=c("StopSequence","StopUID","StopID","StopName","ArrivalTime","DepartureTime")
+
+  bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
+                      bus_time,
+                      mapply(function(x) list(bus_info$Timetables[[x]]$ServiceDay), c(1:nrow(bus_info))) %>% do.call(rbind, .))
+  bus_time=cbind(bus_route[rep(c(1:nrow(bus_route)), times=num_of_time),], bus_time)
+
+  bus_schedule=bind_rows(bus_freq, bus_time)
+  row.names(bus_schedule)=NULL
+
+  cat(paste0("#---", county, " Bus Schedule Downloaded---#\n"))
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(bus_schedule, out, row.names=F)
+  }
+  return(bus_schedule)
+}
+
+# temp=Bus_Schedule(access_token, TDX_County$Code[23])
+
+
 # Rail_StationOfLine=function(access_token, operator, out=F){
 #   if (!require(dplyr)) install.packages("dplyr")
 #   if (!require(xml2)) install.packages("xml2")
@@ -695,7 +625,7 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
 #     nexti=F
 #     while (!nexti){
 #       tryCatch({
-#         # TDX?睊???L?k???ѡu?@?v
+#         # TDX???????L?k?????u?@?v
 #         address_temp=gsub("?@", 1, address[i])%>%
 #           gsub("\\/", "", .) %>%
 #           url_encode()
@@ -779,7 +709,7 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
 #   if (county %in% c(TDX_County$Code[1:22], "ALL") & roadclass %in% c(0,1,3,"ALL")){
 #
 #     if (county!="ALL" & roadclass=="ALL"){
-#       # ???w?????Ҧ??D???h?Ÿ???
+#       # ???w?????????D???h??????
 #       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?&%24format=XML")
 #       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 #
@@ -797,7 +727,7 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
 #                       RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
 #                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
 #     }else if (county!="ALL" & roadclass %in% c(0,1,3)){
-#       # ???w???????w?D???h?Ÿ???
+#       # ???w???????w?D???h??????
 #       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", roadclass, "'&$format=xml")
 #       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 #
@@ -815,7 +745,7 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
 #                       RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
 #                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
 #     }else if (county=="ALL" & roadclass %in% c(0,1,3)){
-#       # ?Ҧ????????w?D???h?Ÿ???
+#       # ???????????w?D???h??????
 #       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", roadclass, "?&$format=XML")
 #       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 #
@@ -833,7 +763,7 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
 #                       RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
 #                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
 #     }else if (county=="ALL" & roadclass=="ALL"){
-#       # ?Ҧ??????Ҧ??D???h?Ÿ???
+#       # ?????????????D???h??????
 #       road=data.frame()
 #       for (i in c(0,1,3)){
 #         url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", i, "?&$format=XML")
