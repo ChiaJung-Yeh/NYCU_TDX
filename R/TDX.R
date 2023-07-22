@@ -195,6 +195,7 @@ Bus_Route=function(access_token, county, out=F){
 }
 
 
+# usethis::use_git_config(user.name = "ChiaJung-Yeh", user.email = "robert1328.mg10@nycu.edu.tw")
 
 Bus_Shape=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
