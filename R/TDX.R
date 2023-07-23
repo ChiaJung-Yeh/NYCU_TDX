@@ -267,9 +267,12 @@ Bus_Schedule=function(access_token, county, out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  if (county=="Intercity"){
+  if(county=="Intercity"){
     url="https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/InterCity?&$format=JSON"
-  }else{
+  }else if(county=="LienchiangCounty"){
+    stop("Bus schedule data of LienchiangCounty is now unavaliable.")
+  }
+  else{
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/City/", county, "?&$format=JSON")
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
@@ -312,10 +315,15 @@ Bus_Schedule=function(access_token, county, out=F){
     data.frame()
   bus_time=select(bus_time, -X5)
   colnames(bus_time)=c("StopSequence","StopUID","StopID","StopName","ArrivalTime","DepartureTime")
-
-  bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
-                      bus_time,
-                      mapply(function(x) list(bus_info$Timetables[[x]]$ServiceDay), c(1:nrow(bus_info))) %>% do.call(rbind, .))
+  day_oper=mapply(function(x) list(bus_info$Timetables[[x]]$ServiceDay), c(1:nrow(bus_info))) %>% do.call(rbind, .)
+  if(!is.null(day_oper)){
+    bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
+                        bus_time,
+                        day_oper)
+  }else{
+    bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
+                        bus_time)
+  }
   bus_time=cbind(bus_route[rep(c(1:nrow(bus_route)), times=num_of_time),], bus_time)
 
   bus_schedule=bind_rows(bus_freq, bus_time)
@@ -329,110 +337,126 @@ Bus_Schedule=function(access_token, county, out=F){
   return(bus_schedule)
 }
 
-# wrong
-# temp=Bus_Schedule(access_token, TDX_County$Code[23])
 
 
-# Rail_StationOfLine=function(access_token, operator, out=F){
-#   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(xml2)) install.packages("xml2")
-#   if (!require(httr)) install.packages("httr")
-#   if (!require(sf)) install.packages("sf")
-#
-#   if (operator=="TRA"){
-#     url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/StationOfLine?&%24format=XML"
-#   }else if (operator=="THSR"){
-#     stop("Please use function 'Rail_Station' to retrieve the station of high speed rail (THSR).")
-#   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
-#     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=XML")
-#   }else if (operator=="AFR"){
-#     url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/StationOfLine?&%24format=XML")
-#   }else{
-#     print(TDX_Railway)
-#     stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
-#   }
-#   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#   tryCatch({
-#     x=read_xml(x)
-#   }, error=function(err){
-#     cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-#     stop(paste0("Your access token is invalid!"))
-#   })
-#
-#   rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")))
-#   num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:Stations"))
-#
-#   if (operator=="TRA"){
-#     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
-#                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-#                                  StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName")),
-#                                  TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:TraveledDistance")))
-#   }else if(operator=="AFR"){
-#     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
-#                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-#                                  StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")),
-#                                  TraveledDistance=xml_text(xml_find_all(x, xpath = ".//d1:CumulativeDistance")))
-#   }else{
-#     rail_station_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
-#                                  StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-#                                  StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName//d1:Zh_tw")))
-#   }
-#
-#   rail_line=as.data.frame(lapply(rail_line, rep, num_of_station))
-#   rail_station_line=cbind(rail_line, rail_station_temp)
-#
-#   if (operator=="TRA"){
-#     url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/Line?&%24format=XML"
-#     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#     x=read_xml(x)
-#     rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
-#                          LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineNameZh")),
-#                          LineSectionName=xml_text(xml_find_all(x, xpath = ".//d1:LineSectionNameZh")))
-#     rail_station_line=left_join(rail_station_line, rail_line)%>%
-#       dplyr::select(LineID, LineName, LineSectionName, Sequence, StationID, StationName, TraveledDistance)
-#   }else if (operator=="AFR"){
-#     url="https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/Line?&%24format=XML"
-#     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#     x=read_xml(x)
-#     rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
-#                          LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName//d1:Zh_tw")),
-#                          LineSectionName=xml_text(xml_find_all(x, xpath = ".//d1:LineSectionName//d1:Zh_tw")))
-#     rail_station_line=left_join(rail_station_line, rail_line)%>%
-#       dplyr::select(LineID, LineName, LineSectionName, Sequence, StationID, StationName, TraveledDistance)
-#   }else{
-#     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Line/", operator,"?&%24format=XML")
-#     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#     x=read_xml(x)
-#     rail_line=data.frame(LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
-#                          LineName=xml_text(xml_find_all(x, xpath = ".//d1:LineName//d1:Zh_tw")))
-#     rail_station_line=left_join(rail_station_line, rail_line)%>%
-#       dplyr::select(LineID, LineName, Sequence, StationID, StationName)
-#   }
-#
-#   cat(paste0("#---", operator, " Station of Line Downloaded---#\n"))
-#
-#   if (nchar(out)!=0 & out!=F){
-#     write.csv(rail_station_line, out, row.names=F)
-#   }
-#   return(rail_station_line)
-# }
-#
-#
-#
+Rail_StationOfLine=function(access_token, operator, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(jsonlite)) install.packages("jsonlite")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  if(operator=="TRA"){
+    url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/StationOfLine?&%24format=JSON"
+  }else if(operator=="THSR"){
+    stop("Please use function 'Rail_Station()' to retrieve the station of high speed rail (THSR).")
+  }else if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=JSON")
+  }else if(operator=="AFR"){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/StationOfLine?&%24format=JSON")
+  }else{
+    print(TDX_Railway)
+    stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+  }
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    if(operator=="AFR"){
+      rail_info=fromJSON(content(x, as="text"))$StationOfLines
+    }else{
+      rail_info=fromJSON(content(x, as="text"))
+    }
+  }, error=function(err){
+    if (grepl("invalid", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }
+  })
+
+  num_of_station=unlist(mapply(function(x) nrow(rail_info$Stations[[x]]), c(1:nrow(rail_info))))
+
+  if(operator=="TRA"){
+    rail_station_temp=data.frame(Sequence=unlist(mapply(function(x) rail_info$Stations[[x]]$Sequence, c(1:nrow(rail_info)))),
+                                 StationID=unlist(mapply(function(x) rail_info$Stations[[x]]$StationID, c(1:nrow(rail_info)))),
+                                 StationName=unlist(mapply(function(x) rail_info$Stations[[x]]$StationName, c(1:nrow(rail_info)))),
+                                 TraveledDistance=unlist(mapply(function(x) rail_info$Stations[[x]]$TraveledDistance, c(1:nrow(rail_info)))))
+  }else if(operator=="AFR"){
+    rail_station_temp=data.frame(Sequence=unlist(mapply(function(x) rail_info$Stations[[x]]$Sequence, c(1:nrow(rail_info)))),
+                                 StationID=unlist(mapply(function(x) rail_info$Stations[[x]]$StationID, c(1:nrow(rail_info)))),
+                                 StationName=unlist(mapply(function(x) rail_info$Stations[[x]]$StationName$Zh_tw, c(1:nrow(rail_info)))),
+                                 CumulativeDistance=unlist(mapply(function(x) rail_info$Stations[[x]]$CumulativeDistance, c(1:nrow(rail_info)))))
+  }else{
+    rail_station_temp=data.frame(Sequence=unlist(mapply(function(x) rail_info$Stations[[x]]$Sequence, c(1:nrow(rail_info)))),
+                                 StationID=unlist(mapply(function(x) rail_info$Stations[[x]]$StationID, c(1:nrow(rail_info)))),
+                                 StationName=unlist(mapply(function(x) rail_info$Stations[[x]]$StationName$Zh_tw, c(1:nrow(rail_info)))))
+  }
+
+  rail_info=data.frame(LineID=rail_info$LineID[rep(c(1:nrow(rail_info)), num_of_station)])
+  rail_station_line=cbind(rail_info, rail_station_temp)
+
+  if (operator=="TRA"){
+    url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/Line?&%24format=JSON"
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    rail_line=fromJSON(content(x, as="text"))
+    rail_line$LineName=rail_line$LineNameZh
+    rail_line$LineSectionName=rail_line$LineSectionNameZh
+    rail_station_line=left_join(rail_station_line, rail_line[, c("LineID","LineName","LineSectionName","IsBranch")], by=c("LineID"))%>%
+      dplyr::select(LineID, LineName, LineSectionName, IsBranch, Sequence, StationID, StationName, TraveledDistance)
+  }else if (operator=="AFR"){
+    url="https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/Line?&%24format=JSON"
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    rail_line=fromJSON(content(x, as="text"))$Lines
+    rail_line$LineName=rail_line$LineName$Zh_tw
+    rail_line$LineSectionName=rail_line$LineSectionName$Zh_tw
+    rail_station_line=left_join(rail_station_line, rail_line)%>%
+      dplyr::select(LineID, LineName, LineSectionName, IsBranch, Sequence, StationID, StationName, CumulativeDistance)
+  }else{
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Line/", operator,"?&%24format=JSON")
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+    dat=content(x)
+    rail_line=data.frame(LineID=unlist(mapply(function(x) dat[[x]]$LineID, c(1:length(dat)))),
+                         LineName=unlist(mapply(function(x) dat[[x]]$LineName$Zh_tw, c(1:length(dat)))),
+                         LineSectionName=unlist(mapply(function(x) ifelse(is.null(dat[[1]]$LineSectionName$Zh_tw), NA, dat[[1]]$LineSectionName$Zh_tw), c(1:length(dat)))),
+                         IsBranch=unlist(mapply(function(x) dat[[x]]$IsBranch, c(1:length(dat)))))
+    rail_station_line=left_join(rail_station_line, rail_line, by=c("LineID"))%>%
+      dplyr::select(LineID, LineName, LineSectionName, IsBranch, Sequence, StationID, StationName)
+  }
+
+  cat(paste0("#---", operator, " Station of Line Downloaded---#\n"))
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(rail_station_line, out, row.names=F)
+  }
+  return(rail_station_line)
+}
+
+
+
 # Rail_Station=function(access_token, operator, dtype="text", out=F){
 #   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(xml2)) install.packages("xml2")
+#   if (!require(jsonlite)) install.packages("jsonlite")
 #   if (!require(httr)) install.packages("httr")
 #   if (!require(sf)) install.packages("sf")
 #
-#   if (operator=="TRA"){
+#   if(!dtype %in% c("text","sf")){
+#     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+#   }
+#   if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
+#     stop("The file name must contain '.shp' when exporting shapefile.\n")
+#   }
+#   if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
+#     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+#   }
+#
+#   if(operator=="TRA"){
 #     url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/Station?&%24format=XML"
-#   }else if (operator=="THSR"){
+#   }else if(operator=="THSR"){
 #     url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/Station?&%24format=XML"
-#   }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
+#   }else if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
 #     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Station/", operator, "?&%24format=XML")
-#   }else if (operator=="AFR"){
+#   }else if(operator=="AFR"){
 #     url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/Station?&%24format=XML")
 #   }else{
 #     print(TDX_Railway)
