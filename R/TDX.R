@@ -638,215 +638,199 @@ Bike_Station=function(access_token, county, dtype="text", out=F){
 
 
 
-# Geocoding=function(access_token, address, dtype="text", out=F){
-#   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(xml2)) install.packages("xml2")
-#   if (!require(sf)) install.packages("sf")
-#   if (!require(urltools)) install.packages("urltools")
-#   if (!require(httr)) install.packages("httr")
-#   if (!require(progress)) install.packages("progress")
-#
-#   pb=progress_bar$new(format="(:spin) [:bar] :percent  ", total=length(address), clear=F, width=80)
-#   address_record=data.frame()
-#   record_fail=c()
-#
-#   for (i in c(1:length(address))){
-#     pb$tick()
-#     nexti=F
-#     while (!nexti){
-#       tryCatch({
-#         # TDX???????L?k?????u?@?v
-#         address_temp=gsub("?@", 1, address[i])%>%
-#           gsub("\\/", "", .) %>%
-#           url_encode()
-#
-#         url=paste0("https://tdx.transportdata.tw/api/advanced/V3/Map/GeoCode/Coordinate/Address/", address_temp, "?&$format=JSON")
-#         add_temp=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))%>%
-#           content()
-#
-#         if (length(add_temp)==0){
-#           cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
-#           record_fail=c(record_fail, address[i])
-#         }else if (length(add_temp)==14){
-#           stop("Your access token is invalid!")
-#         }else{
-#           add_temp=data.frame(AddressOriginal=address[i],
-#                               AddressNew=add_temp[[1]]$Address,
-#                               Geometry=add_temp[[1]]$Geometry)
-#           address_record=rbind(address_record, add_temp)
-#         }
-#         nexti=T
-#         # if((i %% 10==0 | i==length(address))){
-#         #   cat(paste0(i, "/", length(address), "\n"))
-#         # }
-#
-#       }, error=function(err){
-#         # cat(paste0("ERROR:", conditionMessage(err), "\n"))
-#         if (grepl("externalptr", conditionMessage(err))){
-#           cat(paste0("Reconnect!\n"))
-#           nexti=F
-#         }else if(grepl("subscript out of bounds", conditionMessage(err))){
-#           cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
-#           record_fail=c(record_fail, address[i])
-#           nexti=T
-#         }else{
-#           stop("Your access token is invalid!")
-#         }
-#       })
-#     }
-#   }
-#
-#   datanum_ori=nrow(address_record)
-#   address_record=distinct(address_record)
-#   datanum_rev=nrow(address_record)
-#
-#   cat("Geocoding Summary",
-#       paste0("Total:      ", length(address)),
-#       paste0("Success:    ", datanum_rev),
-#       paste0("Duplicated: ", datanum_ori-datanum_rev),
-#       paste0("Fail:       ", length(record_fail)),
-#       sep="\n")
-#
-#   if (dtype=="text"){
-#     if (nchar(out)!=0 & out!=F){
-#       write.csv(address_record, out, row.names=F)
-#     }
-#     return(list(SUCCESS=address_record, FAIL=record_fail))
-#   }else if (dtype=="sf"){
-#     address_record$Geometry=st_as_sfc(address_record$Geometry)
-#     address_record=st_sf(address_record, crs=4326)
-#
-#     if (grepl(".shp", out) & out!=F){
-#       write_sf(address_record, out, layer_options="ENCODING=UTF-8")
-#     }else if (!(grepl(".shp", out)) & out!=F){
-#       stop("The file name must contain '.shp'\n")
-#     }
-#
-#     return(list(SUCCESS=address_record, FAIL=record_fail))
-#   }else{
-#     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
-#   }
-# }
-#
-#
-#
-# Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
-#   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(xml2)) install.packages("xml2")
-#   if (!require(sf)) install.packages("sf")
-#   if (!require(httr)) install.packages("httr")
-#
-#   if (county %in% c(TDX_County$Code[1:22], "ALL") & roadclass %in% c(0,1,3,"ALL")){
-#
-#     if (county!="ALL" & roadclass=="ALL"){
-#       # ???w?????????D???h??????
-#       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?&%24format=XML")
-#       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#       tryCatch({
-#         x=read_xml(x)
-#       }, error=function(err){
-#         cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-#         stop(paste0("Your access token is invalid!"))
-#       })
-#
-#       road=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
-#                       RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
-#                       RoadID=xml_text(xml_find_all(x, xpath=".//RoadID")),
-#                       RoadName=xml_text(xml_find_all(x, xpath=".//RoadName")),
-#                       RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
-#                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
-#     }else if (county!="ALL" & roadclass %in% c(0,1,3)){
-#       # ???w???????w?D???h??????
-#       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?$filter=RoadClass%20eq%20'", roadclass, "'&$format=xml")
-#       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#       tryCatch({
-#         x=read_xml(x)
-#       }, error=function(err){
-#         cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-#         stop(paste0("Your access token is invalid!"))
-#       })
-#
-#       road=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
-#                       RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
-#                       RoadID=xml_text(xml_find_all(x, xpath=".//RoadID")),
-#                       RoadName=xml_text(xml_find_all(x, xpath=".//RoadName")),
-#                       RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
-#                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
-#     }else if (county=="ALL" & roadclass %in% c(0,1,3)){
-#       # ???????????w?D???h??????
-#       url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", roadclass, "?&$format=XML")
-#       x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#       tryCatch({
-#         x=read_xml(x)
-#       }, error=function(err){
-#         cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-#         stop(paste0("Your access token is invalid!"))
-#       })
-#
-#       road=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
-#                       RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
-#                       RoadID=xml_text(xml_find_all(x, xpath=".//RoadID")),
-#                       RoadName=xml_text(xml_find_all(x, xpath=".//RoadName")),
-#                       RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
-#                       Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
-#     }else if (county=="ALL" & roadclass=="ALL"){
-#       # ?????????????D???h??????
-#       road=data.frame()
-#       for (i in c(0,1,3)){
-#         url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", i, "?&$format=XML")
-#         x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#         tryCatch({
-#           x=read_xml(x)
-#         }, error=function(err){
-#           cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-#           stop(paste0("Your access token is invalid!"))
-#         })
-#
-#         x=data.frame(RoadClass=xml_text(xml_find_all(x, xpath=".//RoadClass")),
-#                      RoadClassName=xml_text(xml_find_all(x, xpath=".//RoadClassName")),
-#                      RoadID=xml_text(xml_find_all(x, xpath=".//RoadID")),
-#                      RoadName=xml_text(xml_find_all(x, xpath=".//RoadName")),
-#                      RoadNameID=xml_text(xml_find_all(x, xpath=".//RoadNameID")),
-#                      Geometry=xml_text(xml_find_all(x, xpath=".//Geometry")))
-#         road=rbind(road, x)
-#         cat(paste0("Road Class ", i, " Downloaded\n"))
-#       }
-#     }
-#   }else if(!(county %in% c(TDX_County$Code[1:22], "ALL"))){
-#     print(c(TDX_County$Code[1:22], "ALL"))
-#     stop(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
-#   }else if(!(RoadClass %in% c(0,1,3,"ALL"))){
-#     print(TDX_RoadClass)
-#     stop(paste0("'", RoadClass, "' is invalid RoadClass code. Please check out the parameter table above."))
-#   }
-#
-#   if (dtype=="text"){
-#     if (nchar(out)!=0 & out!=F){
-#       write.csv(road, out, row.names=F)
-#     }
-#     return(road)
-#   }else if (dtype=="sf"){
-#     road$Geometry=st_as_sfc(road$Geometry)
-#     road=st_sf(road, crs=4326)
-#
-#     if (grepl(".shp", out) & out!=F){
-#       write_sf(road, out, layer_options="ENCODING=UTF-8")
-#     }else if (!(grepl(".shp", out)) & out!=F){
-#       stop("The file name must contain '.shp'\n")
-#     }
-#
-#     return(road)
-#   }else{
-#     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
-#   }
-# }
-#
-#
-#
+Geocoding=function(access_token, address, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(jsonlite)) install.packages("jsonlite")
+  if (!require(sf)) install.packages("sf")
+  if (!require(urltools)) install.packages("urltools")
+  if (!require(httr)) install.packages("httr")
+  if (!require(progress)) install.packages("progress")
+
+  if(!dtype %in% c("text","sf")){
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
+    stop("The file name must contain '.shp' when exporting shapefile.\n")
+  }
+  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  pb=progress_bar$new(format="(:spin) [:bar] :percent  ", total=length(address), clear=F, width=80)
+  address_record=data.frame()
+  record_fail=c()
+
+  for (i in c(1:length(address))){
+    pb$tick()
+    nexti=F
+    while (!nexti){
+      tryCatch({
+        address_temp=gsub("?@", 1, address[i])%>%
+          gsub("\\/", "", .) %>%
+          url_encode()
+
+        url=paste0("https://tdx.transportdata.tw/api/advanced/V3/Map/GeoCode/Coordinate/Address/", address_temp, "?&$format=JSON")
+        add_temp=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))%>%
+          content()
+
+        if (length(add_temp)==0){
+          cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
+          record_fail=c(record_fail, address[i])
+        }else if (length(add_temp)==14){
+          stop("Your access token is invalid!")
+        }else{
+          add_temp=data.frame(AddressOriginal=address[i],
+                              AddressNew=add_temp[[1]]$Address,
+                              geometry=add_temp[[1]]$Geometry)
+          address_record=rbind(address_record, add_temp)
+        }
+        nexti=T
+
+      }, error=function(err){
+        # cat(paste0("ERROR:", conditionMessage(err), "\n"))
+        if (grepl("externalptr", conditionMessage(err))){
+          cat(paste0("Reconnect!\n"))
+          nexti=F
+        }else if(grepl("subscript out of bounds", conditionMessage(err))){
+          cat(paste0("CANNOT Geocode ", AddressOriginal=address[i], "\n"))
+          record_fail=c(record_fail, address[i])
+          nexti=T
+        }else{
+          stop("Your access token is invalid!")
+        }
+      })
+    }
+  }
+
+  datanum_ori=nrow(address_record)
+  address_record=distinct(address_record)
+  datanum_rev=nrow(address_record)
+
+  cat("Geocoding Summary",
+      paste0("Total:      ", length(address)),
+      paste0("Success:    ", datanum_rev),
+      paste0("Duplicated: ", datanum_ori-datanum_rev),
+      paste0("Fail:       ", length(record_fail)),
+      sep="\n")
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(address_record, out, row.names=F)
+    }
+    return(list(SUCCESS=address_record, FAIL=record_fail))
+  }else if (dtype=="sf"){
+    address_record$geometry=st_as_sfc(address_record$geometry)
+    address_record=st_sf(address_record, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(address_record, out, layer_options="ENCODING=UTF-8")
+    }else if (!(grepl(".shp", out)) & out!=F){
+      stop("The file name must contain '.shp'\n")
+    }
+
+    return(list(SUCCESS=address_record, FAIL=record_fail))
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+}
+
+
+
+Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(jsonlite)) install.packages("jsonlite")
+  if (!require(sf)) install.packages("sf")
+  if (!require(httr)) install.packages("httr")
+
+  if(!dtype %in% c("text","sf")){
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
+    stop("The file name must contain '.shp' when exporting shapefile.\n")
+  }
+  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  if (county %in% c(TDX_County$Code[1:22], "ALL") & roadclass %in% c(0,1,3,"ALL")){
+    if (county!="ALL" & roadclass=="ALL"){
+      # road of specific county and all road class
+      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?&%24format=JSON")
+      skip_flag=F
+    }else if (county!="ALL" & roadclass %in% c(0,1,3)){
+      # road of specific county and specific road class
+      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/City/", county, "?%24filter=RoadClass%20eq%20%27", roadclass, "%27&%24format=JSON")
+      skip_flag=F
+    }else if (county=="ALL" & roadclass %in% c(0,1,3)){
+      # road of all county and specific road class
+      url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", roadclass, "?&$format=JSON")
+      skip_flag=F
+    }else if (county=="ALL" & roadclass=="ALL"){
+      # road of all county and all road class
+      road=data.frame()
+      for (i in c(0,1,3)){
+        url=paste0("https://tdx.transportdata.tw/api/basic/V3/Map/Road/Network/RoadClass/", i, "?&$format=JSON")
+        x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+        tryCatch({
+          temp=fromJSON(content(x, as="text"))
+        }, error=function(err){
+          stop(paste0("Your access token is invalid!"))
+        })
+        temp=temp[, c("RoadClass","RoadClassName","RoadID","RoadName","RoadNameID","Geometry")]%>%
+          rename(geometry=Geometry)
+
+        road=rbind(road, temp)
+        cat(paste0("Road Class ", i, " Downloaded\n"))
+        skip_flag=T
+      }
+    }
+
+    if(skip_flag==F){
+      x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+      tryCatch({
+        road=fromJSON(content(x, as="text"))
+      }, error=function(err){
+        stop(paste0("Your access token is invalid!"))
+      })
+
+      if(class(road)=="data.frame"){
+        road=road[, c("RoadClass","RoadClassName","RoadID","RoadName","RoadNameID","Geometry")]%>%
+          rename(geometry=Geometry)
+      }else{
+        stop(paste0("'", county, " has no RoadClass ", roadclass))
+      }
+    }
+
+  }else if(!(county %in% c(TDX_County$Code[1:22], "ALL"))){
+    print(c(TDX_County$Code[1:22], "ALL"))
+    stop(paste0("'", county, "' is invalid county code. Please check out the parameter table above."))
+  }else if(!(RoadClass %in% c(0,1,3,"ALL"))){
+    print(TDX_RoadClass)
+    stop(paste0("'", RoadClass, "' is invalid RoadClass code. Please check out the parameter table above."))
+  }
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(road, out, row.names=F)
+    }
+    return(road)
+  }else if (dtype=="sf"){
+    road$geometry=st_as_sfc(road$geometry)
+    road=st_sf(road, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(road, out, layer_options="ENCODING=UTF-8")
+    }
+    return(road)
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+}
+
+
+
 # Rail_TimeTable=function(access_token, operator, record, out=F){
 #   if (!require(dplyr)) install.packages("dplyr")
 #   if (!require(xml2)) install.packages("xml2")
