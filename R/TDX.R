@@ -831,217 +831,135 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
 
 
 
-# Rail_TimeTable=function(access_token, operator, record, out=F){
-#   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(xml2)) install.packages("xml2")
-#   if (!require(httr)) install.packages("httr")
-#
-#   if (record=="station"){
-#     if (operator=="TRA"){
-#       url="https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/GeneralStationTimetable?&$format=xml"
-#     }else if (operator=="THSR"){
-#       stop("THSR does not provide 'station' time table up to now! Please use 'general' time table.")
-#     }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
-#       url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationTimeTable/", operator, "?&%24format=XML")
-#     }else if (operator %in% c("TMRT","AFR")){
-#       stop(paste0(operator, " does not provide 'station' time table up to now! Please check out other MRT system."))
-#     }else{
-#       print(TDX_Railway)
-#       stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
-#     }
-#     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#     tryCatch({
-#       x=read_xml(x)
-#     }, error=function(err){
-#       cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-#       stop(paste0("Your access token is invalid!"))
-#     })
-#
-#
-#     if (operator=="TRA"){
-#       station=data.frame(StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-#                          StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
-#                          Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")))
-#
-#       num_of_table=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
-#
-#       rail_timetable_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
-#                                      TrainNo=xml_text(xml_find_all(x, xpath = ".//d1:TrainNo")),
-#                                      DestinationStationID=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStationID")),
-#                                      DestinationStationName=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStationName/d1:Zh_tw")),
-#                                      TrainTypeID=xml_text(xml_find_all(x, xpath = ".//d1:TrainTypeID")),
-#                                      TrainTypeCode=xml_text(xml_find_all(x, xpath = ".//d1:TrainTypeCode")),
-#                                      TrainTypeName=xml_text(xml_find_all(x, xpath = ".//d1:TrainTypeName/d1:Zh_tw")),
-#                                      ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
-#                                      DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")))
-#
-#       station=as.data.frame(lapply(station, rep, num_of_table))
-#       rail_timetable=cbind(station, rail_timetable_temp)
-#     }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
-#       station=data.frame(RouteID=xml_text(xml_find_all(x, xpath = ".//d1:RouteID")),
-#                          LineID=xml_text(xml_find_all(x, xpath = ".//d1:LineID")),
-#                          StationID=xml_text(xml_find_all(x, xpath = ".//d1:StationID")),
-#                          StationName=xml_text(xml_find_all(x, xpath = ".//d1:StationName/d1:Zh_tw")),
-#                          Direction=xml_text(xml_find_all(x, xpath = ".//d1:Direction")),
-#                          DestinationStaionID=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStaionID")),
-#                          DestinationStationName=xml_text(xml_find_all(x, xpath = ".//d1:DestinationStationName/d1:Zh_tw")),
-#                          ServiceTag=xml_text(xml_find_all(x, xpath = ".//d1:ServiceTag")),
-#                          Monday=xml_text(xml_find_all(x, xpath = ".//d1:Monday")),
-#                          Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Tuesday")),
-#                          Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Wednesday")),
-#                          Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Thursday")),
-#                          Friday=xml_text(xml_find_all(x, xpath = ".//d1:Friday")),
-#                          Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Saturday")),
-#                          Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Sunday")),
-#                          NationalHolidays=xml_text(xml_find_all(x, xpath = ".//d1:NationalHolidays")))
-#
-#
-#       num_of_table=xml_length(xml_find_all(x, xpath = ".//d1:Timetables"))
-#
-#       rail_timetable_temp=data.frame(Sequence=xml_text(xml_find_all(x, xpath = ".//d1:Sequence")),
-#                                      ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
-#                                      DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")),
-#                                      TrainType=xml_text(xml_find_all(x, xpath = ".//d1:TrainType")))
-#
-#       station=as.data.frame(lapply(station, rep, num_of_table))
-#       rail_timetable=cbind(station, rail_timetable_temp)
-#     }
-#   }else if (record=="general"){
-#     if (operator=="TRA"){
-#       url="https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/GeneralTrainTimetable?&$format=XML"
-#     }else if (operator=="THSR"){
-#       url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/GeneralTimetable?&$format=XML"
-#     }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT","TMRT")){
-#       stop("MRT system does not provide 'general' time table up to now! Please use 'station' time table.")
-#     }else if (operator =="AFR"){
-#       url="https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/GeneralTrainTimetable?&%24format=XML"
-#     }else{
-#       print(TDX_Railway)
-#       stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
-#     }
-#     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#     tryCatch({
-#       x=read_xml(x)
-#     }, error=function(err){
-#       cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-#       stop(paste0("Your access token is invalid!"))
-#     })
-#
-#     if (operator=="TRA"){
-#       tra_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
-#                           Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-#                           TrainTypeID=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeID")),
-#                           TrainTypeCode=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeCode")),
-#                           TrainTypeName=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeName//d1:Zh_tw")),
-#                           TripHeadSign=xml_text(xml_find_all(x, xpath=".//d1:TripHeadSign")),
-#                           StartingStationID=xml_text(xml_find_all(x, xpath=".//d1:StartingStationID")),
-#                           StartingStationName=xml_text(xml_find_all(x, xpath=".//d1:StartingStationName//d1:Zh_tw")),
-#                           EndingStationID=xml_text(xml_find_all(x, xpath=".//d1:EndingStationID")),
-#                           EndingStationName=xml_text(xml_find_all(x, xpath=".//d1:EndingStationName//d1:Zh_tw")),
-#                           TripLine=xml_text(xml_find_all(x, xpath=".//d1:TripLine")),
-#                           Monday=xml_text(xml_find_all(x, xpath=".//d1:Monday")),
-#                           Tuesday=xml_text(xml_find_all(x, xpath=".//d1:Tuesday")),
-#                           Wednesday=xml_text(xml_find_all(x, xpath=".//d1:Wednesday")),
-#                           Thursday=xml_text(xml_find_all(x, xpath=".//d1:Thursday")),
-#                           Friday=xml_text(xml_find_all(x, xpath=".//d1:Friday")),
-#                           Saturday=xml_text(xml_find_all(x, xpath=".//d1:Saturday")),
-#                           Sunday=xml_text(xml_find_all(x, xpath=".//d1:Sunday")),
-#                           NationalHolidays=xml_text(xml_find_all(x, xpath=".//d1:NationalHolidays")),
-#                           DayBeforeHoliday=xml_text(xml_find_all(x, xpath=".//d1:DayBeforeHoliday")),
-#                           DayAfterHoliday=xml_text(xml_find_all(x, xpath=".//d1:DayAfterHoliday")))
-#
-#       num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:StopTimes"))
-#
-#       rail_timetable_temp=data.frame(StopSequence=as.numeric(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))),
-#                                      StationID=xml_text(xml_find_all(x, xpath=".//d1:StationID")),
-#                                      StationName=xml_text(xml_find_all(x, xpath=".//d1:StationName//d1:Zh_tw")),
-#                                      ArrivalTime=xml_text(xml_find_all(x, xpath=".//d1:ArrivalTime")),
-#                                      DepartureTime=xml_text(xml_find_all(x, xpath=".//d1:DepartureTime")))
-#
-#       tra_info=as.data.frame(lapply(tra_info, rep, num_of_station))
-#       rail_timetable=cbind(tra_info, rail_timetable_temp)
-#     }else if (operator=="THSR"){
-#       tra_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
-#                           Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-#                           StartingStationID=xml_text(xml_find_all(x, xpath=".//d1:StartingStationID")),
-#                           StartingStationName=xml_text(xml_find_all(x, xpath=".//d1:StartingStationName//d1:Zh_tw")),
-#                           EndingStationID=xml_text(xml_find_all(x, xpath=".//d1:EndingStationID")),
-#                           EndingStationName=xml_text(xml_find_all(x, xpath=".//d1:EndingStationName//d1:Zh_tw")),
-#                           Monday=xml_text(xml_find_all(x, xpath=".//d1:Monday")),
-#                           Tuesday=xml_text(xml_find_all(x, xpath=".//d1:Tuesday")),
-#                           Wednesday=xml_text(xml_find_all(x, xpath=".//d1:Wednesday")),
-#                           Thursday=xml_text(xml_find_all(x, xpath=".//d1:Thursday")),
-#                           Friday=xml_text(xml_find_all(x, xpath=".//d1:Friday")),
-#                           Saturday=xml_text(xml_find_all(x, xpath=".//d1:Saturday")),
-#                           Sunday=xml_text(xml_find_all(x, xpath=".//d1:Sunday")))
-#
-#       num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:StopTimes"))
-#
-#
-#       ArrivalTime=xml_text(xml_find_all(x, xpath=".//d1:ArrivalTime"))
-#       ArrivalTime=data.frame(id=which(grepl("ArrivalTime", xml_find_all(x, xpath=".//d1:StopTime"))), ArrivalTime)
-#       DepartureTime=xml_text(xml_find_all(x, xpath=".//d1:DepartureTime"))
-#       DepartureTime=data.frame(id=which(grepl("DepartureTime", xml_find_all(x, xpath=".//d1:StopTime"))), DepartureTime)
-#       temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))))), ArrivalTime)%>%
-#         left_join(DepartureTime)%>%
-#         dplyr::select(-id)
-#
-#       rail_timetable_temp=data.frame(StopSequence=as.numeric(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))),
-#                                      StationID=xml_text(xml_find_all(x, xpath=".//d1:StationID")),
-#                                      StationName=xml_text(xml_find_all(x, xpath=".//d1:StationName//d1:Zh_tw")),
-#                                      temp)
-#
-#       tra_info=as.data.frame(lapply(tra_info, rep, num_of_station))
-#       rail_timetable=cbind(tra_info, rail_timetable_temp)
-#     }else if (operator=="AFR"){
-#       afr_info=data.frame(TrainNo=xml_text(xml_find_all(x, xpath=".//d1:TrainNo")),
-#                           RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
-#                           Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-#                           Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-#                           TrainTypeID=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeID")),
-#                           TrainTypeCode=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeCode")),
-#                           TrainTypeName=xml_text(xml_find_all(x, xpath=".//d1:TrainTypeName//d1:Zh_tw")),
-#                           StartingStationID=xml_text(xml_find_all(x, xpath=".//d1:StartingStationID")),
-#                           StartingStationName=xml_text(xml_find_all(x, xpath=".//d1:StartingStationName//d1:Zh_tw")),
-#                           EndingStationID=xml_text(xml_find_all(x, xpath=".//d1:EndingStationID")),
-#                           EndingStationName=xml_text(xml_find_all(x, xpath=".//d1:EndingStationName//d1:Zh_tw")),
-#                           TripLine=xml_text(xml_find_all(x, xpath=".//d1:TripLine")),
-#                           Monday=xml_text(xml_find_all(x, xpath=".//d1:Monday")),
-#                           Tuesday=xml_text(xml_find_all(x, xpath=".//d1:Tuesday")),
-#                           Wednesday=xml_text(xml_find_all(x, xpath=".//d1:Wednesday")),
-#                           Thursday=xml_text(xml_find_all(x, xpath=".//d1:Thursday")),
-#                           Friday=xml_text(xml_find_all(x, xpath=".//d1:Friday")),
-#                           Saturday=xml_text(xml_find_all(x, xpath=".//d1:Saturday")),
-#                           Sunday=xml_text(xml_find_all(x, xpath=".//d1:Sunday")),
-#                           NationalHolidays=xml_text(xml_find_all(x, xpath=".//d1:NationalHolidays")),
-#                           DayBeforeHoliday=xml_text(xml_find_all(x, xpath=".//d1:DayBeforeHoliday")),
-#                           DayAfterHoliday=xml_text(xml_find_all(x, xpath=".//d1:DayAfterHoliday")))
-#
-#       num_of_station=xml_length(xml_find_all(x, xpath = ".//d1:StopTimes"))
-#
-#       rail_timetable_temp=data.frame(StopSequence=as.numeric(xml_text(xml_find_all(x, xpath=".//d1:StopSequence"))),
-#                                      StationID=xml_text(xml_find_all(x, xpath=".//d1:StationID")),
-#                                      StationName=xml_text(xml_find_all(x, xpath=".//d1:StationName//d1:Zh_tw")),
-#                                      ArrivalTime=xml_text(xml_find_all(x, xpath=".//d1:ArrivalTime")),
-#                                      DepartureTime=xml_text(xml_find_all(x, xpath=".//d1:DepartureTime")))
-#
-#       afr_info=as.data.frame(lapply(afr_info, rep, num_of_station))
-#       rail_timetable=cbind(afr_info, rail_timetable_temp)
-#     }
-#   }else{
-#     stop("'", record, "' is not valid format of timetable. Please use 'station' or 'general'.")
-#   }
-#
-#   if (nchar(out)!=0 & out!=F){
-#     write.csv(rail_timetable, out, row.names=F)
-#   }
-#   return(rail_timetable)
-# }
-#
-#
-#
+Rail_TimeTable=function(access_token, operator, record, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(xml2)) install.packages("xml2")
+  if (!require(httr)) install.packages("httr")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  if (record=="station"){
+    if (operator=="TRA"){
+      url="https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/GeneralStationTimetable?&$format=JSON"
+    }else if (operator=="THSR"){
+      stop("THSR does not provide 'station' time table up to now! Please use 'general' time table.")
+    }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationTimeTable/", operator, "?&%24format=JSON")
+    }else if (operator %in% c("TMRT","AFR")){
+      stop(paste0(operator, " does not provide 'station' time table up to now! Please check out other rail system."))
+    }else{
+      print(TDX_Railway)
+      stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
+    }
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+    tryCatch({
+      if(operator=="TRA"){
+        data_all=fromJSON(content(x, as="text"))$StationTimetables
+      }else{
+        data_all=fromJSON(content(x, as="text"))
+      }
+    }, error=function(err){
+      stop(paste0("Your access token is invalid!"))
+    })
+
+    if (operator=="TRA"){
+      data_all$StationName=data_all$StationName$Zh_tw
+      station=data_all[, c("StationID","StationName","Direction")]%>%
+        cbind(data_all$ServiceDay)
+
+      rail_timetable_temp=data.frame(Sequence=unlist(mapply(function(x) data_all$Timetables[[x]]$Sequence, c(1:nrow(data_all)))),
+                                     TrainNo=unlist(mapply(function(x) data_all$Timetables[[x]]$TrainNo, c(1:nrow(data_all)))),
+                                     DestinationStationID=unlist(mapply(function(x) data_all$Timetables[[x]]$DestinationStationID, c(1:nrow(data_all)))),
+                                     DestinationStationName=unlist(mapply(function(x) data_all$Timetables[[x]]$DestinationStationName$Zh_tw, c(1:nrow(data_all)))),
+                                     TrainTypeID=unlist(mapply(function(x) data_all$Timetables[[x]]$TrainTypeID, c(1:nrow(data_all)))),
+                                     TrainTypeCode=unlist(mapply(function(x) data_all$Timetables[[x]]$TrainTypeCode, c(1:nrow(data_all)))),
+                                     TrainTypeName=unlist(mapply(function(x) data_all$Timetables[[x]]$TrainTypeName$Zh_tw, c(1:nrow(data_all)))),
+                                     ArrivalTime=unlist(mapply(function(x) data_all$Timetables[[x]]$ArrivalTime, c(1:nrow(data_all)))),
+                                     DepartureTime=unlist(mapply(function(x) data_all$Timetables[[x]]$DepartureTime, c(1:nrow(data_all)))))
+    }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
+      data_all$StationName=data_all$StationName$Zh_tw
+      data_all$DestinationStationName=data_all$DestinationStationName$Zh_tw
+      station=data_all[, c("RouteID","LineID","StationID","StationName","Direction","DestinationStaionID","DestinationStationName")]%>%
+        cbind(data_all$ServiceDay)
+
+      rail_timetable_temp=data.frame(Sequence=unlist(mapply(function(x) data_all$Timetables[[x]]$Sequence, c(1:nrow(data_all)))),
+                                     ArrivalTime=unlist(mapply(function(x) data_all$Timetables[[x]]$ArrivalTime, c(1:nrow(data_all)))),
+                                     DepartureTime=unlist(mapply(function(x) data_all$Timetables[[x]]$DepartureTime, c(1:nrow(data_all)))))
+    }
+    num_of_table=mapply(function(x) nrow(data_all$Timetables[[x]]), c(1:nrow(data_all)))
+    station=station[rep(c(1:nrow(station)), num_of_table), ]
+    rail_timetable=cbind(station, rail_timetable_temp)
+  }else if (record=="general"){
+    if (operator=="TRA"){
+      url="https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/GeneralTrainTimetable?&$format=JSON"
+    }else if (operator=="THSR"){
+      url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/GeneralTimetable?&$format=JSON"
+    }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT","TMRT")){
+      stop("MRT system does not provide 'general' time table up to now! Please use 'station' time table.")
+    }else if (operator =="AFR"){
+      url="https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/GeneralTrainTimetable?&%24format=JSON"
+    }else{
+      print(TDX_Railway)
+      stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+    }
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+    tryCatch({
+      if(operator %in% c("TRA","AFR")){
+        data_all=fromJSON(content(x, as="text"))$TrainTimetables
+      }else{
+        data_all=fromJSON(content(x, as="text"))$GeneralTimetable
+      }
+    }, error=function(err){
+      stop(paste0("Your access token is invalid!"))
+    })
+
+    if (operator %in% c("TRA","AFR")){
+      tra_info=cbind(data_all$TrainInfo, data_all$ServiceDay)
+      tra_info$TrainTypeName=tra_info$TrainTypeName$Zh_tw
+      tra_info$StartingStationName=tra_info$StartingStationName$Zh_tw
+      tra_info$EndingStationName=tra_info$EndingStationName$Zh_tw
+      rail_timetable_temp=data.frame(StopSequence=unlist(mapply(function(x) data_all$StopTimes[[x]]$StopSequence, c(1:nrow(data_all)))),
+                                     StationID=unlist(mapply(function(x) data_all$StopTimes[[x]]$StationID, c(1:nrow(data_all)))),
+                                     StationName=unlist(mapply(function(x) data_all$StopTimes[[x]]$StationName$Zh_tw, c(1:nrow(data_all)))),
+                                     ArrivalTime=unlist(mapply(function(x) data_all$StopTimes[[x]]$ArrivalTime, c(1:nrow(data_all)))),
+                                     DepartureTime=unlist(mapply(function(x) data_all$StopTimes[[x]]$DepartureTime, c(1:nrow(data_all)))))
+
+      num_of_station=mapply(function(x) nrow(data_all$StopTimes[[x]]), c(1:nrow(data_all)))
+      tra_info=tra_info[rep(c(1:nrow(tra_info)), num_of_station), ]
+      rail_timetable=cbind(tra_info, rail_timetable_temp)
+    }else if (operator=="THSR"){
+      temp=data.frame(TrainNo=data_all$GeneralTrainInfo$TrainNo,
+                      Direction=data_all$GeneralTrainInfo$Direction,
+                      StartingStationID=data_all$GeneralTrainInfo$StartingStationID,
+                      EndingStationID=data_all$GeneralTrainInfo$EndingStationID)
+      tra_info=cbind(temp, data_all$ServiceDay)
+
+      rail_timetable_temp=data.frame(StopSequence=unlist(mapply(function(x) data_all$StopTimes[[x]]$StopSequence, c(1:nrow(data_all)))),
+                                     StationID=unlist(mapply(function(x) data_all$StopTimes[[x]]$StationID, c(1:nrow(data_all)))),
+                                     StationName=unlist(mapply(function(x) data_all$StopTimes[[x]]$StationName$Zh_tw, c(1:nrow(data_all)))),
+                                     ArrivalTime=unlist(mapply(function(x) data_all$StopTimes[[x]]$ArrivalTime, c(1:nrow(data_all)))),
+                                     DepartureTime=unlist(mapply(function(x) data_all$StopTimes[[x]]$DepartureTime, c(1:nrow(data_all)))))
+
+      num_of_station=mapply(function(x) nrow(data_all$StopTimes[[x]]), c(1:nrow(data_all)))
+      tra_info=tra_info[rep(c(1:nrow(tra_info)), num_of_station), ]
+      rail_timetable=cbind(tra_info, rail_timetable_temp)
+    }
+  }else{
+    stop("'", record, "' is not valid format of timetable. Please use 'station' or 'general'.")
+  }
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(rail_timetable, out, row.names=F)
+  }
+  return(rail_timetable)
+}
+
+
+
 # Bike_Shape=function(access_token, county, dtype="text", out=F){
 #   if (!require(dplyr)) install.packages("dplyr")
 #   if (!require(xml2)) install.packages("xml2")
