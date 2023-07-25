@@ -1,13 +1,14 @@
 library(dplyr)
+library(jsonlite)
 library(xml2)
 library(httr)
 library(sf)
 library(urltools)
 library(progress)
 library(data.table)
-library(jsonlite)
 
 usethis::use_package("dplyr")
+usethis::use_package("jsonlite")
 usethis::use_package("xml2")
 usethis::use_package("httr")
 usethis::use_package("sf")
@@ -123,7 +124,6 @@ Bus_StopOfRoute=function(access_token, county, dtype="text", out=F){
     if (nchar(out)!=0 & out!=F){
       write.csv(bus_stop, out, row.names=F)
     }
-    return(bus_stop)
   }else if(dtype=="sf"){
     bus_stop$geometry=st_as_sfc(ifelse(!is.na(bus_stop$PositionLon), paste0("POINT(", bus_stop$PositionLon, " ", bus_stop$PositionLat, ")"), "GEOMETRYCOLLECTION EMPTY"))
     bus_stop=st_sf(bus_stop, crs=4326)
@@ -131,8 +131,8 @@ Bus_StopOfRoute=function(access_token, county, dtype="text", out=F){
     if(grepl(".shp", out) & out!=F){
       write_sf(bus_stop, out, layer_options="ENCODING=UTF-8")
     }
-    return(bus_stop)
   }
+  return(bus_stop)
 }
 
 
@@ -244,7 +244,6 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
     if (nchar(out)!=0 & out!=F){
       write.csv(bus_shape, out, row.names=F)
     }
-    return(bus_shape)
   }else if(dtype=="sf"){
     bus_shape$geometry=st_as_sfc(bus_shape$geometry)
     bus_shape=st_sf(bus_shape, crs=4326)
@@ -252,8 +251,8 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
     if(grepl(".shp", out) & out!=F){
       write_sf(bus_shape, out, layer_options="ENCODING=UTF-8")
     }
-    return(bus_shape)
   }
+  return(bus_shape)
 }
 
 
@@ -494,7 +493,6 @@ Rail_Station=function(access_token, operator, dtype="text", out=F){
     if (nchar(out)!=0 & out!=F){
       write.csv(rail_station, out, row.names=F)
     }
-    return(rail_station)
   }else if (dtype=="sf"){
     rail_station$geometry=st_as_sfc(ifelse(!is.na(rail_station$PositionLon), paste0("POINT(", rail_station$PositionLon, " ", rail_station$PositionLat, ")"), "GEOMETRYCOLLECTION EMPTY"))
     rail_station=st_sf(rail_station, crs=4326)
@@ -502,11 +500,8 @@ Rail_Station=function(access_token, operator, dtype="text", out=F){
     if(grepl(".shp", out) & out!=F){
       write_sf(rail_station, out, layer_options="ENCODING=UTF-8")
     }
-
-    return(rail_station)
-  }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
+  return(rail_station)
 }
 
 
@@ -553,7 +548,7 @@ Rail_Shape=function(access_token, operator, dtype="text", out=F){
 
   rail_shape$LineName=rail_shape$LineName$Zh_tw
   rail_shape=rename(rail_shape, geometry=Geometry)%>%
-    select(LineID, LineName, geometry)
+    dplyr::select(LineID, LineName, geometry)
 
   cat(paste0("#---", operator, " Shape Downloaded---#\n"))
 
@@ -962,133 +957,80 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
 
 Bike_Shape=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
-  if (!require(xml2)) install.packages("xml2")
+  if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Cycling/Shape/City/", county, "?&$format=XML")
+  if(!dtype %in% c("text","sf")){
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
+    stop("The file name must contain '.shp' when exporting shapefile.\n")
+  }
+  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Cycling/Shape/City/", county, "?&$format=JSON")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   tryCatch({
-    x=read_xml(x)
+    bike_shape=fromJSON(content(x, as="text"))
   }, error=function(err){
-    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-
-    if (grepl("Unauthorized", conditionMessage(err))){
-      stop(paste0("Your access token is invalid!"))
-    }else{
+    stop(paste0("Your access token is invalid!"))
+  })
+  if("Message" %in% names(bike_shape) | length(bike_shape)==0){
+    if(county %in% TDX_County$Code){
+      stop(paste0("'",county, "' has no cycling path or data is not avaliable.\n", bike_station$Message))
+    }
+    else{
       print(TDX_County)
       stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
     }
-  })
-
-  if (substr(xml_text(x), 1, 4)=="City"){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the paramete table above.",
-                "\nIf the county code is indeed in the parameter table, but the error still occurs, it means that the county has no cycling network now in TDX platform."))
   }
 
-  RoadSectionStart=xml_text(xml_find_all(x, xpath = ".//d1:RoadSectionStart"))
-  RoadSectionStart=data.frame(id=which(grepl("RoadSectionStart", xml_find_all(x, xpath=".//d1:BikeShape"))), RoadSectionStart)
-  RoadSectionEnd=xml_text(xml_find_all(x, xpath = ".//d1:RoadSectionEnd"))
-  RoadSectionEnd=data.frame(id=which(grepl("RoadSectionEnd", xml_find_all(x, xpath=".//d1:BikeShape"))), RoadSectionEnd)
-  temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:City"))))), RoadSectionStart)%>%
-    left_join(RoadSectionEnd)%>%
-    dplyr::select(-id)
-
-  bike_shape=data.frame(RouteName=xml_text(xml_find_all(x, xpath = ".//d1:RouteName")),
-                        City=xml_text(xml_find_all(x, xpath = ".//d1:City")),
-                        temp,
-                        CyclingLength=xml_text(xml_find_all(x, xpath = ".//d1:CyclingLength")),
-                        Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
-
-  if (dtype=="text"){
+  if(dtype=="text"){
     if (nchar(out)!=0 & out!=F){
       write.csv(bike_shape, out, row.names=F)
     }
-    return(bike_shape)
   }else if (dtype=="sf"){
-    bike_shape$Geometry=st_as_sfc(bike_shape$Geometry)
+    bike_shape=rename(bike_shape, geometry=Geometry)
+    bike_shape$geometry=st_as_sfc(bike_shape$geometry)
     bike_shape=st_sf(bike_shape, crs=4326)
 
     if (grepl(".shp", out) & out!=F){
       write_sf(bike_shape, out, layer_options="ENCODING=UTF-8")
-    }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'\n")
     }
-
-    return(bike_shape)
-  }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
+  return(bike_shape)
 }
 
 
 
 Air_Schedule=function(access_token, domestic=T, out=F){
   if (!require(dplyr)) install.packages("dplyr")
-  if (!require(xml2)) install.packages("xml2")
+  if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
 
   if (domestic){
-    url="https://tdx.transportdata.tw/api/basic/v2/Air/GeneralSchedule/Domestic?$format=xml"
-    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-
-    tryCatch({
-      x=read_xml(x)
-    }, error=function(err){
-      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-      stop(paste0("Your access token is invalid!"))
-    })
-
-    air_schedule=data.frame(AirlineID=xml_text(xml_find_all(x, xpath = ".//d1:AirlineID")),
-                            ScheduleStartDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleStartDate")),
-                            ScheduleEndDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleEndDate")),
-                            FlightNumber=xml_text(xml_find_all(x, xpath = ".//d1:FlightNumber")),
-                            DepartureAirportID=xml_text(xml_find_all(x, xpath = ".//d1:DepartureAirportID")),
-                            DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")),
-                            ArrivalAirportID=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalAirportID")),
-                            ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
-                            Monday=xml_text(xml_find_all(x, xpath = ".//d1:Monday")),
-                            Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Tuesday")),
-                            Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Wednesday")),
-                            Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Thursday")),
-                            Friday=xml_text(xml_find_all(x, xpath = ".//d1:Friday")),
-                            Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Saturday")),
-                            Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Sunday")))
+    url="https://tdx.transportdata.tw/api/basic/v2/Air/GeneralSchedule/Domestic?$format=JSON"
   }else{
-    url="https://tdx.transportdata.tw/api/basic/v2/Air/GeneralSchedule/International?$format=xml"
-    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-
-    tryCatch({
-      x=read_xml(x)
-    }, error=function(err){
-      cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-      stop(paste0("Your access token is invalid!"))
-    })
-
-    Terminal=xml_text(xml_find_all(x, xpath = ".//d1:Terminal"))
-    Terminal=data.frame(id=which(grepl("Terminal", xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))), Terminal)
-    temp=left_join(data.frame(id=c(1:length(xml_text(xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))))), Terminal)%>%
-      dplyr::select(-id)
-
-    air_schedule=data.frame(AirlineID=xml_text(xml_find_all(x, xpath = ".//d1:AirlineID"))[1:length(xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))],
-                            FlightNumber=xml_text(xml_find_all(x, xpath = ".//d1:FlightNumber"))[1:length(xml_find_all(x, xpath=".//d1:GeneralFlightSchedule"))],
-                            scheduleStartDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleStartDate")),
-                            ScheduleEndDate=xml_text(xml_find_all(x, xpath = ".//d1:ScheduleEndDate")),
-                            DepartureAirportID=xml_text(xml_find_all(x, xpath = ".//d1:DepartureAirportID")),
-                            DepartureTime=xml_text(xml_find_all(x, xpath = ".//d1:DepartureTime")),
-                            ArrivalAirportID=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalAirportID")),
-                            ArrivalTime=xml_text(xml_find_all(x, xpath = ".//d1:ArrivalTime")),
-                            Monday=xml_text(xml_find_all(x, xpath = ".//d1:Monday")),
-                            Tuesday=xml_text(xml_find_all(x, xpath = ".//d1:Tuesday")),
-                            Wednesday=xml_text(xml_find_all(x, xpath = ".//d1:Wednesday")),
-                            Thursday=xml_text(xml_find_all(x, xpath = ".//d1:Thursday")),
-                            Friday=xml_text(xml_find_all(x, xpath = ".//d1:Friday")),
-                            Saturday=xml_text(xml_find_all(x, xpath = ".//d1:Saturday")),
-                            Sunday=xml_text(xml_find_all(x, xpath = ".//d1:Sunday")),
-                            temp)
+    url="https://tdx.transportdata.tw/api/basic/v2/Air/GeneralSchedule/International?$format=JSON"
   }
+
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    air_schedule=fromJSON(content(x, as="text"))
+  }, error=function(err){
+    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
+    stop(paste0("Your access token is invalid!"))
+  })
+
+  air_schedule$CodeShare_AirlineID=mapply(function(x) ifelse(is.null(air_schedule$CodeShare[[x]]$AirlineID), NA, paste(air_schedule$CodeShare[[x]]$AirlineID, collapse="|")), c(1:nrow(air_schedule)))
+  air_schedule$CodeShare_FlightNumber=mapply(function(x) ifelse(is.null(air_schedule$CodeShare[[x]]$FlightNumber), NA, paste(air_schedule$CodeShare[[x]]$FlightNumber, collapse="|")), c(1:nrow(air_schedule)))
+  air_schedule=dplyr::select(air_schedule, -CodeShare, -VersionID, -UpdateTime)
+
   if (nchar(out)!=0 & out!=F){
     write.csv(air_schedule, out, row.names=F)
   }
@@ -1099,94 +1041,58 @@ Air_Schedule=function(access_token, domestic=T, out=F){
 
 Tourism=function(access_token, county, poi, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
-  if (!require(xml2)) install.packages("xml2")
+  if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
-  if (!(county %in% c(TDX_County$Code, "ALL"))){
-    print(TDX_County)
+  if(!dtype %in% c("text","sf")){
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
+    stop("The file name must contain '.shp' when exporting shapefile.\n")
+  }
+  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  if (!(county %in% c(TDX_County$Code[1:22], "ALL"))){
+    print(TDX_County[1:22,])
     stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
   }else if (!(poi %in% c("ScenicSpot","Restaurant","Hotel"))){
     stop(paste0("City: '", poi, "' is not valid. Please use the 'ScenicSpot', 'Restaurant', or 'Hotel'."))
   }
 
   if (county=="ALL"){
-    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Tourism/", poi, "?&%24format=XML")
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Tourism/", poi, "?&%24format=JSON")
   }else{
-    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Tourism/", poi, "/", county, "?&$format=xml")
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Tourism/", poi, "/", county, "?&$format=JSON")
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   tryCatch({
-    x=read_xml(x)
+    poidf=fromJSON(content(x, as="text"))
   }, error=function(err){
-    cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-
-    if (grepl("Unauthorized", conditionMessage(err))){
-      stop(paste0("Your access token is invalid!"))
-    }else{
-      print(TDX_County)
-      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
-    }
+    stop(paste0("Your access token is invalid!"))
   })
 
-
-  if (poi=="ScenicSpot"){
-    xml_node=c("ScenicSpotTourismInfo//d1:ScenicSpotID","ScenicSpotTourismInfo//d1:ScenicSpotName","ScenicSpotTourismInfo//d1:City",
-               "ScenicSpotTourismInfo//d1:Address","ScenicSpotTourismInfo//d1:Phone","ScenicSpotTourismInfo//d1:OpenTime","ScenicSpotTourismInfo//d1:DescriptionDetail",
-               "ScenicSpotTourismInfo//d1:Position//d1:PositionLon","ScenicSpotTourismInfo//d1:Position//d1:PositionLat")
-    xml_node_name=c("ScenicSpotID","ScenicSpotName","City","Address","Phone","OpenTime","DescriptionDetail","PositionLon","PositionLat")
-
-    poidf=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:ScenicSpotTourismInfo"))))
-    for (i in xml_node){
-      node_name=xml_node_name[which(xml_node==i)]
-      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
-      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:ScenicSpotTourismInfo"))
-      temp_id=which(temp_id)
-      temp=data.frame(temp_id, temp)
-      colnames(temp)[2]=node_name
-      poidf=left_join(poidf, temp, by="temp_id")
-      cat(paste0("Attribute '", node_name, "' is parsed\n"))
+  if(length(poidf)==0){
+    stop(paste0("'", poi, "' data of '", county, "' is not avaliable.\n"))
+  }else{
+    poidf=cbind(poidf, poidf$Position)
+    if(poi=="ScenicSpot"){
+      req_col=c("ScenicSpotID","ScenicSpotName","DescriptionDetail","Description","Address","ZipCode","Phone","WebsiteUrl","OpenTime","Level","Class1","Class2","Class3","City","PositionLon","PositionLat","TravelInfo")
+      req_col=req_col[req_col %in% names(poidf)]
+      poidf=poidf[, req_col]
+    }else if(poi=="Restaurant"){
+      req_col=c("RestaurantID","RestaurantName","Description","Address","Phone","OpenTime","Class","City","PositionLon","PositionLat")
+      req_col=req_col[req_col %in% names(poidf)]
+      poidf=poidf[, req_col]
+    }else if(poi=="Hotel"){
+      req_col=c("HotelID","HotelName","Description","Address","ZipCode","Phone","Fax","WebsiteUrl","OpenTime","Class","Spec","ServiceInfo","ParkingInfo","Grade","City","PositionLon","PositionLat")
+      req_col=req_col[req_col %in% names(poidf)]
+      poidf=poidf[, req_col]
     }
-    poidf=dplyr::select(poidf, -temp_id)
-  }else if (poi=="Restaurant"){
-    xml_node=c("RestaurantTourismInfo//d1:RestaurantID","RestaurantTourismInfo//d1:RestaurantName","RestaurantTourismInfo//d1:Class",
-               "RestaurantTourismInfo//d1:Address","RestaurantTourismInfo//d1:Phone","RestaurantTourismInfo//d1:OpenTime","RestaurantTourismInfo//d1:Description",
-               "RestaurantTourismInfo//d1:Position//d1:PositionLon","RestaurantTourismInfo//d1:Position//d1:PositionLat")
-    xml_node_name=c("RestaurantID","RestaurantName","Class","Address","Phone","OpenTime","Description","PositionLon","PositionLat")
-
-    poidf=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:RestaurantTourismInfo"))))
-    for (i in xml_node){
-      node_name=xml_node_name[which(xml_node==i)]
-      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
-      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:RestaurantTourismInfo"))
-      temp_id=which(temp_id)
-      temp=data.frame(temp_id, temp)
-      colnames(temp)[2]=node_name
-      poidf=left_join(poidf, temp, by="temp_id")
-      cat(paste0("Attribute '", node_name, "' is parsed\n"))
-    }
-    poidf=dplyr::select(poidf, -temp_id)
-  }else if (poi=="Hotel"){
-    xml_node=c("HotelTourismInfo//d1:HotelID","HotelTourismInfo//d1:HotelName","HotelTourismInfo//d1:Class","HotelTourismInfo//d1:City",
-               "HotelTourismInfo//d1:Address","HotelTourismInfo//d1:Phone","HotelTourismInfo//d1:OpenTime","HotelTourismInfo//d1:Description","HotelTourismInfo//d1:ParkingInfo",
-               "HotelTourismInfo//d1:Position//d1:PositionLon","HotelTourismInfo//d1:Position//d1:PositionLat")
-    xml_node_name=c("HotelID","HotelName","Class","City","Address","Phone","OpenTime","Description","ParkingInfo","PositionLon","PositionLat")
-
-    poidf=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:HotelTourismInfo"))))
-    for (i in xml_node){
-      node_name=xml_node_name[which(xml_node==i)]
-      temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:", i)))
-      temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:HotelTourismInfo"))
-      temp_id=which(temp_id)
-      temp=data.frame(temp_id, temp)
-      colnames(temp)[2]=node_name
-      poidf=left_join(poidf, temp, by="temp_id")
-      cat(paste0("Attribute '", node_name, "' is parsed\n"))
-    }
-    poidf=select(poidf, -temp_id)
   }
-
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
@@ -1194,18 +1100,13 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
     }
     return(poidf)
   }else if (dtype=="sf"){
-    poidf$Geometry=st_as_sfc(paste0("POINT(", poidf$PositionLon, " ", poidf$PositionLat, ")"))
+    poidf$geometry=st_as_sfc(paste0("POINT(", poidf$PositionLon, " ", poidf$PositionLat, ")"))
     poidf=st_sf(poidf, crs=4326)
 
     if (grepl(".shp", out) & out!=F){
       write_sf(poidf, out, layer_options="ENCODING=UTF-8")
-    }else if (!(grepl(".shp", out)) & out!=F){
-      stop("The file name must contain '.shp'\n")
     }
-
     return(poidf)
-  }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 }
 
