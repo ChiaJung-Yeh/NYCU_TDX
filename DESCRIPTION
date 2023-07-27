@@ -18,4 +18,5 @@ Imports:
     sf,
     urltools,
     progress,
-    data.table
+    data.table,
+    cli
