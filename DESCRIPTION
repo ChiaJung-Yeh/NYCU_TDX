@@ -19,4 +19,5 @@ Imports:
     urltools,
     progress,
     data.table,
-    cli
+    cli,
+    xml2
