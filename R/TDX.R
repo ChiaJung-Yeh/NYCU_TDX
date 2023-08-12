@@ -1202,6 +1202,7 @@ Rail_ODFare=function(access_token, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
+  if (!require(data.table)) install.packages("data.table")
 
   if (operator %in% c("TRA","THSR")){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/", operator, "/ODFare?&%24format=JSON")
@@ -1472,94 +1473,110 @@ Ship_StopOfRoute=function(access_token, county, out=F){
 
 
 
-# Bus_RouteFare=function(access_token, county, out=F){
-#   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(jsonlite)) install.packages("jsonlite")
-#   if (!require(httr)) install.packages("httr")
-#
-#   if(!(grepl(".csv|.txt", out)) & out!=F){
-#     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
-#   }
-#
-#   url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/RouteFare/City/", county, "?&%24format=JSON")
-#   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#   tryCatch({
-#     bus_info=fromJSON(content(x, as="text"))
-#   }, error=function(err){
-#     stop(paste0("Your access token is invalid!"))
-#   })
-#   if("Message" %in% names(bus_info)){
-#     print(TDX_County)
-#     stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
-#   }
-#
-#   if (unique(bus_info$FarePricingType)==0){
-#     temp=mapply(function(x) bus_info$SectionFares[[x]]$BufferZones[[1]], c(1:nrow(bus_info)))
-#     route_buffer=data.frame(SectionSequence=unlist(mapply(function(x) temp[[x]]$SectionSequence, c(1:length(temp)))),
-#                             Direction=unlist(mapply(function(x) temp[[x]]$Direction, c(1:length(temp)))),
-#                             BZOStopID=unlist(mapply(function(x) temp[[x]]$FareBufferZoneOrigin$StopID, c(1:length(temp)))),
-#                             BZOStopName=unlist(mapply(function(x) temp[[x]]$FareBufferZoneOrigin$StopName, c(1:length(temp)))),
-#                             BZDStopID=unlist(mapply(function(x) temp[[x]]$FareBufferZoneDestination$StopID, c(1:length(temp)))),
-#                             BZDStopName=unlist(mapply(function(x) temp[[x]]$FareBufferZoneDestination$StopName, c(1:length(temp)))))
-#     num_of_buffer=lengths(mapply(function(x) temp[[x]]$SectionSequence, c(1:length(temp))))
-#     bus_info_bz=cbind(bus_info[rep(c(1:nrow(bus_info)), num_of_buffer), c("RouteID",'RouteName')], route_buffer)
-#
-#     temp=rbindlist(mapply(function(x) list(bus_info$SectionFares[[x]]$Fares[[1]]), c(1:nrow(bus_info))))
-#     num_of_fares=mapply(function(x) nrow(bus_info$SectionFares[[x]]$Fares[[1]]), c(1:nrow(bus_info)))
-#     bus_info_fare=cbind(bus_info[rep(c(1:nrow(bus_info)), num_of_fares), ], temp)%>%
-#       dplyr::select(-SectionFares, -UpdateTime)
-#   }else if (unique(bus_info$FarePricingType)==1){
-#     cat(paste0("Sorry! Data is too large. '", county, "` is recorded in OD Fare. Please try another county!", "\n"))
-#
-#     # cat("Please wait for a while...\n")
-#     # temp=xml_find_all(x, xpath = ".//d1:BusRouteFare")
-#     # bus_info_od=bus_info[which(grepl("ODFares", temp)),]
-#     # num_of_odfare=xml_length(xml_find_all(x, xpath = ".//d1:ODFares"))
-#     #
-#     # route_fare=data.frame(Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-#     #                       OStopID=xml_text(xml_find_all(x, xpath=".//d1:OriginStop//d1:StopID")),
-#     #                       OStopName=xml_text(xml_find_all(x, xpath=".//d1:OriginStop//d1:StopName")),
-#     #                       DStopID=xml_text(xml_find_all(x, xpath=".//d1:DestinationStop//d1:StopID")),
-#     #                       DStopName=xml_text(xml_find_all(x, xpath=".//d1:DestinationStop//d1:StopName")),
-#     #                       TicketType=xml_text(xml_find_all(x, xpath=".//d1:TicketType")),
-#     #                       FareClass=xml_text(xml_find_all(x, xpath=".//d1:FareClass")),
-#     #                       Price=xml_text(xml_find_all(x, xpath=".//d1:Price")))
-#     #
-#     # bus_info_od=as.data.frame(lapply(bus_info_od, rep, num_of_odfare))
-#     # bus_info_fare=cbind(bus_info_od, route_fare)
-#   }else if (unique(bus_info$FarePricingType)==2){
-#     num_of_stagefare=xml_length(xml_find_all(x, xpath = ".//d1:StageFares"))
-#     num_of_fare=xml_length(xml_find_all(x, xpath = ".//d1:Fares"))
-#
-#     bus_info_stage=as.data.frame(lapply(bus_info, rep, num_of_stagefare))
-#     route_info=data.frame(Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-#                           OStopID=xml_text(xml_find_all(x, xpath=".//d1:OriginStage//d1:StopID")),
-#                           OStopName=xml_text(xml_find_all(x, xpath=".//d1:OriginStage//d1:StopName")),
-#                           DStopID=xml_text(xml_find_all(x, xpath=".//d1:DestinationStage//d1:StopID")),
-#                           DStopName=xml_text(xml_find_all(x, xpath=".//d1:DestinationStage//d1:StopName")))
-#
-#     bus_info_stage=cbind(bus_info_stage, route_info)
-#
-#     route_fare=data.frame(TicketType=xml_text(xml_find_all(x, xpath=".//d1:TicketType")),
-#                           FareClass=xml_text(xml_find_all(x, xpath=".//d1:FareClass")),
-#                           Price=xml_text(xml_find_all(x, xpath=".//d1:Price")))
-#
-#     bus_info_fare=as.data.frame(lapply(bus_info_stage, rep, num_of_fare))
-#     bus_info_fare=cbind(bus_info_stage, route_fare)
-#   }
-#
-#
-#   # if (nchar(out)!=0 & out!=F){
-#   #   write.csv(shiproute, out, row.names=F)
-#   # }
-#
-#   if (unique(bus_info$FarePricingType)==0){
-#     return(list(BufferZone=bus_info_bz, ZoneFare=bus_info_fare))
-#   }else if (unique(bus_info$FarePricingType)==2){
-#     return(bus_info_fare)
-#   }
-# }
+Bus_RouteFare=function(access_token, county, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(jsonlite)) install.packages("jsonlite")
+  if (!require(httr)) install.packages("httr")
+  if (!require(data.table)) install.packages("data.table")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  cat("Please wait for a while...\n")
+  if(county=="Intercity"){
+    url="https://tdx.transportdata.tw/api/basic/v2/Bus/RouteFare/InterCity?&%24format=JSON"
+  }else{
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/RouteFare/City/", county, "?&%24format=JSON")
+  }
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    bus_info=fromJSON(content(x, as="text"))
+  }, error=function(err){
+    stop(paste0("Your access token is invalid!"))
+  })
+  if("Message" %in% names(bus_info)){
+    if(county %in% TDX_County$Code){
+      stop(paste0("'",county, "' has no data avaliable.\n", bus_info$Message))
+    }
+    else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+  }
+
+  if(unique(bus_info$FarePricingType)==0){
+    temp=mapply(function(x) bus_info$SectionFares[[x]]$BufferZones[[1]], c(1:nrow(bus_info)))
+    route_buffer=data.frame(SectionSequence=unlist(mapply(function(x) temp[[x]]$SectionSequence, c(1:length(temp)))),
+                            Direction=unlist(mapply(function(x) temp[[x]]$Direction, c(1:length(temp)))),
+                            BZOStopID=unlist(mapply(function(x) temp[[x]]$FareBufferZoneOrigin$StopID, c(1:length(temp)))),
+                            BZOStopName=unlist(mapply(function(x) temp[[x]]$FareBufferZoneOrigin$StopName, c(1:length(temp)))),
+                            BZDStopID=unlist(mapply(function(x) temp[[x]]$FareBufferZoneDestination$StopID, c(1:length(temp)))),
+                            BZDStopName=unlist(mapply(function(x) temp[[x]]$FareBufferZoneDestination$StopName, c(1:length(temp)))))
+    num_of_buffer=lengths(mapply(function(x) temp[[x]]$SectionSequence, c(1:length(temp))))
+    bus_info_bz=cbind(bus_info[rep(c(1:nrow(bus_info)), num_of_buffer), c("RouteID",'RouteName')], route_buffer)
+
+    temp=rbindlist(mapply(function(x) list(bus_info$SectionFares[[x]]$Fares[[1]]), c(1:nrow(bus_info))))
+    num_of_fare=mapply(function(x) nrow(bus_info$SectionFares[[x]]$Fares[[1]]), c(1:nrow(bus_info)))
+    bus_info_fare=cbind(bus_info[rep(c(1:nrow(bus_info)), num_of_fare), ], temp)%>%
+      dplyr::select(-SectionFares, -UpdateTime)
+  }else if(unique(bus_info$FarePricingType)==1){
+    stop_info=data.frame(Direction=unlist(mapply(function(x) bus_info$ODFares[[x]]$Direction, c(1:nrow(bus_info)))),
+                         OriginStopID=unlist(mapply(function(x) bus_info$ODFares[[x]]$OriginStop$StopID, c(1:nrow(bus_info)))),
+                         OriginStopName=unlist(mapply(function(x) bus_info$ODFares[[x]]$OriginStop$StopName, c(1:nrow(bus_info)))),
+                         DestinationStopID=unlist(mapply(function(x) bus_info$ODFares[[x]]$DestinationStop$StopID, c(1:nrow(bus_info)))),
+                         DestinationStopName=unlist(mapply(function(x) bus_info$ODFares[[x]]$DestinationStop$StopName, c(1:nrow(bus_info)))))
+    num_of_stop=unlist(mapply(function(x) ifelse(is.null(nrow(bus_info$ODFares[[x]])), 0, nrow(bus_info$ODFares[[x]])), c(1:nrow(bus_info))))
+
+    stop_info=cbind(bus_info[rep(c(1:nrow(bus_info)), num_of_stop), c("RouteID","RouteName","OperatorID","OperatorNo","SubRouteID","SubRouteName","FarePricingType","IsFreeBus","IsForAllSubRoutes")], stop_info)
+    bus_info=bus_info[num_of_stop!=0, ]
+
+    fare_data=data.frame(TicketType=unlist(mapply(function(y) mapply(function(x) bus_info$ODFares[[y]]$Fares[[x]]$TicketType, c(1:nrow(bus_info$ODFares[[y]]))), c(1:nrow(bus_info)))),
+                         FareClass=unlist(mapply(function(y) mapply(function(x) bus_info$ODFares[[y]]$Fares[[x]]$FareClass, c(1:nrow(bus_info$ODFares[[y]]))), c(1:nrow(bus_info)))),
+                         Price=unlist(mapply(function(y) mapply(function(x) bus_info$ODFares[[y]]$Fares[[x]]$Price, c(1:nrow(bus_info$ODFares[[y]]))), c(1:nrow(bus_info)))))
+    num_of_fare=unlist(mapply(function(y) mapply(function(x) nrow(bus_info$ODFares[[y]]$Fares[[x]]), c(1:nrow(bus_info$ODFares[[y]]))), c(1:nrow(bus_info))))
+
+    bus_info_fare=cbind(stop_info[rep(c(1:nrow(stop_info)), num_of_fare),], fare_data)
+  }else if (unique(bus_info$FarePricingType)==2){
+    stage_info=data.frame(Direction=unlist(mapply(function(x) bus_info$StageFares[[x]]$Direction, c(1:nrow(bus_info)))),
+                          OriginStage_StopID=unlist(mapply(function(x) bus_info$StageFares[[x]]$OriginStage$StopID, c(1:nrow(bus_info)))),
+                          OriginStage_StopName=unlist(mapply(function(x) bus_info$StageFares[[x]]$OriginStage$StopName, c(1:nrow(bus_info)))),
+                          OriginStage_Sequence=unlist(mapply(function(x) bus_info$StageFares[[x]]$OriginStage$Sequence, c(1:nrow(bus_info)))),
+                          DestinationStage_StopID=unlist(mapply(function(x) bus_info$StageFares[[x]]$DestinationStage$StopID, c(1:nrow(bus_info)))),
+                          DestinationStage_StopName=unlist(mapply(function(x) bus_info$StageFares[[x]]$DestinationStage$StopName, c(1:nrow(bus_info)))),
+                          DestinationStage_Sequence=unlist(mapply(function(x) bus_info$StageFares[[x]]$DestinationStage$Sequence, c(1:nrow(bus_info)))))
+    num_of_stage=mapply(function(x) nrow(bus_info$StageFares[[x]]), c(1:nrow(bus_info)))
+    stage_info=cbind(bus_info[rep(c(1:nrow(bus_info)), num_of_stage), c("RouteID","RouteName","OperatorID","OperatorNo","SubRouteID","SubRouteName","FarePricingType","IsFreeBus","IsForAllSubRoutes")], stage_info)
+
+    fare_data=data.frame(FareName=unlist(mapply(function(y) mapply(function(x) bus_info$StageFares[[y]]$Fares[[x]]$FareName, c(1:nrow(bus_info$StageFares[[y]]))), c(1:nrow(bus_info)))),
+                         TicketType=unlist(mapply(function(y) mapply(function(x) bus_info$StageFares[[y]]$Fares[[x]]$TicketType, c(1:nrow(bus_info$StageFares[[y]]))), c(1:nrow(bus_info)))),
+                         FareClass=unlist(mapply(function(y) mapply(function(x) bus_info$StageFares[[y]]$Fares[[x]]$FareClass, c(1:nrow(bus_info$StageFares[[y]]))), c(1:nrow(bus_info)))),
+                         Price=unlist(mapply(function(y) mapply(function(x) bus_info$StageFares[[y]]$Fares[[x]]$Price, c(1:nrow(bus_info$StageFares[[y]]))), c(1:nrow(bus_info)))))
+    num_of_fare=unlist(mapply(function(y) mapply(function(x) nrow(bus_info$StageFares[[y]]$Fares[[x]]), c(1:nrow(bus_info$StageFares[[y]]))), c(1:nrow(bus_info))))
+
+    bus_info_fare=cbind(stage_info[rep(c(1:nrow(stage_info)), num_of_fare),], fare_data)
+  }
+
+
+  if (nchar(out)!=0 & out!=F){
+    if(unique(bus_info$FarePricingType)==0){
+      write.csv(bus_info_bz, paste0(gsub(".txt|.csv", "", out), "_BufferZone.", ifelse(grepl("csv", out), "csv", "txt")), row.names=F)
+      write.csv(bus_info_fare, paste0(gsub(".txt|.csv", "", out), "_ZoneFare.", ifelse(grepl("csv", out), "csv", "txt")), row.names=F)
+    }else{
+      write.csv(bus_info_fare, out, row.names=F)
+    }
+  }
+
+  row.names(bus_info_fare)=NULL
+  if (unique(bus_info$FarePricingType)==0){
+    row.names(bus_info_bz)=NULL
+    warning("Please use '$BufferZone' to retrieve the buffer zone of bus route, and use '$ZoneFare' to  retrieve the fare of each buffer zone.")
+    return(list(BufferZone=bus_info_bz, ZoneFare=bus_info_fare))
+  }else{
+    return(bus_info_fare)
+  }
+}
 
 
 
@@ -2014,24 +2031,48 @@ Bus_RealTime=function(access_token, county, format, dates, out=F){
 
 # Ship_Schedule=function(access_token, county, out=F){
 #   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(xml2)) install.packages("xml2")
+#   if (!require(jsonlite)) install.packages("jsonlite")
 #   if (!require(httr)) install.packages("httr")
 #
-#   url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/GeneralSchedule/Domestic/City/", county, "?&%24format=XML")
+#   url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/GeneralSchedule/Domestic/City/", county, "?&%24format=JSON")
 #   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 #
 #   tryCatch({
-#     x=read_xml(x)
+#     ship_schedule=fromJSON(content(x, as="text"))
 #   }, error=function(err){
-#     cat(paste0("ERROR: ", conditionMessage(err), "\n"))
-#
-#     if (grepl("Unauthorized", conditionMessage(err))){
-#       stop(paste0("Your access token is invalid!"))
-#     }else{
-#       print(TDX_County)
-#       stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above. Or it might becasue there is no ship service in '", county, "'."))
-#     }
+#     stop(paste0("Your access token is invalid!"))
 #   })
+#   if("Message" %in% names(ship_schedule)){
+#     if(county %in% TDX_County$Code){
+#       stop(paste0("'",county, "' has no ship route or data is not avaliable.\n", ship_schedule$Message))
+#     }
+#     else{
+#       print(TDX_County)
+#       stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+#     }
+#   }
+#
+#   ship_schedule=ship_schedule$GeneralSchedules
+#   ship_serviceday=mapply(function(x) ifelse(is.null(ship_schedule$Timetables[[x]]$ServiceDay), list(data.frame("Monday"=NA, "Tuesday"=NA, "Wednesday"=NA, "Thursday"=NA, "Friday"=NA,
+#                                                                                                                "Saturday"=NA, "Sunday"=NA, "NationalHolidays"=NA)), list(ship_schedule$Timetables[[x]]$ServiceDay)),
+#                          c(1:nrow(ship_schedule)))%>%
+#     rbindlist()
+#   ship_tripid=unlist(mapply(function(x) ifelse(is.null(ship_schedule$Timetables[[x]]$TripID), NA, list(ship_schedule$Timetables[[x]]$TripID)), c(1:nrow(ship_schedule))))
+#
+#   mapply(function(x) ifelse(is.null(ship_schedule$Timetables[[x]]$Stoptimes), list(data.frame("Monday"=NA, "Tuesday"=NA, "Wednesday"=NA, "Thursday"=NA, "Friday"=NA,
+#                                                                                                "Saturday"=NA, "Sunday"=NA, "NationalHolidays"=NA)), list(ship_schedule$Timetables[[x]]$Stoptimes)),
+#          c(1:nrow(ship_schedule)))
+#
+#
+#   ship_serviceday
+#   ship_table=mapply(function(x) ifelse(is.null(ship_schedule$Timetables[[x]]$ServiceDay), list(data.frame("Monday"=NA, "Tuesday"=NA, "Wednesday"=NA, "Thursday"=NA, "Friday"=NA,
+#                                                                                                           "Saturday"=NA, "Sunday"=NA, "NationalHolidays"=NA)), list(ship_schedule$Timetables[[x]]$ServiceDay)),
+#                     c(1:nrow(ship_schedule)))
+#
+#   ship_schedule$Timetables[[1]]$ServiceDay
+#
+#
+#   mapply(function(x) ship_schedule$Frequencies[[x]], c(1:nrow(ship_schedule)))
 #
 #   x=xml_find_all(x, xpath = ".//d1:GeneralSchedules")
 #   route_info=data.frame(RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
