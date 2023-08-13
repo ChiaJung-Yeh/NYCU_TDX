@@ -27,6 +27,39 @@ usethis::use_package("data.table")
 # usethis::use_data(TDX_RoadClass, overwrite=T)
 
 
+# #---API Form---#
+# url_all=data.frame(Mode=c("Bus","Rail","Bike","Air","Ship"),
+#                    url=c("https://tdx.transportdata.tw/webapi/File/Swagger/V3/2998e851-81d0-40f5-b26d-77e2f5ac4118",
+#                          "https://tdx.transportdata.tw/webapi/File/Swagger/V3/268fc230-2e04-471b-a728-a726167c1cfc",
+#                          "https://tdx.transportdata.tw/webapi/File/Swagger/V3/2cc9b888-a592-496f-99de-9ab35b7fb70d",
+#                          "https://tdx.transportdata.tw/webapi/File/Swagger/V3/eb87998f-2f9c-4592-8d75-c62e5b724962",
+#                          "https://tdx.transportdata.tw/webapi/File/Swagger/V3/38e6a4c2-5111-4449-8f37-6347caf4a7fc"))
+# name_remain=function(x){
+#   all_name=c("type","title","format","description")
+#   name_remain=all_name[all_name %in% x]
+#   return(name_remain)
+# }
+#
+# all_api=data.frame()
+# for(k in c(1:nrow(url_all))){
+#   api_content=fromJSON(url_all$url[k])
+#   for(i in c(1:length(api_content$components$schemas))){
+#     temp=bind_rows(mapply(function(x) list(data.frame(rbind(api_content$components$schemas[[i]]$properties[[x]])) %>% select(name_remain(names(.)))), c(1:length(api_content$components$schemas[[i]]$properties))))
+#     if(nrow(temp)!=0){
+#       temp=cbind(Attribute=names(api_content$components$schemas[[i]]$properties), temp)
+#       temp=cbind(API=api_content$components$schemas[[i]]$title, temp)
+#       all_api=bind_rows(all_api, cbind(Mode=url_all$Mode[k], temp))
+#     }
+#   }
+# }
+# for(i in c(4:7)){
+#   all_api[[i]]=mapply(function(x) ifelse(is.null(all_api[[i]][[x]]), NA, all_api[[i]][[x]]), c(1:nrow(all_api)))
+# }
+# write.csv(all_api, "./all_api_attribute.csv", row.names=F)
+
+
+
+
 #---get the token---#
 get_token=function(client_id, client_secret){
   if (!require(httr)) install.packages("httr")
