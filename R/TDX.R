@@ -97,7 +97,7 @@ get_token=function(client_id, client_secret){
 
 
 
-Bus_StopOfRoute=function(access_token, county, dtype="text", out=F){
+Bus_StopOfRoute=function(access_token, county, histo=F, dates=F, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
@@ -113,45 +113,88 @@ Bus_StopOfRoute=function(access_token, county, dtype="text", out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  if(county=="Intercity"){
-    url="https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/InterCity?%24format=JSON"
-  }else{
-    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/City/", county, "?%24format=JSON")
-  }
-  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-
-  tryCatch({
-    bus_info=fromJSON(content(x, as="text"))
-  }, error=function(err){
-    if (grepl("invalid", conditionMessage(err))){
-      stop(paste0("Your access token is invalid!"))
+  if(!histo){
+    if(county=="Intercity"){
+      url="https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/InterCity?%24format=JSON"
+    }else{
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/City/", county, "?%24format=JSON")
     }
-  })
-  if("Message" %in% names(bus_info)){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+    tryCatch({
+      bus_info=fromJSON(content(x, as="text"))
+    }, error=function(err){
+      if (grepl("invalid", conditionMessage(err))){
+        stop(paste0("Your access token is invalid!"))
+      }
+    })
+    if("Message" %in% names(bus_info)){
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+
+    bus_info$RouteName=bus_info$RouteName$Zh_tw
+    bus_info$SubRouteName=bus_info$SubRouteName$Zh_tw
+    num_of_stop=mapply(function(x) nrow(bus_info$Stops[[x]]), c(1:nrow(bus_info)))
+    cat(paste0(length(num_of_stop), " Routes\n"))
+    bus_stop_temp=data.frame(StopUID=unlist(mapply(function(x) bus_info$Stops[[x]]$StopUID, c(1:nrow(bus_info)))),
+                             StopID=unlist(mapply(function(x) bus_info$Stops[[x]]$StopID, c(1:nrow(bus_info)))),
+                             StopName=unlist(mapply(function(x) bus_info$Stops[[x]]$StopName$Zh_tw, c(1:nrow(bus_info)))),
+                             StopBoarding=unlist(mapply(function(x) bus_info$Stops[[x]]$StopBoarding, c(1:nrow(bus_info)))),
+                             StopSequence=unlist(mapply(function(x) bus_info$Stops[[x]]$StopSequence, c(1:nrow(bus_info)))),
+                             PositionLon=unlist(mapply(function(x) bus_info$Stops[[x]]$StopPosition$PositionLon, c(1:nrow(bus_info)))),
+                             PositionLat=unlist(mapply(function(x) bus_info$Stops[[x]]$StopPosition$PositionLat, c(1:nrow(bus_info)))),
+                             StationID=unlist(mapply(function(x) if(!is.null(bus_info$Stops[[x]]$StationID)) bus_info$Stops[[x]]$StationID else rep(NA, num_of_stop[x]), c(1:nrow(bus_info)))),
+                             LocationCityCode=unlist(mapply(function(x) bus_info$Stops[[x]]$LocationCityCode, c(1:nrow(bus_info)))))
+
+    bus_info=as.data.frame(lapply(bus_info[, c("RouteUID","RouteID","RouteName","SubRouteUID","SubRouteID","SubRouteName","Direction")], rep, num_of_stop))
+    bus_stop=cbind(bus_info, bus_stop_temp)
+    rm(bus_info, bus_stop_temp, num_of_stop)
+
+    cat(paste0("#---", county, " Stop of Route Downloaded---#\n"))
+  }else{
+    if(grepl(",", dates)){
+      dates_all=unique(unlist(strsplit(dates, ",")))
+    }else if(grepl("~", dates)){
+      dates_all=unique(unlist(strsplit(dates, "~")))
+    }else if(!dates){
+      stop("Argument 'Dates' is required!")
+    }
+
+    tryCatch({
+      dates_all=as.Date(dates_all)
+      if(grepl("~", dates)){
+        dates_all=as.Date(dates_all[1]:dates_all[2])
+      }
+    }, error=function(err){
+      stop(paste0("Date value is invalid! Format of the date:\n", "\nType", paste0(rep(" ", 12), collapse=""), "Format", paste0(rep(" ", 18), collapse=""), "Example\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD,YYYY-MM-DD\t2023-01-01,2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31"))
+    })
+    if(sum(is.na(dates_all))!=0){
+      stop(paste0("Date value is invalid! Format of the date:\n", "\nType", paste0(rep(" ", 12), collapse=""), "Format", paste0(rep(" ", 18), collapse=""), "Example\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD,YYYY-MM-DD\t2023-01-01,2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31"))
+    }
+
+    bus_stop=data.frame()
+    num_of_nodata=0
+    cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]  {.emph Date: {dates_all[pb_current]}}", total=length(dates_all))
+    for(i in as.character(dates_all)){
+      cli_progress_update()
+      url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/Bus/StopOfRoute/Date/", i, "/City/", county, "?&%24format=CSV")
+      x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+      if(content(x, "text")==""){
+        num_of_nodata=num_of_nodata+1
+        cli_alert_info(paste0("Data of ", i, " is not avaliable!\n"))
+      }else{
+        bus_stop_temp=read.csv(textConnection(content(x, "text")), header=T)
+        if("invalid.token" %in% names(bus_stop_temp)){
+          stop(paste0("Your access token is invalid!"))
+        }
+      }
+      bus_stop=rbind(bus_stop, cbind(bus_stop_temp, "InfoDate"=i))
+    }
+    cli_alert_info(ifelse(num_of_nodata==0, "All Done!", paste0("All Done!\n", num_of_nodata, " dates have no data!")))
+    cli_progress_done()
   }
-
-  bus_info$RouteName=bus_info$RouteName$Zh_tw
-  bus_info$SubRouteName=bus_info$SubRouteName$Zh_tw
-  num_of_stop=mapply(function(x) nrow(bus_info$Stops[[x]]), c(1:nrow(bus_info)))
-  cat(paste0(length(num_of_stop), " Routes\n"))
-  bus_stop_temp=data.frame(StopUID=unlist(mapply(function(x) bus_info$Stops[[x]]$StopUID, c(1:nrow(bus_info)))),
-                           StopID=unlist(mapply(function(x) bus_info$Stops[[x]]$StopID, c(1:nrow(bus_info)))),
-                           StopName=unlist(mapply(function(x) bus_info$Stops[[x]]$StopName$Zh_tw, c(1:nrow(bus_info)))),
-                           StopBoarding=unlist(mapply(function(x) bus_info$Stops[[x]]$StopBoarding, c(1:nrow(bus_info)))),
-                           StopSequence=unlist(mapply(function(x) bus_info$Stops[[x]]$StopSequence, c(1:nrow(bus_info)))),
-                           PositionLon=unlist(mapply(function(x) bus_info$Stops[[x]]$StopPosition$PositionLon, c(1:nrow(bus_info)))),
-                           PositionLat=unlist(mapply(function(x) bus_info$Stops[[x]]$StopPosition$PositionLat, c(1:nrow(bus_info)))),
-                           StationID=unlist(mapply(function(x) if(!is.null(bus_info$Stops[[x]]$StationID)) bus_info$Stops[[x]]$StationID else rep(NA, num_of_stop[x]), c(1:nrow(bus_info)))),
-                           LocationCityCode=unlist(mapply(function(x) bus_info$Stops[[x]]$LocationCityCode, c(1:nrow(bus_info)))))
-
-  bus_info=as.data.frame(lapply(bus_info[, c("RouteUID","RouteID","RouteName","SubRouteUID","SubRouteID","SubRouteName","Direction")], rep, num_of_stop))
-  bus_stop=cbind(bus_info, bus_stop_temp)
-
-  rm(bus_info, bus_stop_temp, num_of_stop)
-
-  cat(paste0("#---", county, " Stop of Route Downloaded---#\n"))
 
   if(dtype=="text"){
     if (nchar(out)!=0 & out!=F){
@@ -723,8 +766,7 @@ Geocoding=function(access_token, address, dtype="text", out=F){
   }
 
   # pb=progress_bar$new(format="(:spin) [:bar] :percent  ", total=length(address), clear=F, width=80)
-  cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]",
-                   total=length(address))
+  cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]", total=length(address))
   address_record=data.frame()
   record_fail=c()
 
@@ -1357,8 +1399,7 @@ Bus_TravelTime=function(access_token, county, routeid, out=F){
   }else{
     routeid=unique(routeid)
     cat(paste0("Total: ", length(routeid), " Routes\n"))
-    cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]  {.emph RouteID: {routeid[pb_current]}}",
-                     total=length(routeid))
+    cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]  {.emph RouteID: {routeid[pb_current]}}", total=length(routeid))
     num_of_nodata=0
 
     traveltime_ALL=data.frame()
@@ -1812,19 +1853,26 @@ Bike_Remain_His=function(access_token, county, dates, out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/Bike/Availability/", county, "?Dates=", dates, "&%24format=JSONL")
+  url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/Bike/Availability/", county, "?Dates=", dates, "&%24format=CSV")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
-  bike_remain=read.csv(textConnection(content(x, 'text')), header=F)%>%
-    select(-V7)
-  bike_remain$V1=substr(bike_remain$V1, regexpr(":", bike_remain$V1)+1, 1000)
-  bike_remain$V2=substr(bike_remain$V2, regexpr(":", bike_remain$V2)+1, 1000)
-  bike_remain$V3=substr(bike_remain$V3, regexpr(":", bike_remain$V3)+1, 1000)
-  bike_remain$V4=substr(bike_remain$V4, regexpr(":", bike_remain$V4)+1, 1000)
-  bike_remain$V5=substr(bike_remain$V5, regexpr(":", bike_remain$V5)+1, 1000)
-  bike_remain$V6=substr(bike_remain$V6, regexpr(":", bike_remain$V6)+1, 1000)
+  if(content(x, "text")==""){
+    stop(paste0("'",county, "' has no bike sharing system or data is not avaliable.\n", bike_station$Message))
+  }
+  bike_remain=read.csv(textConnection(content(x, "text")), header=T)
 
-  colnames(bike_remain)=c("StationUID","StationID","ServiceAvailable","AvailableRentBikes","AvailableReturnBikes","SrcUpdateTime")
+  if("invalid.token" %in% names(bike_remain)){
+    stop(paste0("Your access token is invalid!"))
+  }else if("Message" %in% names(bike_remain)){
+    if(grepl("2021-06-01", bike_remain$Message)){
+      stop(paste0("Historical data can only be retrived after date '2021-06-01'!"))
+    }else if(grepl("City", bike_remain$Message)){
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }else{
+      stop(paste0("Date value is invalid! Format of the date:\n", "\nType\t\tFormat\t\t\tExample\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD;YYYY-MM-DD\t2023-01-01;2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31"))
+    }
+  }
 
   if (nchar(out)!=0 & out!=F){
     write.csv(bike_remain, out, row.names=F)
@@ -2214,10 +2262,11 @@ Freeway_History=function(file, date, out=F){
 
 
 Bus_RealTime=function(access_token, county, format, dates, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(httr)) install.packages("httr")
 
-  if (!(county %in% c(TDX_County$Code, "ALL"))){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
   if(format=="frequency"){
@@ -2227,26 +2276,29 @@ Bus_RealTime=function(access_token, county, format, dates, out=F){
   }else{
     stop("Parameter 'format' should be 'frequency' or 'stop'.")
   }
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+  bus_real_time=read.csv(textConnection(content(x, "text")), header=T)
 
-  tryCatch({
-    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  }, error=function(err){
-    if (grepl("Unauthorized", conditionMessage(err))){
-      stop(paste0("Your access token is invalid!"))
+  if("invalid.token" %in% names(bus_real_time)){
+    stop(paste0("Your access token is invalid!"))
+  }else if("Message" %in% names(bus_real_time)){
+    if(grepl("Dates:", bus_real_time$Message)){
+      stop("Parameter 'Dates' are invalid. And it should not be more than 7 days!")
+    }else if(grepl("City", bus_real_time$Message)){
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }else{
+      stop(paste0("Date value is invalid! Format of the date:\n", "\nType\t\tFormat\t\t\tExample\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD;YYYY-MM-DD\t2023-01-01;2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31"))
     }
-  })
-
-  if(x$status_code==400){
-    stop("Parameter 'dates' should not be more than 7 days!")
   }
-
-  bus_real_time=content(x)
 
   if (nchar(out)!=0 & out!=F){
     write.csv(bus_real_time, out, row.names=F)
   }
   return(bus_real_time)
 }
+
+
 
 
 
