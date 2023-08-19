@@ -102,6 +102,7 @@ Bus_StopOfRoute=function(access_token, county, histo=F, dates=F, dtype="text", o
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
+  if (!require(cli)) install.packages("cli")
 
   if(!dtype %in% c("text","sf")){
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
