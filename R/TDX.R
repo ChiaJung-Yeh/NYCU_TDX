@@ -988,7 +988,12 @@ Rail_TravelTime=function(access_token, operator, out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/S2STravelTime/", operator, "?%24format=JSON")
+  if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/S2STravelTime/", operator, "?%24format=JSON")
+  }else{
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/", operator, "/S2STravelTime/?%24format=JSON")
+  }
+
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   tryCatch({
@@ -1031,7 +1036,7 @@ Rail_TravelTime=function(access_token, operator, out=F){
 
 
 Rail_StationExit=function(access_token, operator, dtype="text", out=F){
- if (!require(dplyr)) install.packages("dplyr")
+  if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(sf)) install.packages("sf")
   if (!require(httr)) install.packages("httr")
@@ -1050,15 +1055,26 @@ Rail_StationExit=function(access_token, operator, dtype="text", out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationExit/", operator, "?%24format=JSON")
+  if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationExit/", operator, "?%24format=JSON")
+  }else if(operator=="TRA"){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/", operator, "/StationExit/?%24format=JSON")
+  }else{
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/", operator, "/StationExit/?%24format=JSON")
+  }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   tryCatch({
-    rail_info=fromJSON(content(x, as="text"))
+    if(operator=="TRA"){
+      rail_info=fromJSON(content(x, as="text"))$StationExits
+    }else{
+      rail_info=fromJSON(content(x, as="text"))
+    }
   }, error=function(err){
     stop(paste0("Your access token is invalid!"))
   })
-  if("Message" %in% names(rail_info)){
+
+  if("MESSAGE" %in% toupper(names(rail_info))){
     if(operator %in% TDX_Railway$Code){
       stop(paste0("'",operator, "' station exit data is not avaliable.\n", rail_info$Message))
     }
@@ -1068,31 +1084,38 @@ Rail_StationExit=function(access_token, operator, dtype="text", out=F){
     }
   }
 
-  station_exit=data.frame(StationID=unlist(mapply(function(x) list(rail_info$StationID), c(1:nrow(rail_info)))),
-                          StationName=unlist(mapply(function(x) list(rail_info$StationName$Zh_tw), c(1:nrow(rail_info)))),
-                          ExitID=unlist(mapply(function(x) list(rail_info$ExitID), c(1:nrow(rail_info)))),
-                          ExitName=unlist(mapply(function(x) list(rail_info$ExitName$Zh_tw), c(1:nrow(rail_info)))),
-                          PositionLon=unlist(mapply(function(x) list(rail_info$ExitPosition$PositionLon), c(1:nrow(rail_info)))),
-                          PositionLat=unlist(mapply(function(x) list(rail_info$ExitPosition$PositionLat), c(1:nrow(rail_info)))),
-                          LocationDescription=unlist(mapply(function(x) ifelse(is.null(rail_info$LocationDescription), list(rep(NA, nrow(rail_info))), list(rail_info$LocationDescription)), c(1:nrow(rail_info)))),
-                          Stair=unlist(mapply(function(x) ifelse(is.null(rail_info$Stair), list(rep(NA, nrow(rail_info))), list(rail_info$Stair)), c(1:nrow(rail_info)))),
-                          Escalator=unlist(mapply(function(x) ifelse(is.null(rail_info$Escalator), list(rep(NA, nrow(rail_info))), list(rail_info$Escalator)), c(1:nrow(rail_info)))),
-                          Elevator=unlist(mapply(function(x) ifelse(is.null(rail_info$Elevator), list(rep(NA, nrow(rail_info))), list(rail_info$Elevator)), c(1:nrow(rail_info)))))
-
-  # req_col=c("LineNo","LineID","RouteID","TrainType")
-  # req_col=req_col[req_col %in% names(rail_info)]
-  # rail_info=rail_info[rep(c(1:nrow(rail_info)), times=num_of_s2s), req_col]
-
-  # travel_time=cbind(rail_info, travel_time)
-  # row.names(travel_time)=NULL
+  if(operator=="TRA"){
+    station_exit=data.frame(ExitID=unlist(mapply(function(x) list(rail_info$Exits[[x]]$ExitID), c(1:nrow(rail_info)))),
+                            ExitName=unlist(mapply(function(x) list(rail_info$Exits[[x]]$ExitName$Zh_tw), c(1:nrow(rail_info)))),
+                            PositionLon=unlist(mapply(function(x) ifelse(is.null(rail_info$Exits[[x]]$ExitPosition$PositionLon), list(rep(NA, times=nrow(rail_info$Exits[[x]]))), list(rail_info$Exits[[x]]$ExitPosition$PositionLon)), c(1:nrow(rail_info)))),
+                            PositionLat=unlist(mapply(function(x) ifelse(is.null(rail_info$Exits[[x]]$ExitPosition$PositionLat), list(rep(NA, times=nrow(rail_info$Exits[[x]]))), list(rail_info$Exits[[x]]$ExitPosition$PositionLat)), c(1:nrow(rail_info)))),
+                            LocationDescription=unlist(mapply(function(x) list(rail_info$Exits[[x]]$LocationDescription), c(1:nrow(rail_info)))),
+                            Stair=unlist(mapply(function(x) list(rail_info$Exits[[x]]$Stair), c(1:nrow(rail_info)))),
+                            Escalator=unlist(mapply(function(x) list(rail_info$Exits[[x]]$Escalator), c(1:nrow(rail_info)))),
+                            Elevator=unlist(mapply(function(x) list(rail_info$Exits[[x]]$Escalator), c(1:nrow(rail_info)))))
+    num_of_exit=mapply(function(x) nrow(rail_info$Exits[[x]]), c(1:nrow(rail_info)))
+    rail_info$StationName=rail_info$StationName$Zh_tw
+    station_exit=cbind(rail_info[rep(c(1:nrow(rail_info)), num_of_exit), c("StationID","StationName")], station_exit)
+    row.names(station_exit)=NULL
+  }else{
+    station_exit=data.frame(StationID=rail_info$StationID,
+                            StationName=rail_info$StationName$Zh_tw,
+                            ExitID=rail_info$ExitID,
+                            ExitName=rail_info$ExitName$Zh_tw,
+                            PositionLon=rail_info$ExitPosition$PositionLon,
+                            PositionLat=rail_info$ExitPosition$PositionLat,
+                            LocationDescription=unlist(ifelse(is.null(rail_info$LocationDescription), list(rep(NA, nrow(rail_info))), list(rail_info$LocationDescription))),
+                            Stair=unlist(ifelse(is.null(rail_info$Stair), list(rep(NA, nrow(rail_info))), list(rail_info$Stair))),
+                            Escalator=unlist(ifelse(is.null(rail_info$Escalator), list(rep(NA, nrow(rail_info))), list(rail_info$Escalator))),
+                            Elevator=unlist(ifelse(is.null(rail_info$Elevator), list(rep(NA, nrow(rail_info))), list(rail_info$Elevator))))
+  }
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
       write.csv(station_exit, out, row.names=F)
     }
   }else if (dtype=="sf"){
-    station_exit$geometry=paste0("POINT(", station_exit$PositionLon, " ", station_exit$PositionLat, ")")
-    station_exit$geometry=st_as_sfc(station_exit$geometry)
+    station_exit$geometry=st_as_sfc(ifelse(!is.na(station_exit$PositionLon), paste0("POINT(", station_exit$PositionLon, " ", station_exit$PositionLat, ")"), "GEOMETRYCOLLECTION EMPTY"))
     station_exit=st_sf(station_exit, crs=4326)
 
     if (grepl(".shp", out) & out!=F){
@@ -1101,7 +1124,6 @@ Rail_StationExit=function(access_token, operator, dtype="text", out=F){
   }
   return(station_exit)
 }
-
 
 
 
