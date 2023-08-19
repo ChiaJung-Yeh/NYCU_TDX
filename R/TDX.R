@@ -371,6 +371,48 @@ Bus_Schedule=function(access_token, county, out=F){
 
 
 
+Bus_Vehicle=function(access_token, county, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(jsonlite)) install.packages("jsonlite")
+  if (!require(httr)) install.packages("httr")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  if(county=="Intercity"){
+    url="https://tdx.transportdata.tw/api/basic/v2/Bus/Vehicle/InterCity?&$format=JSON"
+  }else{
+    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Vehicle/City/", county, "?&$format=JSON")
+  }
+  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+  tryCatch({
+    bus_veh=fromJSON(content(x, as="text"))
+  }, error=function(err){
+    if (grepl("invalid", conditionMessage(err))){
+      stop(paste0("Your access token is invalid!"))
+    }
+  })
+  if("Message" %in% names(bus_veh)){
+    if(county %in% TDX_County$Code){
+      stop(paste0("'",county, "' bus vehicle data is not avaliable.\n", bus_veh$Message))
+    }else{
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+  }
+
+  bus_veh=select(bus_veh, -"UpdateTime")
+
+  if(nchar(out)!=0 & out!=F){
+    write.csv(bus_veh, out, row.names=F)
+  }
+  return(bus_veh)
+}
+
+
+
 Rail_StationOfLine=function(access_token, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
