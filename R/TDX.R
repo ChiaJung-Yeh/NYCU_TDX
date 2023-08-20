@@ -97,7 +97,64 @@ get_token=function(client_id, client_secret){
 
 
 
-Bus_StopOfRoute=function(access_token, county, histo=F, dates=F, dtype="text", out=F){
+#' @noRd
+histo_data=function(access_token, mode, type, cou_ope, dates){
+  if(grepl(",", dates)){
+    dates_all=unique(unlist(strsplit(dates, ",")))
+  }else if(grepl("~", dates)){
+    dates_all=unique(unlist(strsplit(dates, "~")))
+  }else{
+    dates_all=dates
+  }
+
+  tryCatch({
+    dates_all=as.Date(dates_all)
+    if(grepl("~", dates)){
+      dates_all=as.Date(dates_all[1]:dates_all[2])
+    }
+  }, error=function(err){
+    cat(paste0("Type", paste0(rep(" ", 12), collapse=""), "Format", paste0(rep(" ", 18), collapse=""), "Example\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD,YYYY-MM-DD\t2023-01-01,2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31\n"))
+    stop("Date value is invalid! Format of the date is listed above.")
+  })
+  if(sum(is.na(dates_all))!=0){
+    cat(paste0("Type", paste0(rep(" ", 12), collapse=""), "Format", paste0(rep(" ", 18), collapse=""), "Example\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD,YYYY-MM-DD\t2023-01-01,2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31\n"))
+    stop("Date value is invalid! Format of the date is listed above.")
+  }
+
+  all_data=data.frame()
+  num_of_nodata=0
+  cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]  {.emph Date: {dates_all[pb_current]}}", total=length(dates_all))
+  for(i in as.character(dates_all)){
+    cli_progress_update()
+    if(cou_ope=="Intercity"){
+      url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/", mode, "/", type, "/Date/", i, "/InterCity?&%24format=CSV")
+    }else{
+      url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/", mode, "/", type, "/Date/", i, "/City/", cou_ope, "?&%24format=CSV")
+    }
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+    if(content(x, "text")==""){
+      num_of_nodata=num_of_nodata+1
+      cli_alert_info(paste0("Data of ", i, " is not avaliable!\n"))
+    }else{
+      all_data_temp=read.csv(textConnection(content(x, "text")), header=T)
+      if("invalid.token" %in% names(all_data_temp)){
+        stop(paste0("Your access token is invalid!"))
+      }else if("Message" %in% names(all_data_temp)){
+        stop(all_data_temp$Message)
+      }else{
+        all_data=rbind(all_data, cbind(all_data_temp, "InfoDate"=i))
+      }
+    }
+  }
+  cli_alert_info(ifelse(num_of_nodata==0, "All Done!", paste0("All Done!\n", num_of_nodata, " dates have no data!")))
+  cli_progress_done()
+  return(all_data)
+}
+
+
+
+Bus_StopOfRoute=function(access_token, county, dates=F, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
@@ -114,7 +171,7 @@ Bus_StopOfRoute=function(access_token, county, histo=F, dates=F, dtype="text", o
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  if(!histo){
+  if(dates==F){
     if(county=="Intercity"){
       url="https://tdx.transportdata.tw/api/basic/v2/Bus/StopOfRoute/InterCity?%24format=JSON"
     }else{
@@ -154,47 +211,7 @@ Bus_StopOfRoute=function(access_token, county, histo=F, dates=F, dtype="text", o
 
     cat(paste0("#---", county, " Stop of Route Downloaded---#\n"))
   }else{
-    if(grepl(",", dates)){
-      dates_all=unique(unlist(strsplit(dates, ",")))
-    }else if(grepl("~", dates)){
-      dates_all=unique(unlist(strsplit(dates, "~")))
-    }else if(!dates){
-      stop("Argument 'Dates' is required!")
-    }
-
-    tryCatch({
-      dates_all=as.Date(dates_all)
-      if(grepl("~", dates)){
-        dates_all=as.Date(dates_all[1]:dates_all[2])
-      }
-    }, error=function(err){
-      stop(paste0("Date value is invalid! Format of the date:\n", "\nType", paste0(rep(" ", 12), collapse=""), "Format", paste0(rep(" ", 18), collapse=""), "Example\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD,YYYY-MM-DD\t2023-01-01,2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31"))
-    })
-    if(sum(is.na(dates_all))!=0){
-      stop(paste0("Date value is invalid! Format of the date:\n", "\nType", paste0(rep(" ", 12), collapse=""), "Format", paste0(rep(" ", 18), collapse=""), "Example\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD,YYYY-MM-DD\t2023-01-01,2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31"))
-    }
-
-    bus_stop=data.frame()
-    num_of_nodata=0
-    cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]  {.emph Date: {dates_all[pb_current]}}", total=length(dates_all))
-    for(i in as.character(dates_all)){
-      cli_progress_update()
-      url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/Bus/StopOfRoute/Date/", i, "/City/", county, "?&%24format=CSV")
-      x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-
-      if(content(x, "text")==""){
-        num_of_nodata=num_of_nodata+1
-        cli_alert_info(paste0("Data of ", i, " is not avaliable!\n"))
-      }else{
-        bus_stop_temp=read.csv(textConnection(content(x, "text")), header=T)
-        if("invalid.token" %in% names(bus_stop_temp)){
-          stop(paste0("Your access token is invalid!"))
-        }
-      }
-      bus_stop=rbind(bus_stop, cbind(bus_stop_temp, "InfoDate"=i))
-    }
-    cli_alert_info(ifelse(num_of_nodata==0, "All Done!", paste0("All Done!\n", num_of_nodata, " dates have no data!")))
-    cli_progress_done()
+    bus_stop=histo_data(access_token, "Bus", "StopOfRoute", county, dates)
   }
 
   if(dtype=="text"){
@@ -214,7 +231,7 @@ Bus_StopOfRoute=function(access_token, county, histo=F, dates=F, dtype="text", o
 
 
 
-Bus_Route=function(access_token, county, out=F){
+Bus_Route=function(access_token, county, dates=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
@@ -223,46 +240,51 @@ Bus_Route=function(access_token, county, out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  if(county=="Intercity"){
-    url="https://tdx.transportdata.tw/api/basic/v2/Bus/Route/InterCity?%24format=JSON"
-  }else{
-    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Route/City/", county, "?$format=JSON")
-  }
-  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-
-  tryCatch({
-    bus_info=fromJSON(content(x, as="text"))
-  }, error=function(err){
-    if (grepl("invalid", conditionMessage(err))){
-      stop(paste0("Your access token is invalid!"))
+  if(dates==F){
+    if(county=="Intercity"){
+      url="https://tdx.transportdata.tw/api/basic/v2/Bus/Route/InterCity?%24format=JSON"
+    }else{
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Route/City/", county, "?$format=JSON")
     }
-  })
-  if("Message" %in% names(bus_info)){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+    tryCatch({
+      bus_info=fromJSON(content(x, as="text"))
+    }, error=function(err){
+      if (grepl("invalid", conditionMessage(err))){
+        stop(paste0("Your access token is invalid!"))
+      }
+    })
+    if("Message" %in% names(bus_info)){
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+
+    bus_info$RouteName=bus_info$RouteName$Zh_tw
+    names(bus_info)[grepl("Zh", names(bus_info))]=gsub("Zh", "", names(bus_info)[grepl("Zh", names(bus_info))])
+    num_of_subroute=mapply(function(x) nrow(bus_info$SubRoutes[[x]]), c(1:nrow(bus_info)))
+    cat(paste0(length(num_of_subroute), " Routes\n"))
+
+    bus_route_temp=data.frame(SubRouteUID=unlist(mapply(function(x) bus_info$SubRoutes[[x]]$SubRouteUID, c(1:nrow(bus_info)))),
+                              SubRouteID=unlist(mapply(function(x) bus_info$SubRoutes[[x]]$SubRouteID, c(1:nrow(bus_info)))),
+                              SubRouteName=unlist(mapply(function(x) bus_info$SubRoutes[[x]]$SubRouteName$Zh_tw, c(1:nrow(bus_info)))),
+                              Direction=unlist(mapply(function(x) bus_info$SubRoutes[[x]]$Direction, c(1:nrow(bus_info)))),
+                              FirstBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$FirstBusTime)) bus_info$SubRoutes[[x]]$FirstBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))),
+                              LastBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$LastBusTime)) bus_info$SubRoutes[[x]]$LastBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))),
+                              HolidayFirstBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$HolidayFirstBusTime)) bus_info$SubRoutes[[x]]$HolidayFirstBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))),
+                              HolidayLastBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$HolidayLastBusTime)) bus_info$SubRoutes[[x]]$HolidayLastBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))))
+
+    col_retain=c("RouteUID","RouteID","RouteName","BusRouteType","DepartureStopName","DestinationStopName","TicketPriceDescription","FareBufferZoneDescription")
+    col_retain=col_retain[col_retain %in% names(bus_info)]
+    bus_info=as.data.frame(lapply(bus_info[, col_retain], rep, num_of_subroute))
+    bus_route=cbind(bus_info, bus_route_temp)
+
+    col_seq=c("RouteUID","RouteID","RouteName", "SubRouteUID", "SubRouteID", "SubRouteName", "Direction", "BusRouteType","DepartureStopName","DestinationStopName","TicketPriceDescription","FareBufferZoneDescription", "FirstBusTime", "LastBusTime", "HolidayFirstBusTime", "HolidayLastBusTime")
+    col_seq=col_seq[col_seq %in% names(bus_route)]
+    bus_route=bus_route[,col_seq]
+  }else{
+    bus_route=histo_data(access_token, "Bus", "Route", county, dates)
   }
-
-  bus_info$RouteName=bus_info$RouteName$Zh_tw
-  names(bus_info)[grepl("Zh", names(bus_info))]=gsub("Zh", "", names(bus_info)[grepl("Zh", names(bus_info))])
-  num_of_subroute=mapply(function(x) nrow(bus_info$SubRoutes[[x]]), c(1:nrow(bus_info)))
-  cat(paste0(length(num_of_subroute), " Routes\n"))
-
-  bus_route_temp=data.frame(SubRouteUID=unlist(mapply(function(x) bus_info$SubRoutes[[x]]$SubRouteUID, c(1:nrow(bus_info)))),
-                            SubRouteID=unlist(mapply(function(x) bus_info$SubRoutes[[x]]$SubRouteID, c(1:nrow(bus_info)))),
-                            SubRouteName=unlist(mapply(function(x) bus_info$SubRoutes[[x]]$SubRouteName$Zh_tw, c(1:nrow(bus_info)))),
-                            Direction=unlist(mapply(function(x) bus_info$SubRoutes[[x]]$Direction, c(1:nrow(bus_info)))),
-                            FirstBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$FirstBusTime)) bus_info$SubRoutes[[x]]$FirstBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))),
-                            LastBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$LastBusTime)) bus_info$SubRoutes[[x]]$LastBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))),
-                            HolidayFirstBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$HolidayFirstBusTime)) bus_info$SubRoutes[[x]]$HolidayFirstBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))),
-                            HolidayLastBusTime=unlist(mapply(function(x) if(!is.null(bus_info$SubRoutes[[x]]$HolidayLastBusTime)) bus_info$SubRoutes[[x]]$HolidayLastBusTime else rep(NA, num_of_subroute[x]), c(1:nrow(bus_info)))))
-
-  col_retain=c("RouteUID","RouteID","RouteName","BusRouteType","DepartureStopName","DestinationStopName","TicketPriceDescription","FareBufferZoneDescription")
-  col_retain=col_retain[col_retain %in% names(bus_info)]
-  bus_info=as.data.frame(lapply(bus_info[, col_retain], rep, num_of_subroute))
-  bus_route=cbind(bus_info, bus_route_temp)
-
-  col_seq=c("RouteUID","RouteID","RouteName", "SubRouteUID", "SubRouteID", "SubRouteName", "Direction", "BusRouteType","DepartureStopName","DestinationStopName","TicketPriceDescription","FareBufferZoneDescription", "FirstBusTime", "LastBusTime", "HolidayFirstBusTime", "HolidayLastBusTime")
-  col_seq=col_seq[col_seq %in% names(bus_route)]
 
   if(nchar(out)!=0 & out!=F){
     write.csv(bus_route, out, row.names=F)
@@ -272,7 +294,7 @@ Bus_Route=function(access_token, county, out=F){
 
 
 
-Bus_Shape=function(access_token, county, dtype="text", out=F){
+Bus_Shape=function(access_token, county, dates=F, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
@@ -288,34 +310,39 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  if(county=="Intercity"){
-    url="https://tdx.transportdata.tw/api/basic/v2/Bus/Shape/InterCity?&$format=JSON"
-  }else{
-    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Shape/City/", county, "?&$format=JSON")
-  }
-  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-
-  tryCatch({
-    bus_shape=fromJSON(content(x, as="text"))
-  }, error=function(err){
-    if (grepl("invalid", conditionMessage(err))){
-      stop(paste0("Your access token is invalid!"))
+  if(dates==F){
+    if(county=="Intercity"){
+      url="https://tdx.transportdata.tw/api/basic/v2/Bus/Shape/InterCity?&$format=JSON"
+    }else{
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Shape/City/", county, "?&$format=JSON")
     }
-  })
-  if("Message" %in% names(bus_shape)){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+    tryCatch({
+      bus_shape=fromJSON(content(x, as="text"))
+    }, error=function(err){
+      if (grepl("invalid", conditionMessage(err))){
+        stop(paste0("Your access token is invalid!"))
+      }
+    })
+    if("Message" %in% names(bus_shape)){
+      print(TDX_County)
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+
+    bus_shape$RouteName=bus_shape$RouteName$Zh_tw
+    bus_shape$SubRouteName=bus_shape$SubRouteName$Zh_tw
+
+    col_seq=c("RouteUID", "RouteID", "RouteName", "SubRouteUID", "SubRouteID", "SubRouteName", "Direction", "Geometry")
+    col_seq=col_seq[col_seq %in% names(bus_shape)]
+    bus_shape=bus_shape[, col_seq]%>%
+      rename(geometry=Geometry)
+
+    cat(paste0("#---", county, " Bus Shape Downloaded---#\n"))
+  }else{
+    bus_shape=histo_data(access_token, "Bus", "Shape", county, dates)
+    bus_shape=rename(bus_shape, geometry=Geometry)
   }
-
-  bus_shape$RouteName=bus_shape$RouteName$Zh_tw
-  bus_shape$SubRouteName=bus_shape$SubRouteName$Zh_tw
-
-  col_seq=c("RouteUID", "RouteID", "RouteName", "SubRouteUID", "SubRouteID", "SubRouteName", "Direction", "Geometry")
-  col_seq=col_seq[col_seq %in% names(bus_shape)]
-  bus_shape=bus_shape[, col_seq]%>%
-    rename(geometry=Geometry)
-
-  cat(paste0("#---", county, " Bus Shape Downloaded---#\n"))
 
   if(dtype=="text"){
     if (nchar(out)!=0 & out!=F){
@@ -333,8 +360,15 @@ Bus_Shape=function(access_token, county, dtype="text", out=F){
 }
 
 
+# temp=Bus_Shape(access_token, county="Intercity", dates=paste(paste0(2022, "-", stringr::str_pad(c(1:3), 2, "left", 0), "-01"), collapse=","))
+# group_by(st_drop_geometry(temp), InfoDate)%>%
+#   summarise(count=n())
+#
+# temp=histo_data(access_token, "Bus", "Schedule", "Taipei", dates="2022-01-01")
 
-Bus_Schedule=function(access_token, county, out=F){
+
+
+Bus_Schedule=function(access_token, county, dates=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
@@ -343,69 +377,75 @@ Bus_Schedule=function(access_token, county, out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  if(county=="Intercity"){
-    url="https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/InterCity?&$format=JSON"
-  }else if(county=="LienchiangCounty"){
-    stop("Bus schedule data of LienchiangCounty is now unavaliable.")
-  }
-  else{
-    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/City/", county, "?&$format=JSON")
-  }
-  x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-
-  tryCatch({
-    bus_info=fromJSON(content(x, as="text"))
-  }, error=function(err){
-    if (grepl("invalid", conditionMessage(err))){
-      stop(paste0("Your access token is invalid!"))
+  if(dates==F){
+    if(county=="Intercity"){
+      url="https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/InterCity?&$format=JSON"
+    }else{
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/Schedule/City/", county, "?&$format=JSON")
     }
-  })
-  if("Message" %in% names(bus_info)){
-    print(TDX_County)
-    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
-  }
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
-  bus_info$RouteName=bus_info$RouteName$Zh_tw
-  bus_info$SubRouteName=bus_info$SubRouteName$Zh_tw
-  bus_route=bus_info[, c("RouteUID","RouteID","RouteName","SubRouteUID","SubRouteID","SubRouteName","Direction")]
+    tryCatch({
+      bus_info=fromJSON(content(x, as="text"))
+    }, error=function(err){
+      if (grepl("invalid", conditionMessage(err))){
+        stop(paste0("Your access token is invalid!"))
+      }
+    })
+    if("Message" %in% names(bus_info)){
+      if(county %in% TDX_County$Code){
+        stop(paste0("Bus schedule data of '",county, "' is not avaliable.\n", bike_station$Message))
+      }
+      else{
+        print(TDX_County)
+        stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+      }
+    }
 
-  num_of_freq=unlist(mapply(function(x) ifelse(is.null(nrow(bus_info$Frequencys[[x]])), 0, nrow(bus_info$Frequencys[[x]])), c(1:nrow(bus_info))))
-  num_of_time=unlist(mapply(function(x) ifelse(is.null(nrow(bus_info$Timetables[[x]])), 0, nrow(bus_info$Timetables[[x]])), c(1:nrow(bus_info))))
+    bus_info$RouteName=bus_info$RouteName$Zh_tw
+    bus_info$SubRouteName=bus_info$SubRouteName$Zh_tw
+    bus_route=bus_info[, c("RouteUID","RouteID","RouteName","SubRouteUID","SubRouteID","SubRouteName","Direction")]
 
-  bus_freq=data.frame(StartTime=unlist(mapply(function(x) bus_info$Frequencys[[x]]$StartTime, c(1:nrow(bus_info)))),
-                      EndTime=unlist(mapply(function(x) bus_info$Frequencys[[x]]$EndTime, c(1:nrow(bus_info)))),
-                      MinHeadwayMins=unlist(mapply(function(x) bus_info$Frequencys[[x]]$MinHeadwayMins, c(1:nrow(bus_info)))),
-                      MaxHeadwayMins=unlist(mapply(function(x) bus_info$Frequencys[[x]]$MaxHeadwayMins, c(1:nrow(bus_info)))),
-                      rbindlist(mapply(function(x) bus_info$Frequencys[[x]]$ServiceDay, c(1:nrow(bus_info)))))
-  bus_freq=cbind(bus_route[rep(c(1:nrow(bus_route)), times=num_of_freq),], bus_freq)
+    num_of_freq=unlist(mapply(function(x) ifelse(is.null(nrow(bus_info$Frequencys[[x]])), 0, nrow(bus_info$Frequencys[[x]])), c(1:nrow(bus_info))))
+    num_of_time=unlist(mapply(function(x) ifelse(is.null(nrow(bus_info$Timetables[[x]])), 0, nrow(bus_info$Timetables[[x]])), c(1:nrow(bus_info))))
 
-  retrieve_first=function(dat){
-    temp=data.frame(t(mapply(function(x){
-      first_row=t(unlist(dat[[x]][1,]))
-      return(first_row)
-    }, c(1:length(dat)))))
-    return(temp)
-  }
-  bus_time=mapply(function(x) list(retrieve_first(bus_info$Timetables[[x]]$StopTimes)), which(num_of_time!=0))
-  bus_time=do.call(bind_rows, bus_time)%>%
-    data.frame()
-  bus_time=select(bus_time, -X5)
-  colnames(bus_time)=c("StopSequence","StopUID","StopID","StopName","ArrivalTime","DepartureTime")
-  day_oper=mapply(function(x) list(bus_info$Timetables[[x]]$ServiceDay), c(1:nrow(bus_info))) %>% do.call(rbind, .)
-  if(!is.null(day_oper)){
-    bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
-                        bus_time,
-                        day_oper)
+    bus_freq=data.frame(StartTime=unlist(mapply(function(x) bus_info$Frequencys[[x]]$StartTime, c(1:nrow(bus_info)))),
+                        EndTime=unlist(mapply(function(x) bus_info$Frequencys[[x]]$EndTime, c(1:nrow(bus_info)))),
+                        MinHeadwayMins=unlist(mapply(function(x) bus_info$Frequencys[[x]]$MinHeadwayMins, c(1:nrow(bus_info)))),
+                        MaxHeadwayMins=unlist(mapply(function(x) bus_info$Frequencys[[x]]$MaxHeadwayMins, c(1:nrow(bus_info)))),
+                        rbindlist(mapply(function(x) bus_info$Frequencys[[x]]$ServiceDay, c(1:nrow(bus_info)))))
+    bus_freq=cbind(bus_route[rep(c(1:nrow(bus_route)), times=num_of_freq),], bus_freq)
+
+    retrieve_first=function(dat){
+      temp=data.frame(t(mapply(function(x){
+        first_row=t(unlist(dat[[x]][1,]))
+        return(first_row)
+      }, c(1:length(dat)))))
+      return(temp)
+    }
+    bus_time=mapply(function(x) list(retrieve_first(bus_info$Timetables[[x]]$StopTimes)), which(num_of_time!=0))
+    bus_time=do.call(bind_rows, bus_time)%>%
+      data.frame()
+    bus_time=select(bus_time, -X5)
+    colnames(bus_time)=c("StopSequence","StopUID","StopID","StopName","ArrivalTime","DepartureTime")
+    day_oper=mapply(function(x) list(bus_info$Timetables[[x]]$ServiceDay), c(1:nrow(bus_info))) %>% do.call(rbind, .)
+    if(!is.null(day_oper)){
+      bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
+                          bus_time,
+                          day_oper)
+    }else{
+      bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
+                          bus_time)
+    }
+    bus_time=cbind(bus_route[rep(c(1:nrow(bus_route)), times=num_of_time),], bus_time)
+
+    bus_schedule=bind_rows(bus_freq, bus_time)
+    row.names(bus_schedule)=NULL
+
+    cat(paste0("#---", county, " Bus Schedule Downloaded---#\n"))
   }else{
-    bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
-                        bus_time)
+    bus_schedule=histo_data(access_token, "Bus", "Schedule", county, dates)
   }
-  bus_time=cbind(bus_route[rep(c(1:nrow(bus_route)), times=num_of_time),], bus_time)
-
-  bus_schedule=bind_rows(bus_freq, bus_time)
-  row.names(bus_schedule)=NULL
-
-  cat(paste0("#---", county, " Bus Schedule Downloaded---#\n"))
 
   if(nchar(out)!=0 & out!=F){
     write.csv(bus_schedule, out, row.names=F)
