@@ -21,3 +21,4 @@ Imports:
     data.table,
     cli,
     xml2
+RoxygenNote: 7.2.3

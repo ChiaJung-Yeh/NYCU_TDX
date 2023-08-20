@@ -96,10 +96,6 @@ get_token=function(client_id, client_secret){
 }
 
 
-
-#' A function rather aimed at developers
-#' @description A function that does blabla, blabla.
-#' @keywords internal
 #' @export
 histo_data=function(access_token, mode, type, cou_ope, dates){
   if(grepl(",", dates)){
