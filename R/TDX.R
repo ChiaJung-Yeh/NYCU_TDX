@@ -61,6 +61,7 @@ usethis::use_package("data.table")
 
 
 #---get the token---#
+#' @export
 get_token=function(client_id, client_secret){
   if (!require(httr)) install.packages("httr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -96,7 +97,7 @@ get_token=function(client_id, client_secret){
 }
 
 
-#' @export
+
 histo_data=function(access_token, mode, type, cou_ope, dates){
   if(grepl(",", dates)){
     dates_all=unique(unlist(strsplit(dates, ",")))
@@ -153,6 +154,7 @@ histo_data=function(access_token, mode, type, cou_ope, dates){
 
 
 
+#' @export
 Bus_StopOfRoute=function(access_token, county, dates=F, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -230,6 +232,7 @@ Bus_StopOfRoute=function(access_token, county, dates=F, dtype="text", out=F){
 
 
 
+#' @export
 Bus_Route=function(access_token, county, dates=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -293,6 +296,7 @@ Bus_Route=function(access_token, county, dates=F, out=F){
 
 
 
+#' @export
 Bus_Shape=function(access_token, county, dates=F, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -367,6 +371,7 @@ Bus_Shape=function(access_token, county, dates=F, dtype="text", out=F){
 
 
 
+#' @export
 Bus_Schedule=function(access_token, county, dates=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -454,6 +459,7 @@ Bus_Schedule=function(access_token, county, dates=F, out=F){
 
 
 
+#' @export
 Bus_Vehicle=function(access_token, county, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -496,6 +502,7 @@ Bus_Vehicle=function(access_token, county, out=F){
 
 
 
+#' @export
 Rail_StationOfLine=function(access_token, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -591,6 +598,7 @@ Rail_StationOfLine=function(access_token, operator, out=F){
 
 
 
+#' @export
 Rail_Station=function(access_token, operator, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -664,6 +672,7 @@ Rail_Station=function(access_token, operator, dtype="text", out=F){
 
 
 
+#' @export
 Rail_Shape=function(access_token, operator, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -727,6 +736,7 @@ Rail_Shape=function(access_token, operator, dtype="text", out=F){
 
 
 
+#' @export
 Bike_Station=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -787,6 +797,7 @@ Bike_Station=function(access_token, county, dtype="text", out=F){
 
 
 
+#' @export
 Geocoding=function(access_token, address, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -882,6 +893,7 @@ Geocoding=function(access_token, address, dtype="text", out=F){
 
 
 
+#' @export
 Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -974,6 +986,7 @@ Road_Network=function(access_token, county, roadclass, dtype="text", out=F){
 
 
 
+#' @export
 Rail_TimeTable=function(access_token, operator, record, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1103,6 +1116,7 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
 
 
 
+#' @export
 Rail_TravelTime=function(access_token, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1159,6 +1173,7 @@ Rail_TravelTime=function(access_token, operator, out=F){
 
 
 
+#' @export
 Rail_StationExit=function(access_token, operator, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1251,6 +1266,7 @@ Rail_StationExit=function(access_token, operator, dtype="text", out=F){
 
 
 
+#' @export
 Bike_Shape=function(access_token, county, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1303,6 +1319,7 @@ Bike_Shape=function(access_token, county, dtype="text", out=F){
 
 
 
+#' @export
 Air_Schedule=function(access_token, domestic=T, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1339,6 +1356,7 @@ Air_Schedule=function(access_token, domestic=T, out=F){
 
 
 
+#' @export
 Tourism=function(access_token, county, poi, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1412,6 +1430,7 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
 
 
 
+#' @export
 Bus_TravelTime=function(access_token, county, routeid, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1503,6 +1522,7 @@ Bus_TravelTime=function(access_token, county, routeid, out=F){
 
 
 
+#' @export
 Rail_ODFare=function(access_token, operator, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1551,6 +1571,7 @@ Rail_ODFare=function(access_token, operator, out=F){
 
 
 
+#' @export
 Car_Park=function(access_token, county, street, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1644,6 +1665,7 @@ Car_Park=function(access_token, county, street, dtype="text", out=F){
 
 
 
+#' @export
 Ship_Port=function(access_token, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1691,6 +1713,7 @@ Ship_Port=function(access_token, dtype="text", out=F){
 
 
 
+#' @export
 Ship_Route=function(access_token, county, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1728,6 +1751,7 @@ Ship_Route=function(access_token, county, out=F){
 
 
 
+#' @export
 Ship_StopOfRoute=function(access_token, county, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1778,6 +1802,7 @@ Ship_StopOfRoute=function(access_token, county, out=F){
 
 
 
+#' @export
 Bus_RouteFare=function(access_token, county, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -1885,6 +1910,7 @@ Bus_RouteFare=function(access_token, county, out=F){
 
 
 
+#' @export
 Bike_Remain_His=function(access_token, county, dates, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(httr)) install.packages("httr")
@@ -1922,6 +1948,7 @@ Bike_Remain_His=function(access_token, county, dates, out=F){
 
 
 
+#' @export
 Freeway_Shape=function(geotype, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
@@ -2067,6 +2094,7 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
 
 
 
+#' @export
 District_Shape=function(access_token, district, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
@@ -2112,6 +2140,7 @@ District_Shape=function(access_token, district, dtype="text", out=F){
 
 
 
+#' @export
 Population=function(district, time, age=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
 
@@ -2179,6 +2208,7 @@ Population=function(district, time, age=F, out=F){
 
 
 
+#' @export
 Freeway_History=function(file, date, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(data.table)) install.packages("data.table")
@@ -2301,6 +2331,7 @@ Freeway_History=function(file, date, out=F){
 
 
 
+#' @export
 Bus_RealTime=function(access_token, county, format, dates, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(httr)) install.packages("httr")
@@ -2337,10 +2368,6 @@ Bus_RealTime=function(access_token, county, format, dates, out=F){
   }
   return(bus_real_time)
 }
-
-
-
-
 
 
 
