@@ -98,7 +98,7 @@ get_token=function(client_id, client_secret){
 
 
 
-histo_data=function(access_token, mode, type, cou_ope, dates){
+date_rev=function(dates){
   if(grepl(",", dates)){
     dates_all=unique(unlist(strsplit(dates, ",")))
   }else if(grepl("~", dates)){
@@ -120,7 +120,12 @@ histo_data=function(access_token, mode, type, cou_ope, dates){
     cat(paste0("Type", paste0(rep(" ", 12), collapse=""), "Format", paste0(rep(" ", 18), collapse=""), "Example\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD,YYYY-MM-DD\t2023-01-01,2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31\n"))
     stop("Date value is invalid! Format of the date is listed above.")
   }
+  return(dates_all)
+}
 
+
+histo_data=function(access_token, mode, type, cou_ope, dates){
+  dates_all=date_rev(dates)
   all_data=data.frame()
   num_of_nodata=0
   cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]  {.emph Date: {dates_all[pb_current]}}", total=length(dates_all))
