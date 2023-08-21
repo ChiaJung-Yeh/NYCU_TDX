@@ -5,10 +5,8 @@
 .Rdata
 .httr-oauth
 .DS_Store
-key.txt
-key_old.txt
-access_token.txt
 data/tdx_county.txt
 data/tdx_railway.txt
 data/tdx_roadclass.txt
+Note.txt
 .quarto
