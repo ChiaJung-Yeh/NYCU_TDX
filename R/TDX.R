@@ -157,11 +157,11 @@ histo_data=function(access_token, mode, type, cou_ope, dates){
 
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
-    if(content(x, "text")==""){
+    if(content(x, "text", encoding="UTF-8")==""){
       num_of_nodata=num_of_nodata+1
       cli_alert_info(paste0("Data of ", i, " is not avaliable!\n"))
     }else{
-      all_data_temp=read.csv(textConnection(content(x, "text")), header=T)
+      all_data_temp=read.csv(textConnection(content(x, "text", encoding="UTF-8")), header=T)
       if("invalid.token" %in% names(all_data_temp)){
         stop(paste0("Your access token is invalid!"))
       }else if("Message" %in% names(all_data_temp)){
@@ -1994,10 +1994,10 @@ Bike_Remain_His=function(access_token, county, dates, out=F){
   url=paste0("https://tdx.transportdata.tw/api/historical/v2/Historical/Bike/Availability/", county, "?Dates=", dates, "&%24format=CSV")
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
-  if(content(x, "text")==""){
+  if(content(x, "text", encoding="UTF-8")==""){
     stop(paste0("'",county, "' has no bike sharing system or data is not avaliable.\n", bike_station$Message))
   }
-  bike_remain=read.csv(textConnection(content(x, "text")), header=T)
+  bike_remain=read.csv(textConnection(content(x, "text", encoding="UTF-8")), header=T)
 
   if("invalid.token" %in% names(bike_remain)){
     stop(paste0("Your access token is invalid!"))
@@ -2420,7 +2420,7 @@ Bus_RealTime=function(access_token, county, format, dates, out=F){
     stop("Parameter 'format' should be 'frequency' or 'stop'.")
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-  bus_real_time=read.csv(textConnection(content(x, "text")), header=T)
+  bus_real_time=read.csv(textConnection(content(x, "text", encoding="UTF-8")), header=T)
 
   if("invalid.token" %in% names(bus_real_time)){
     stop(paste0("Your access token is invalid!"))
@@ -2440,6 +2440,69 @@ Bus_RealTime=function(access_token, county, format, dates, out=F){
   }
   return(bus_real_time)
 }
+
+
+
+#' @export
+Income=function(year, out=F){
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  tryCatch({
+    url=paste0("https://eip.fia.gov.tw/data/ias/ias", year-1911, "/", year-1911, "_165-9.csv")
+    income=read.csv(url)
+  }, error=function(err){
+    stop(paste0("Data of year '", year, "' is not provided!"))
+  })
+  colnames(income)=c("CountyTown","Village","Houses","Amount","MEAN","MED","Q1","A3","SD","VAR")
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(income, out, row.names=F)
+  }
+  return(income)
+}
+
+
+
+#' @export
+gtfs=function(access_token, mode, county=F, out=F){
+  gtfs_label=c("agency","calendar","calendar_dates","frequencies","routes","shapes","stop_times","stops","trips")
+  cat(paste0("Note that GTFS data includes ", paste(gtfs_label, collapse=", "), ". All data would stored as 'txt' file in a directory if they are exported.\n"))
+
+  gtfs_list=list()
+  for(i in c(1:length(gtfs_label))){
+    if(mode=="Bus"){
+      url=paste0("https://tdx.transportdata.tw/api/premium/v2/GTFS/Static/", mode, "/City/", county, "/", gtfs_label[i], "?%24format=txt")
+    }else if(mode %in% c("TRA","THSR")){
+      url=paste0("https://tdx.transportdata.tw/api/premium/v2/GTFS/Static/", mode, "/", gtfs_label[i], "?%24format=txt")
+    }else{
+      stop(paste0("Data of '", mode, "' is not available."))
+    }
+
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+    if(content(x, "text", encoding="UTF-8")==""){
+      cat(paste0("'", gtfs_label[i], "' data is not available.\n"))
+      gtfs_list[gtfs_label[i]]=list(c())
+    }else{
+      all_data_temp=read.csv(textConnection(content(x, "text", encoding="UTF-8")), header=T)
+      if("invalid.token" %in% names(all_data_temp)){
+        stop(paste0("Your access token is invalid!"))
+      }else if(sum(grepl("Message", names(all_data_temp)))!=0){
+        stop(fromJSON(content(x, "text", encoding="UTF-8"))$Message)
+      }else{
+        gtfs_list[gtfs_label[i]]=list(all_data_temp)
+        if(out!=F){
+          write.table(all_data_temp, paste0(out, "/", gtfs_label[i], ".txt"), sep=",")
+        }
+        cat(paste0("'", gtfs_label[i], "' data downloaded.\n"))
+      }
+    }
+  }
+  return(gtfs_list)
+}
+
 
 
 
