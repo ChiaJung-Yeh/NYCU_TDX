@@ -402,6 +402,7 @@ retrieve_first=function(dat){
 #' @export
 Bus_Schedule=function(access_token, county, dates=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
+  if (!require(data.table)) install.packages("data.table")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
   if (!require(cli)) install.packages("cli")
@@ -1505,6 +1506,7 @@ Tourism=function(access_token, county, poi, dtype="text", out=F){
 #' @export
 Bus_TravelTime=function(access_token, county, routeid, out=F){
   if (!require(dplyr)) install.packages("dplyr")
+  if (!require(data.table)) install.packages("data.table")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
   if (!require(cli)) install.packages("cli")
