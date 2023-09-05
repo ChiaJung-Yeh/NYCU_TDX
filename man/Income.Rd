@@ -44,7 +44,7 @@ Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-Income(2021)
+Income(2020)
 }
 \keyword{datasets}
 
