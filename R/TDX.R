@@ -1767,6 +1767,7 @@ Ship_Port=function(access_token, dtype="text", out=F){
 
   shipport=cbind(shipport, shipport$PortPosition)%>%
     dplyr::select(-PortPosition)
+  shipport$PortName=shipport$PortName$Zh_tw
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
