@@ -8,7 +8,7 @@ Retrieve the schedule of each bus routes
 The function is used to download the bus schedule. And it supports to download data of city buses and intercity buses. Note that the schedule is recorded in two forms, including timetable and frequency. Some cities (e.g., Taipei) record in both two methods, and they would be merged together in this function. Most of the cities only record in the schedule form.
 }
 \usage{
-Bus_Schedule(access_token, county, out=F)
+Bus_Schedule(access_token, county, dates=F, out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
@@ -16,13 +16,14 @@ Bus_Schedule(access_token, county, out=F)
 \arguments{
   \item{access_token}{Your access token given by TDX platform. This can be derived from the function \code{get_token()}.}
   \item{county}{Please fill in the English county name. Checking out the appropriate county name in dataframe \code{TDX_County}. If \code{Intercity} is used, the function retrieves the intercity bus data.}
+  \item{dates}{If historical data would be retrieved, this argument should be set; otherwise the default value is FALSE. The date format should be \code{YYYY-MM-DD}.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data.}
 }
 \value{
 Some columns definition are listed below.
   \tabular{rlll}{
-      \tab \strong{RouteUID}   \tab It contains every sub-routes and directions in a same RouteUID.\cr
-      \tab \strong{SubRouteUID} \tab If the direction or sub-route is not the same, a different SubRouteUID must be recorded.\cr
+      \tab \strong{RouteUID}   \tab It contains every subroutes and directions in a same RouteUID.\cr
+      \tab \strong{SubRouteUID} \tab If the direction or subroute is not the same, a different SubRouteUID must be recorded.\cr
       \tab \strong{TripID} \tab It is used to record the sequence of Trips. It only occurs when the schedule is recorded in timetable format.\cr
       \tab \strong{Sunday} \tab If the trip is operated in that day, it is recorded in 1; ortherwise, 0. \emph{Other days are the same.}\cr
       \tab \strong{Date} \tab Use to record some special hoildays.\cr
@@ -52,7 +53,7 @@ Codes of BusRouteType are listed below.
   }
 }
 \author{
-Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
+Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 }
 \details{
 %%  ~~ If necessary, more details than the __description__ above ~~
@@ -66,6 +67,9 @@ Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
 \examples{
 Bus_Schedule(access_token, "Taipei")
 Bus_Schedule(access_token, "Hsinchu", out="./Hsinchu_Schedule.csv")
+
+# historical data
+Bus_Schedule(access_token, "Hsinchu", "2022-01-01")
 }
 \keyword{datasets}
 

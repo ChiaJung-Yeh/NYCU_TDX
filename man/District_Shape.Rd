@@ -20,7 +20,7 @@ District_Shape(access_token, district, dtype="text", out=F)
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data. Note that the directory must contain ".shp" when exporting simple feature. And the directory must contain ".csv" or ".txt" when exporting text file.}
 }
 \author{
-Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
+Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 }
 \details{
 %%  ~~ If necessary, more details than the __description__ above ~~

@@ -29,7 +29,7 @@ Some columns definition of success result are listed below.
     }
 }
 \author{
-Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
+Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 }
 \details{
 %%  ~~ If necessary, more details than the __description__ above ~~

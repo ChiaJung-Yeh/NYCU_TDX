@@ -1,21 +1,21 @@
-\name{Air_Schedule}
-\alias{Air_Schedule}
+\name{Rail_TravelTime}
+\alias{Rail_TravelTime}
 \docType{data}
 \title{
-Retrieve the schedule of domestic or international airline flights
+Retrieve the travel time of each OD of railway system
 }
 \description{
-The function is used to download the schedule of airline. And it supports to download data of domestic and international flights.
+The function is used to download the travel time of each OD for a given railway system. There are two types of format of time table, general and station. \code{general} means to record the time table by each train No., while \code{station} represents record the time table based on each station. Please look up the "record" arguments below to find out details of settings.
 }
 \usage{
-Air_Schedule(access_token, domestic=T, out=F)
+Rail_TravelTime(access_token, operator, out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
 }
 \arguments{
   \item{access_token}{Your access token given by TDX platform. This can be derived from the function \code{get_token()}.}
-  \item{domestic}{TRUE for the domestic airline, while FALSE for the international airline.}
+  \item{operator}{Please fill in the operator code of given railway system. Checking out the appropriate operator code in dataframe \code{TDX_Railway}.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data. Note that the directory must contain ".csv" or ".txt" when exporting text file.}
 }
 \author{
@@ -31,11 +31,7 @@ Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-# Retrieve the schedule of domestic flight
-Air_Schedule(access_token, domestic=T)
-
-# Retrieve the schedule of international flight
-Air_Schedule(access_token, domestic=F, "./international_flight.csv")
+Rail_TravelTime(access_token, operator="TRTC")
 }
-\keyword{datasets}
+\keyword{Road_Network}
 

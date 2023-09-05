@@ -1201,7 +1201,7 @@ Rail_TravelTime=function(access_token, operator, out=F){
   if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/S2STravelTime/", operator, "?%24format=JSON")
   }else{
-    url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/", operator, "/S2STravelTime/?%24format=JSON")
+    stop(paste0("'",operator, "' travel time data is not avaliable.\n"))
   }
 
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
@@ -2455,7 +2455,7 @@ Income=function(year, out=F){
   }, error=function(err){
     stop(paste0("Data of year '", year, "' is not provided!"))
   })
-  colnames(income)=c("CountyTown","Village","Houses","Amount","MEAN","MED","Q1","A3","SD","VAR")
+  colnames(income)=c("CountyTown","Village","Houses","Amount","MEAN","MED","Q1","Q3","SD","CV")
 
   if (nchar(out)!=0 & out!=F){
     write.csv(income, out, row.names=F)
@@ -2468,7 +2468,7 @@ Income=function(year, out=F){
 #' @export
 gtfs=function(access_token, mode, county=F, out=F){
   gtfs_label=c("agency","calendar","calendar_dates","frequencies","routes","shapes","stop_times","stops","trips")
-  cat(paste0("Note that GTFS data includes ", paste(gtfs_label, collapse=", "), ". All data would stored as 'txt' file in a directory if they are exported.\n"))
+  cat(paste0("Note that GTFS data includes ", paste(gtfs_label, collapse=", "), ". All data would be stored as 'txt' file in a directory if they are exported.\n"))
 
   gtfs_list=list()
   for(i in c(1:length(gtfs_label))){

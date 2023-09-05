@@ -19,7 +19,7 @@ Ship_StopOfRoute(access_token, county, out=F)
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data.}
 }
 \author{
-Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
+Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 }
 \details{
 %%  ~~ If necessary, more details than the __description__ above ~~

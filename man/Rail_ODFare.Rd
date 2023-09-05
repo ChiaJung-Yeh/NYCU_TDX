@@ -30,14 +30,14 @@ Some columns definition are listed below.
       \tab \strong{Price} \tab Price of the OD fare under specific train type, ticket type, fare class, and cabin class."\cr
     }
 
-Codes of TrainType are listed below.
+Codes of \strong{TrainType} are listed below.
   \tabular{rll}{
     \strong{0}   \tab No distinguishment\cr
     \strong{1}   \tab Local train\cr
     \strong{2}   \tab Express train\cr
   }
 
-Codes of TicketType are listed below.
+Codes of \strong{TicketType} are listed below.
   \tabular{rll}{
     \strong{1}   \tab One-way ticket\cr
     \strong{2}   \tab Round-trip ticket\cr
@@ -47,7 +47,7 @@ Codes of TicketType are listed below.
     \strong{6}   \tab 60 days periodic ticket\cr
   }
 
-Codes of FareClass are listed below.
+Codes of \strong{FareClass} are listed below.
   \tabular{rll}{
     \strong{1}   \tab Adult\cr
     \strong{2}   \tab Student\cr
@@ -59,7 +59,7 @@ Codes of FareClass are listed below.
     \strong{8}   \tab Group\cr
   }
 
-Codes of CabinClass are listed below.
+Codes of \strong{CabinClass} are listed below.
   \tabular{rll}{
     \strong{1}   \tab Standard class\cr
     \strong{2}   \tab Business class\cr
@@ -67,7 +67,7 @@ Codes of CabinClass are listed below.
   }
 }
 \author{
-Maintainer: Chia Jung, Yeh  \email{robert1328.mg10@nycu.edu.tw}
+Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 }
 \details{
 %%  ~~ If necessary, more details than the __description__ above ~~
