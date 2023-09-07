@@ -2508,6 +2508,52 @@ gtfs=function(access_token, mode, county=F, out=F){
 
 
 
+#' @export
+Bike_OD_His=function(bikesys, time, out=F){
+  if(bikesys==1){
+    url="https://tcgbusfs.blob.core.windows.net/dotapp/youbike_ticket_opendata/YouBikeHis.csv"
+  }else{
+    url="https://tcgbusfs.blob.core.windows.net/dotapp/youbike_second_ticket_opendata/YouBikeHis.csv"
+  }
+  dir_file=read.csv(url)
+
+  if(nchar(time)==7 & grepl("-", time)){
+    time_year=substr(time, 1, regexpr("-", time)-1)
+    time_month=substr(time, regexpr("-", time)+1, regexpr("-", time)+2)
+  }else{
+    stop("Please check out the format of 'time'! It should be 'YYYY-MM'.")
+  }
+
+  if(sum(grepl(time, dir_file$fileURL))!=0){
+    url=dir_file$fileURL[which(grepl(time, dir_file$fileURL))]
+    unlink(list.files(tempdir(), full.names=T), recursive=T)
+    download.file(url, paste0(tempdir(), "/temp_youbike_TDX.zip"), mode="wb", quiet=T)
+    untar(paste0(tempdir(), "/temp_youbike_TDX.zip"), exdir=paste0(tempdir(), "/temp_youbike_TDX"))
+
+    dir_file=dir(paste0(tempdir(), "/temp_youbike_TDX"), full.names=T)
+    if(grepl("csv", dir_file)==F){
+      dir_file=dir(dir(paste0(tempdir(), "/temp_youbike_TDX"), full.names=T), full.names=T)
+    }
+
+    if(grepl("rent", read.csv(dir_file, header=F, nrows=1)[1])){
+      bike_od_his=read.csv(dir_file, header=T)
+    }else{
+      bike_od_his=read.csv(dir_file, header=F)
+    }
+    colnames(bike_od_his)=c("RentTime","RentStation","ReturnTime","ReturnStation","RideTime","Date")
+    unlink(paste0(tempdir(), "/temp_youbike_TDX"), recursive=T)
+    file.remove(paste0(tempdir(), "/temp_youbike_TDX.zip"))
+  }else{
+    stop(paste0("Data of Youbike ", bikesys, ".0 in ", time, " is not available!"))
+  }
+
+  if(nchar(out)!=0 & out!=F){
+    write.csv(bike_od_his, out, row.names=F)
+  }
+  return(bike_od_his)
+}
+
+
 
 
 # Ship_Schedule=function(access_token, county, out=F){
