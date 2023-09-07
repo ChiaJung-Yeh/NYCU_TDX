@@ -61,7 +61,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-**Rail\_Station()**
+\[Rail\_Station()\]
 </td>
 </tr>
 <tr>
@@ -477,4 +477,4 @@ This package takes advantage of API service provided by TDX, MOTC.
 For questions, bugs, and other discussion, please feel free to contact
 the package maintainer, Chia Jung, Yeh.  
 Email:
-<a href="mailto:robert1328.mg10@nycu.edu.tw"><u><robert1328.mg10@nycu.edu.tw></u></a>
+<a href="mailto:chia-jung.yeh@sydney.edu.au"><u><chia-jung.yeh@sydney.edu.au></u></a>

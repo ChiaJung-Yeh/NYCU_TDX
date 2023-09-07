@@ -60,8 +60,6 @@ usethis::use_package("progress")
 # write.csv(all_api, "./all_api_attribute.csv", row.names=F)
 
 
-
-
 #---get the token---#
 #' @export
 get_token=function(client_id, client_secret){
