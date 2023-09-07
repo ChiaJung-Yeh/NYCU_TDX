@@ -30,9 +30,6 @@ All functions provided in this package are summarized in the table
 below.
 
 <table class="table table-striped table-hover" style="font-size: 14px; margin-left: auto; margin-right: auto;">
-<caption style="font-size: initial !important;">
-本套件函式綜覽
-</caption>
 <thead>
 <tr>
 <th style="text-align:left;font-weight: bold;color: white !important;background-color: #8E8E8E !important;">
