@@ -61,7 +61,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-[`Rail_Station()`](#軌道站點資料)
+Rail\_Station()
 </td>
 </tr>
 <tr>
@@ -69,7 +69,7 @@ below.
 軌道路線站點
 </td>
 <td style="text-align:left;">
-[`Rail_StationOfLine()`](#軌道路線站點資料)
+Rail\_StationOfLine()
 </td>
 </tr>
 <tr>
@@ -77,7 +77,7 @@ below.
 軌道站點出口
 </td>
 <td style="text-align:left;">
-[`Rail_StationExit()`](#軌道站點出口資料)
+Rail\_StationExit()
 </td>
 </tr>
 <tr>
@@ -88,7 +88,7 @@ below.
 線
 </td>
 <td style="text-align:left;">
-[`Rail_Shape()`](#軌道路線線型資料)
+Rail\_Shape()
 </td>
 </tr>
 <tr>
@@ -99,7 +99,7 @@ below.
 文字
 </td>
 <td style="text-align:left;">
-[`Rail_TimeTable()`](#軌道班表資料)
+Rail\_TimeTable()
 </td>
 </tr>
 <tr>
@@ -107,7 +107,7 @@ below.
 軌道票價
 </td>
 <td style="text-align:left;">
-[`Rail_ODFare()`](#軌道票價資料)
+Rail\_ODFare()
 </td>
 </tr>
 <tr>
@@ -115,7 +115,7 @@ below.
 軌道站間旅行時間
 </td>
 <td style="text-align:left;">
-[`Rail_TravelTime()`](#軌道站間旅行時間資料)
+Rail\_TravelTime()
 </td>
 </tr>
 <tr>
@@ -129,7 +129,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-[`Bus_StopOfRoute()`](#公車站點資料)
+Bus\_StopOfRoute()
 </td>
 </tr>
 <tr>
@@ -140,7 +140,7 @@ below.
 文字
 </td>
 <td style="text-align:left;">
-[`Bus_Route()`](#公車路線資料)
+Bus\_Route()
 </td>
 </tr>
 <tr>
@@ -151,7 +151,7 @@ below.
 線
 </td>
 <td style="text-align:left;">
-[`Bus_Shape()`](#公車路線線型資料)
+Bus\_Shape()
 </td>
 </tr>
 <tr>
@@ -162,7 +162,7 @@ below.
 文字
 </td>
 <td style="text-align:left;">
-[`Bus_Schedule()`](#公車班表資料)
+Bus\_Schedule()
 </td>
 </tr>
 <tr>
@@ -170,7 +170,7 @@ below.
 公車站間旅行時間
 </td>
 <td style="text-align:left;">
-[`Bus_TravelTime()`](#公車站間旅行時間資料)
+Bus\_TravelTime()
 </td>
 </tr>
 <tr>
@@ -178,7 +178,7 @@ below.
 公車票價
 </td>
 <td style="text-align:left;">
-[`Bus_RouteFare()`](#公車票價)
+Bus\_RouteFare()
 </td>
 </tr>
 <tr>
@@ -186,7 +186,7 @@ below.
 公車車輛
 </td>
 <td style="text-align:left;">
-[`Bus_Vehicle()`](#公車車輛)
+Bus\_Vehicle()
 </td>
 </tr>
 <tr>
@@ -197,7 +197,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-[`Bus_RealTime()`](#公車動態)
+Bus\_RealTime()
 </td>
 </tr>
 <tr>
@@ -208,7 +208,7 @@ below.
 公共自行車站點
 </td>
 <td style="text-align:left;">
-[`Bike_Station()`](#公共自行車站點資料)
+Bike\_Station()
 </td>
 </tr>
 <tr>
@@ -219,7 +219,7 @@ below.
 線
 </td>
 <td style="text-align:left;">
-[`Bike_Shape()`](#自行車線型資料)
+Bike\_Shape()
 </td>
 </tr>
 <tr>
@@ -230,7 +230,7 @@ below.
 文字
 </td>
 <td style="text-align:left;">
-[`Bike_Remain_His()`](#公共自行車站點歷史動態資料)
+Bike\_Remain\_His()
 </td>
 </tr>
 <tr>
@@ -238,7 +238,7 @@ below.
 臺北市公共自行車租借紀錄
 </td>
 <td style="text-align:left;">
-[`Bike_OD_His()`](#公共自行車租借紀錄資料)
+Bike\_OD\_His()
 </td>
 </tr>
 <tr>
@@ -249,7 +249,7 @@ below.
 航空班表
 </td>
 <td style="text-align:left;">
-[`Air_Schedule()`](#航空班表資料)
+Air\_Schedule()
 </td>
 </tr>
 <tr>
@@ -260,7 +260,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-[`Ship_Port()`](#港口點位資料)
+Ship\_Port()
 </td>
 </tr>
 <tr>
@@ -271,7 +271,7 @@ below.
 文字
 </td>
 <td style="text-align:left;">
-[`Ship_Route()`](#航運航線資料)
+Ship\_Route()
 </td>
 </tr>
 <tr>
@@ -279,7 +279,7 @@ below.
 航線靠港順序
 </td>
 <td style="text-align:left;">
-[`Ship_StopOfRoute()`](#航線靠港順序資料)
+Ship\_StopOfRoute()
 </td>
 </tr>
 <tr>
@@ -293,7 +293,7 @@ below.
 線
 </td>
 <td style="text-align:left;">
-[`Freeway_Shape()`](#高快速公路線型資料)
+Freeway\_Shape()
 </td>
 </tr>
 <tr>
@@ -304,7 +304,7 @@ below.
 文字
 </td>
 <td style="text-align:left;">
-[`Freeway_History()`](#高速公路etag與VD資料)
+Freeway\_History()
 </td>
 </tr>
 <tr>
@@ -318,7 +318,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-[`Car_Park()`](#停車場點位資料)
+Car\_Park()
 </td>
 </tr>
 <tr>
@@ -329,7 +329,7 @@ below.
 景點、餐廳、旅館點位
 </td>
 <td style="text-align:left;">
-[`Tourism()`](#觀光點位資料)
+Tourism()
 </td>
 </tr>
 <tr>
@@ -343,7 +343,7 @@ below.
 線
 </td>
 <td style="text-align:left;">
-[`Road_Network()`](#道路路網線型資料)
+Road\_Network()
 </td>
 </tr>
 <tr>
@@ -357,7 +357,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-[`Geocoding()`](#地理編碼服務)
+Geocoding()
 </td>
 </tr>
 <tr>
@@ -371,7 +371,7 @@ below.
 文字
 </td>
 <td style="text-align:left;">
-[`Population()`](#人口資料)
+Population()
 </td>
 </tr>
 <tr>
@@ -382,7 +382,7 @@ below.
 所得（各村里）
 </td>
 <td style="text-align:left;">
-[`Income()`](#所得資料)
+Income()
 </td>
 </tr>
 <tr>
@@ -396,7 +396,7 @@ below.
 面
 </td>
 <td style="text-align:left;">
-[`District_Shape()`](#行政區資料)
+District\_Shape()
 </td>
 </tr>
 <tr>
@@ -410,16 +410,17 @@ GTFS
 文字
 </td>
 <td style="text-align:left;">
-[`gtfs()`](#公共運輸標準資料)
+gtfs()
 </td>
 </tr>
 </tbody>
 </table>
 
 Data retrieving process requires an access token to obtain the data from
-TDX platform. Every function in this package should use function
-`get_token()` to obtain the token by entering your Client ID and Client
-Secret first. Note that the access token will expire in 1 day.
+TDX platform. Most function in this package should use function
+`get_token()` in advance to obtain the token by entering your Client ID
+and Client Secret first. Note that the access token will expire in 1
+day.
 
 Take retrieving MRT stations of Taipei Metro System for example. The
 code is shown below. Here the argument `CLIENT_ID` and `CLIEN_SECRET` is
