@@ -61,7 +61,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-\[Rail\_Station()\]
+`Rail_Station()`
 </td>
 </tr>
 <tr>
@@ -298,7 +298,7 @@ Freeway\_Shape()
 </tr>
 <tr>
 <td style="text-align:left;">
-高速公路etag與VD
+高速公路 etag 與 VD
 </td>
 <td style="text-align:left;">
 文字
