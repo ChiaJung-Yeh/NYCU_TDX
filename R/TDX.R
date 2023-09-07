@@ -6,6 +6,7 @@ library(sf)
 library(urltools)
 library(cli)
 library(data.table)
+library(progress)
 
 usethis::use_package("dplyr")
 usethis::use_package("jsonlite")
@@ -15,6 +16,7 @@ usethis::use_package("sf")
 usethis::use_package("urltools")
 usethis::use_package("cli")
 usethis::use_package("data.table")
+usethis::use_package("progress")
 
 
 # TDX_County=read.table("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt", encoding="UTF-8", sep=",", header=T)
@@ -126,6 +128,8 @@ date_rev=function(dates){
 
 
 histo_data=function(access_token, mode, type, cou_ope, dates){
+  if (!require(cli)) install.packages("cli")
+
   dates_all=date_rev(dates)
   all_data=data.frame()
   num_of_nodata=0
@@ -2042,7 +2046,11 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
 
   if(geotype=="section"){
     # SectionID
-    x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/Section.xml")
+    tryCatch({
+      x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/Section.xml")
+    }, error=function(err){
+      stop(paste0("Original data in database contains errors!"))
+    })
     freeway_section=data.frame(SectionID=xml_text(xml_find_all(x, xpath = ".//d1:SectionID")),
                                SubAuthorityCode=xml_text(xml_find_all(x, xpath = ".//d1:SubAuthorityCode")),
                                SectionName=xml_text(xml_find_all(x, xpath = ".//d1:SectionName")),
@@ -2058,7 +2066,11 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
                                SpeedLimit=xml_text(xml_find_all(x, xpath = ".//d1:SpeedLimit")))
 
     # SectionID shape
-    x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/SectionShape.xml")
+    tryCatch({
+      x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/SectionShape.xml")
+    }, error=function(err){
+      stop(paste0("Original data in database contains errors!"))
+    })
     freeway_section_shape=data.frame(SectionID=xml_text(xml_find_all(x, xpath = ".//d1:SectionID")),
                                      Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
     freeway_shape=left_join(freeway_section, freeway_section_shape)%>%
@@ -2071,7 +2083,11 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
 
   }else if(geotype=="link"){
     # LinkID
-    x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/SectionLink.xml")
+    tryCatch({
+      x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/SectionLink.xml")
+    }, error=function(err){
+      stop(paste0("Original data in database contains errors!"))
+    })
     freeway_shape=data.frame(SectionID=rep(xml_text(xml_find_all(x, xpath = ".//d1:SectionID")), times=xml_length(xml_find_all(x, xpath = ".//d1:LinkIDs"))),
                              LinkID=xml_text(xml_find_all(x, xpath = ".//d1:LinkID")))
     temp_id=paste0('"', freeway_shape$LinkID, '"')
@@ -2350,6 +2366,7 @@ Freeway_History=function(file, date, out=F){
     url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", gsub("-", "", date), "/00/TDCS_", file, "_", gsub("-", "", date), "_000000.csv")
 
     if(suppressWarnings(ncol(fread(url)))!=0){
+
       pb=progress_bar$new(format="(:spin) [:bar] :percent  ", total=24, clear=F, width=80)
       for(hr in c(0:23)){
         pb$tick()
@@ -2512,8 +2529,10 @@ gtfs=function(access_token, mode, county=F, out=F){
 Bike_OD_His=function(bikesys, time, out=F){
   if(bikesys==1){
     url="https://tcgbusfs.blob.core.windows.net/dotapp/youbike_ticket_opendata/YouBikeHis.csv"
-  }else{
+  }else if(bikesys==2){
     url="https://tcgbusfs.blob.core.windows.net/dotapp/youbike_second_ticket_opendata/YouBikeHis.csv"
+  }else{
+    stop("Argument 'bikesys' should be either 1 or 2!")
   }
   dir_file=read.csv(url)
 

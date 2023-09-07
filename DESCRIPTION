@@ -19,5 +19,6 @@ Imports:
     urltools,
     data.table,
     cli,
-    xml2
+    xml2,
+    progress
 RoxygenNote: 7.2.3

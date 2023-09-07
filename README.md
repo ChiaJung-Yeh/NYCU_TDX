@@ -15,7 +15,10 @@ Dashboard](https://tdx.transportdata.tw/user/dataservice/key).
 
 ## Installation
 
-Please install the package from Github (ChiaJung-Yeh/NYCU\_TDX).
+Please install the package from Github (ChiaJung-Yeh/NYCU\_TDX).  
+If you are Python user, please refer to
+[here](https://pypi.org/project/nycu-tdx-py/) for Python package via
+PyPi.
 
     install.packages("devtools")
     devtools::install_github("ChiaJung-Yeh/NYCU_TDX")
@@ -27,6 +30,9 @@ All functions provided in this package are summarized in the table
 below.
 
 <table class="table table-striped table-hover" style="font-size: 14px; margin-left: auto; margin-right: auto;">
+<caption style="font-size: initial !important;">
+本套件函式綜覽
+</caption>
 <thead>
 <tr>
 <th style="text-align:left;font-weight: bold;color: white !important;background-color: #8E8E8E !important;">
@@ -45,17 +51,17 @@ below.
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="5">
+<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="7">
 軌道
 </td>
 <td style="text-align:left;">
 軌道站點
 </td>
-<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
+<td style="text-align:left;vertical-align: middle !important;" rowspan="3">
 點
 </td>
 <td style="text-align:left;">
-`Rail_Station()`
+[Rail\_Station()](#軌道站點資料)
 </td>
 </tr>
 <tr>
@@ -63,7 +69,15 @@ below.
 軌道路線站點
 </td>
 <td style="text-align:left;">
-`Rail_StationOfLine()`
+[Rail\_StationOfLine()](#軌道路線站點資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+軌道站點出口
+</td>
+<td style="text-align:left;">
+[Rail\_StationExit()](#軌道站點出口資料)
 </td>
 </tr>
 <tr>
@@ -74,18 +88,18 @@ below.
 線
 </td>
 <td style="text-align:left;">
-`Rail_Shape()`
+[Rail\_Shape()](#軌道路線線型資料)
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
 軌道班表
 </td>
-<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
+<td style="text-align:left;vertical-align: middle !important;" rowspan="3">
 文字
 </td>
 <td style="text-align:left;">
-`Rail_TimeTable()`
+[Rail\_TimeTable()](#軌道班表資料)
 </td>
 </tr>
 <tr>
@@ -93,11 +107,19 @@ below.
 軌道票價
 </td>
 <td style="text-align:left;">
-`Rail_ODFare()`
+[Rail\_ODFare()](#軌道票價資料)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="5">
+<td style="text-align:left;">
+軌道站間旅行時間
+</td>
+<td style="text-align:left;">
+[Rail\_TravelTime()](#軌道站間旅行時間資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="8">
 公車
 </td>
 <td style="text-align:left;">
@@ -107,7 +129,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-`Bus_StopOfRoute()`
+[Bus\_StopOfRoute()](#公車站點資料)
 </td>
 </tr>
 <tr>
@@ -118,7 +140,7 @@ below.
 文字
 </td>
 <td style="text-align:left;">
-`Bus_Route()`
+[Bus\_Route()](#公車路線資料)
 </td>
 </tr>
 <tr>
@@ -129,18 +151,18 @@ below.
 線
 </td>
 <td style="text-align:left;">
-`Bus_Shape()`
+[Bus\_Shape()](#公車路線線型資料)
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
 公車班表
 </td>
-<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
+<td style="text-align:left;vertical-align: middle !important;" rowspan="4">
 文字
 </td>
 <td style="text-align:left;">
-`Bus_Schedule()`
+[Bus\_Schedule()](#公車班表資料)
 </td>
 </tr>
 <tr>
@@ -148,21 +170,45 @@ below.
 公車站間旅行時間
 </td>
 <td style="text-align:left;">
-`Bus_TravelTime()`
+[Bus\_TravelTime()](#公車站間旅行時間資料)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="2">
+<td style="text-align:left;">
+公車票價
+</td>
+<td style="text-align:left;">
+[Bus\_RouteFare()](#公車票價)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+公車車輛
+</td>
+<td style="text-align:left;">
+[Bus\_Vehicle()](#公車車輛)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+公車動態
+</td>
+<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
+點
+</td>
+<td style="text-align:left;">
+[Bus\_RealTime()](#公車動態)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="4">
 自行車
 </td>
 <td style="text-align:left;">
 公共自行車站點
 </td>
 <td style="text-align:left;">
-點
-</td>
-<td style="text-align:left;">
-`Bike_Station()`
+[Bike\_Station()](#公共自行車站點資料)
 </td>
 </tr>
 <tr>
@@ -173,7 +219,26 @@ below.
 線
 </td>
 <td style="text-align:left;">
-`Bike_Shape()`
+[Bike\_Shape()](#自行車線型資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+公共自行車站點歷史動態
+</td>
+<td style="text-align:left;vertical-align: middle !important;" rowspan="3">
+文字
+</td>
+<td style="text-align:left;">
+[Bike\_Remain\_His()](#公共自行車站點歷史動態資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+臺北市公共自行車租借紀錄
+</td>
+<td style="text-align:left;">
+[Bike\_OD\_His()](#公共自行車租借紀錄資料)
 </td>
 </tr>
 <tr>
@@ -184,10 +249,7 @@ below.
 航空班表
 </td>
 <td style="text-align:left;">
-文字
-</td>
-<td style="text-align:left;">
-`Air_Schedule()`
+[Air\_Schedule()](#航空班表資料)
 </td>
 </tr>
 <tr>
@@ -198,7 +260,7 @@ below.
 點
 </td>
 <td style="text-align:left;">
-`Ship_Port()`
+[Ship\_Port()](#港口點位資料)
 </td>
 </tr>
 <tr>
@@ -209,7 +271,7 @@ below.
 文字
 </td>
 <td style="text-align:left;">
-`Ship_Route()`
+[Ship\_Route()](#航運航線資料)
 </td>
 </tr>
 <tr>
@@ -217,7 +279,46 @@ below.
 航線靠港順序
 </td>
 <td style="text-align:left;">
-`Ship_StopOfRoute()`
+[Ship\_StopOfRoute()](#航線靠港順序資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;vertical-align: middle !important;" rowspan="2">
+高速公路
+</td>
+<td style="text-align:left;">
+高快速公路線型
+</td>
+<td style="text-align:left;">
+線
+</td>
+<td style="text-align:left;">
+[Freeway\_Shape()](#高快速公路線型資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+高速公路etag與VD
+</td>
+<td style="text-align:left;">
+文字
+</td>
+<td style="text-align:left;">
+[Freeway\_History()](#高速公路etag與VD資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+停車場
+</td>
+<td style="text-align:left;">
+停車場點位資訊
+</td>
+<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
+點
+</td>
+<td style="text-align:left;">
+[Car\_Park()](#停車場點位資料)
 </td>
 </tr>
 <tr>
@@ -228,10 +329,7 @@ below.
 景點、餐廳、旅館點位
 </td>
 <td style="text-align:left;">
-點
-</td>
-<td style="text-align:left;">
-`Tourism()`
+[Tourism()](#觀光點位資料)
 </td>
 </tr>
 <tr>
@@ -245,7 +343,7 @@ below.
 線
 </td>
 <td style="text-align:left;">
-`Road_Network()`
+[Road\_Network()](#道路路網線型資料)
 </td>
 </tr>
 <tr>
@@ -259,7 +357,60 @@ below.
 點
 </td>
 <td style="text-align:left;">
-`Geocoding()`
+[Geocoding()](#地理編碼服務)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+人口
+</td>
+<td style="text-align:left;">
+人口（含各年齡層與性別資料）
+</td>
+<td style="text-align:left;vertical-align: middle !important;" rowspan="2">
+文字
+</td>
+<td style="text-align:left;">
+[Population()](#人口資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+所得
+</td>
+<td style="text-align:left;">
+所得（各村里）
+</td>
+<td style="text-align:left;">
+[Income()](#所得資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+行政區
+</td>
+<td style="text-align:left;">
+行政區疆域
+</td>
+<td style="text-align:left;">
+面
+</td>
+<td style="text-align:left;">
+[District\_Shape()](#行政區資料)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+GTFS
+</td>
+<td style="text-align:left;">
+公共運輸標準格式
+</td>
+<td style="text-align:left;">
+文字
+</td>
+<td style="text-align:left;">
+[gtfs()](#公共運輸標準資料)
 </td>
 </tr>
 </tbody>
@@ -271,34 +422,45 @@ TDX platform. Every function in this package should use function
 Secret first. Note that the access token will expire in 1 day.
 
 Take retrieving MRT stations of Taipei Metro System for example. The
-code is shown below. Here the argument `client_id` and `client_secret`
-is the authentication key applied from TDX.
+code is shown below. Here the argument `CLIENT_ID` and `CLIEN_SECRET` is
+the authentication key applied from TDX.
 
     # get the access token first
     access_token=get_token("CLIENT_ID", "CLIEN_SECRET")
 
     # retrieve Taipei MRT station
     TRTC_station=Rail_Station(access_token, "TRTC")
+
+    # historical data
+    # TRTC_station=Rail_Station(access_token, "TRTC", dates="2023-01-01")
+
     head(TRTC_station)
 
 The result is shown as followings.
 
     ## #---TRTC Station Downloaded---#
 
-    ##   StationName StationUID StationID LocationCity LocationTown LocationTownCode
-    ## 1        頂埔  TRTC-BL01      BL01       新北市       土城區         65000130
-    ## 2        永寧  TRTC-BL02      BL02       新北市       土城區         65000130
-    ## 3        土城  TRTC-BL03      BL03       新北市       土城區         65000130
-    ## 4        海山  TRTC-BL04      BL04       新北市       土城區         65000130
-    ## 5    亞東醫院  TRTC-BL05      BL05       新北市       板橋區         65000010
-    ## 6        府中  TRTC-BL06      BL06       新北市       板橋區         65000010
-    ##   PositionLon PositionLat
-    ## 1    121.4205    24.96012
-    ## 2   121.43613    24.96682
-    ## 3   121.44432    24.97313
-    ## 4   121.44873   24.985305
-    ## 5  121.452465    24.99828
-    ## 6  121.459276   25.008465
+    ##   StationUID StationID StationName                       StationAddress
+    ## 1  TRTC-BL01      BL01        頂埔 236040新北市土城區中央路4段51之6號B3
+    ## 2  TRTC-BL02      BL02        永寧   236036新北市土城區中央路3段105號B1
+    ## 3  TRTC-BL03      BL03        土城   236017新北市土城區金城路1段105號B1
+    ## 4  TRTC-BL04      BL04        海山       236023新北市土城區海山路39號B2
+    ## 5  TRTC-BL05      BL05    亞東醫院  220056新北市板橋區南雅南路2段17號B1
+    ## 6  TRTC-BL06      BL06        府中 220052新北市板橋區縣民大道1段193號B1
+    ##   BikeAllowOnHoliday LocationCity LocationCityCode LocationTown
+    ## 1               TRUE       新北市              NWT       土城區
+    ## 2               TRUE       新北市              NWT       土城區
+    ## 3               TRUE       新北市              NWT       土城區
+    ## 4               TRUE       新北市              NWT       土城區
+    ## 5               TRUE       新北市              NWT       板橋區
+    ## 6               TRUE       新北市              NWT       板橋區
+    ##   LocationTownCode PositionLon PositionLat
+    ## 1         65000130    121.4187    24.95935
+    ## 2         65000130    121.4361    24.96682
+    ## 3         65000130    121.4443    24.97313
+    ## 4         65000130    121.4488    24.98545
+    ## 5         65000010    121.4525    24.99828
+    ## 6         65000010    121.4593    25.00847
 
 Usages of other functions can be found in the **[TDX
 Guide](https://chiajung-yeh.github.io/TDX_Guide/)** website.

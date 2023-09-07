@@ -10,10 +10,9 @@ library(kableExtra)
 library(dplyr)
 library(DT)
 library(TDX)
-app_id=read.table("./key.txt", sep=",")[1,2]
-app_key=read.table("./key.txt", sep=",")[2,2]
-# write.table(access_token, "./access_token.txt", row.names=F, col.names=F)
-access_token=as.character(read.table("./access_token.txt"))
+client_id=read.csv("./key.txt", header=F)[1,2]
+client_secret=read.csv("./key.txt", header=F)[2,2]
+access_token=get_token(client_id, client_secret)
 ```
 
 ## Overview
@@ -28,6 +27,7 @@ This package can be used to connect transportation data from TDX (Transport Data
 ## Installation
 
 Please install the package from Github (ChiaJung-Yeh/NYCU_TDX).  
+If you are Python user, please refer to [here](https://pypi.org/project/nycu-tdx-py/) for Python package via PyPi.  
 
 ```{r installation, echo=T, eval=F}
 install.packages("devtools")
@@ -41,11 +41,10 @@ library(TDX)
 All functions provided in this package are summarized in the table below.  
 
 ```{r TDX_table, echo=F, eval=T}
-TDX_table=data.frame(data=c(rep("軌道", 5), rep("公車", 5), rep("自行車", 2), rep("航空與航運", 4), "觀光點位", "道路路網", "地理編碼"), type=c("軌道站點","軌道路線站點","軌道路線線型","軌道班表","軌道票價","公車站點","公車路線","公車路線線型","公車班表","公車站間旅行時間","公共自行車站點","自行車路網","航空班表","港口點位","航運航線","航線靠港順序","景點、餐廳、旅館點位","道路路網線型","地理編碼服務"), class=c(rep("點", 2),"線",rep("文字", 2),"點","文字","線","文字","文字","點","線","文字","點",rep("文字", 2),"點","線","點"), functiona=c("`Rail_Station()`", "`Rail_StationOfLine()`", "`Rail_Shape()`", "`Rail_TimeTable()`", "`Rail_ODFare()`", "`Bus_StopOfRoute()`", "`Bus_Route()`", "`Bus_Shape()`", "`Bus_Schedule()`", "`Bus_TravelTime()`", "`Bike_Station()`", "`Bike_Shape()`", "`Air_Schedule()`", "`Ship_Port()`", "`Ship_Route()`", "`Ship_StopOfRoute()`", "`Tourism()`","`Road_Network()`","`Geocoding()`"))
+TDX_table=data.frame(data=c(rep("軌道", 7), rep("公車", 8), rep("自行車", 4), rep("航空與航運", 4), rep("高速公路", 2), "停車場","觀光點位", "道路路網", "地理編碼","人口","所得","行政區","GTFS"), type=c("軌道站點","軌道路線站點","軌道站點出口","軌道路線線型","軌道班表","軌道票價","軌道站間旅行時間","公車站點","公車路線","公車路線線型","公車班表","公車站間旅行時間","公車票價","公車車輛","公車動態","公共自行車站點","自行車路網","公共自行車站點歷史動態","臺北市公共自行車租借紀錄","航空班表","港口點位","航運航線","航線靠港順序","高快速公路線型","高速公路etag與VD","停車場點位資訊","景點、餐廳、旅館點位","道路路網線型","地理編碼服務","人口（含各年齡層與性別資料）","所得（各村里）","行政區疆域","公共運輸標準格式"), class=c(rep("點", 3),"線",rep("文字", 3),"點","文字","線",rep("文字", 4),"點","點","線",rep("文字", 3),"點",rep("文字", 2),"線","文字","點","點","線","點", rep("文字", 2), "面","文字"), functiona=c("[Rail_Station()](#軌道站點資料)", "[Rail_StationOfLine()](#軌道路線站點資料)","[Rail_StationExit()](#軌道站點出口資料)", "[Rail_Shape()](#軌道路線線型資料)", "[Rail_TimeTable()](#軌道班表資料)", "[Rail_ODFare()](#軌道票價資料)", "[Rail_TravelTime()](#軌道站間旅行時間資料)", "[Bus_StopOfRoute()](#公車站點資料)", "[Bus_Route()](#公車路線資料)", "[Bus_Shape()](#公車路線線型資料)", "[Bus_Schedule()](#公車班表資料)", "[Bus_TravelTime()](#公車站間旅行時間資料)","[Bus_RouteFare()](#公車票價)","[Bus_Vehicle()](#公車車輛)","[Bus_RealTime()](#公車動態)", "[Bike_Station()](#公共自行車站點資料)", "[Bike_Shape()](#自行車線型資料)", "[Bike_Remain_His()](#公共自行車站點歷史動態資料)", "[Bike_OD_His()](#公共自行車租借紀錄資料)", "[Air_Schedule()](#航空班表資料)", "[Ship_Port()](#港口點位資料)", "[Ship_Route()](#航運航線資料)", "[Ship_StopOfRoute()](#航線靠港順序資料)", "[Freeway_Shape()](#高快速公路線型資料)","[Freeway_History()](#高速公路etag與VD資料)","[Car_Park()](#停車場點位資料)", "[Tourism()](#觀光點位資料)","[Road_Network()](#道路路網線型資料)","[Geocoding()](#地理編碼服務)","[Population()](#人口資料)","[Income()](#所得資料)","[District_Shape()](#行政區資料)","[gtfs()](#公共運輸標準資料)"))
 
 colnames(TDX_table)=c("資料","資料細目","資料型態","函式")
-
-kable(TDX_table, booktabs=T)%>%
+kable(TDX_table, booktabs=T, caption="本套件函式綜覽")%>%
   kable_styling(bootstrap_options=c("striped", "hover"), font_size=14)%>%
   column_spec(1, bold=T)%>%
   collapse_rows(columns=c(1:4))%>%
@@ -54,7 +53,7 @@ kable(TDX_table, booktabs=T)%>%
 
 Data retrieving process requires an access token to obtain the data from TDX platform. Every function in this package should use function `get_token()` to obtain the token by entering your Client ID and Client Secret first. Note that the access token will expire in 1 day.  
 
-Take retrieving MRT stations of Taipei Metro System for example. The code is shown below. Here the argument `client_id` and `client_secret` is the authentication key applied from TDX.  
+Take retrieving MRT stations of Taipei Metro System for example. The code is shown below. Here the argument `CLIENT_ID` and `CLIEN_SECRET` is the authentication key applied from TDX.  
 
 
 ```{r TDX_test_show, echo=T, eval=F, message=F}
@@ -63,6 +62,10 @@ access_token=get_token("CLIENT_ID", "CLIEN_SECRET")
 
 # retrieve Taipei MRT station
 TRTC_station=Rail_Station(access_token, "TRTC")
+
+# historical data
+# TRTC_station=Rail_Station(access_token, "TRTC", dates="2023-01-01")
+
 head(TRTC_station)
 ```
 
