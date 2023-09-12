@@ -91,10 +91,3 @@ include_graphics("./figure/TDX.png")
 For questions, bugs, and other discussion, please feel free to contact the package maintainer, Chia Jung, Yeh.  
 Email: <a href="mailto:chia-jung.yeh@sydney.edu.au"><u>chia-jung.yeh@sydney.edu.au</u></a>
 
-
-
-
-
-
-
-
