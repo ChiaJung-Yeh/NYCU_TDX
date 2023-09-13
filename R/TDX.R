@@ -2236,6 +2236,7 @@ Population=function(district, time, age=F, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
+  if (!require(xlsx)) install.packages("xlsx")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
