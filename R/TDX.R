@@ -7,6 +7,7 @@ library(urltools)
 library(cli)
 library(data.table)
 library(progress)
+library(xlsx)
 
 usethis::use_package("dplyr")
 usethis::use_package("jsonlite")
@@ -17,7 +18,7 @@ usethis::use_package("urltools")
 usethis::use_package("cli")
 usethis::use_package("data.table")
 usethis::use_package("progress")
-
+usethis::use_package("xlsx")
 
 # TDX_County=read.table("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt", encoding="UTF-8", sep=",", header=T)
 # usethis::use_data(TDX_County, overwrite=T)
@@ -58,6 +59,7 @@ usethis::use_package("progress")
 #   all_api[[i]]=mapply(function(x) ifelse(is.null(all_api[[i]][[x]]), NA, all_api[[i]][[x]]), c(1:nrow(all_api)))
 # }
 # write.csv(all_api, "./all_api_attribute.csv", row.names=F)
+
 
 
 #---get the token---#
@@ -2252,14 +2254,34 @@ Population=function(district, time, age=F, dtype="text", out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
 
-  # check if the month is March, June, September, December
-  if(!substr(time, regexpr("-", time)+1, 10) %in% c("03","06","09","12")){
-    stop("The month must be March, June, September, or December. Note that the demographic data in Taiwan is updated every three months!")
+  # check if the month is valid
+  if(nchar(time)!=7 | !grepl("-", time)){
+    stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
   }
   if(as.numeric(substr(time, 1, regexpr("-", time)-1))<2008){
     stop("Only year after 2008 is provided!")
+  }
+  download.file("https://segis.moi.gov.tw/STAT/Resources/Project/Template/STATCatalog.xlsx", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
+  catalog=read.xlsx2(paste0(tempdir(), "./STATCatalog.xlsx"), sheetIndex=1)
+  area1=gsub("\\n|\u6708", "", unlist(strsplit(catalog[2, 4], "\r")))
+  area1=area1[area1!=""]
+  area1=unlist(mapply(function(x) paste0(substr(area1[x], 1, regexpr("\u5e74", area1[x])-1), "Y", unlist(strsplit(substr(area1[x], regexpr("\u5e74", area1[x])+1, 100), ",")), "M"), c(1:length(area1))))
+  area2=gsub("\\n|\u6708", "", unlist(strsplit(catalog[3, 4], "\r")))
+  area2=area2[area2!=""]
+  area2=unlist(mapply(function(x) paste0(substr(area2[x], 1, regexpr("\u5e74", area2[x])-1), "Y", unlist(strsplit(substr(area2[x], regexpr("\u5e74", area2[x])+1, 100), ",")), "M"), c(1:length(area2))))
+
+  time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+  if(district %in% c("County", "Town", "Village")){
+    if(!time_rev %in% area1){
+      stop("Data of ", time, " is not available!\nNote that the month must be March, June, September, or December. This demographic data is updated every three months!")
+    }
+  }else if(district %in% c("SA0","SA1","SA2")){
+    if(!time_rev %in% area2){
+      stop("Data of ", time, " is not available!\nNote that the month must be June or December. This demographic data is updated every six months!")
+    }
+  }else{
+    stop("The argument of 'district' must be 'County', 'Town', 'Village', 'SA0', 'SA1', or 'SA2'!")
   }
 
   if(district=="County"){
@@ -2290,7 +2312,7 @@ Population=function(district, time, age=F, dtype="text", out=F){
     if(age){
       url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=280ECDC6B26BCA5D29A47CDA83401814&STTIME=", time_rev, "&STUNIT=U0201&BOUNDARY=", toupper(url_encode(TDX_County$Operator[1:22])), "&TYPE=", dtype_rev)
     }else{
-      url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=9ADA057F91B8C7E01F1073C9110F3AF2&STTIME=", time_rev, "&STUNIT=U0201&BOUNDARY=", url_encode(TDX_County$Operator[1:22]), "&TYPE=", dtype_rev)
+      url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=9ADA057F91B8C7E01F1073C9110F3AF2&STTIME=", time_rev, "&STUNIT=U0201&BOUNDARY=", toupper(url_encode(TDX_County$Operator[1:22])), "&TYPE=", dtype_rev)
     }
   }else if(district=="SA2"){
     if(age){
@@ -2298,8 +2320,6 @@ Population=function(district, time, age=F, dtype="text", out=F){
     }else{
       url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=9ADA057F91B8C7E0779B66DFAA608323&STTIME=", time_rev, "&STUNIT=U0202&BOUNDARY=", toupper(url_encode(TDX_County$Operator[1:22])), "&TYPE=", dtype_rev)
     }
-  }else{
-    stop("The argument of 'district' must be 'County', 'Town', 'Village', 'SA0', 'SA1', 'SA2'!")
   }
 
   population=data.frame()
