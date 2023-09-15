@@ -2246,6 +2246,7 @@ Population=function(district, time, age=F, dtype="text", out=F){
     dtype_rev="CSV"
   }else if(dtype=="sf"){
     dtype_rev="SHP"
+    col_new_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/pop_col_new_name.csv")
   }else{
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
@@ -2272,6 +2273,8 @@ Population=function(district, time, age=F, dtype="text", out=F){
   area2=gsub("\\n|\u6708", "", unlist(strsplit(catalog[3, 4], "\r")))
   area2=area2[area2!=""]
   area2=unlist(mapply(function(x) paste0(substr(area2[x], 1, regexpr("\u5e74", area2[x])-1), "Y", unlist(strsplit(substr(area2[x], regexpr("\u5e74", area2[x])+1, 100), ",")), "M"), c(1:length(area2))))
+  pop_area_time=data.frame(area1=paste(area1, collapse="|"), area2=paste(area2, collapse="|"))
+  write.csv(pop_area_time, "./others/pop_area_time.csv", row.names=F)
 
   time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
   if(district %in% c("County", "Town", "Village")){
@@ -2343,16 +2346,15 @@ Population=function(district, time, age=F, dtype="text", out=F){
     }else{
       untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"))
       dir_file=dir(paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"), full.names=T)
-      # population_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
+      population_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
       # if(sum(grepl("DBFFieldMapping", dir_file))!=0){
       #   col_new_name=read.table(dir_file[grepl("DBFFieldMapping", dir_file)], sep="=", header=T)
       #   colnames(col_new_name)=c("NEW_NAME","ORI_NAME")
       #   col_new_name$NEW_NAME=gsub(" ", "", toupper(col_new_name$NEW_NAME))
       #   col_new_name$ORI_NAME=gsub(" ", "", toupper(col_new_name$ORI_NAME))
-      #   colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
       # }
       # write.csv(col_new_name, "./others/pop_col_new_name.csv", row.names=F)
-
+      colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
       population_temp=st_sf(population_temp, crs=3826)%>%
         st_transform(crs=4326)%>%
         st_zm()
