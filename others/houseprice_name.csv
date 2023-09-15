@@ -2,7 +2,7 @@
 鄉鎮市區,TOWNNAME
 交易標的,TRANSACTION_TYPE
 土地位置建物門牌,ADDRESS
-土地移轉總面積平方公尺,TOTAL_AREA
+土地移轉總面積平方公尺,LAND_AREA
 都市土地使用分區,LANDUSE_URBAN
 非都市土地使用分區,LANDUSE_NONURBAN
 非都市土地使用編定,LANDUSE_NONURBANPLAN

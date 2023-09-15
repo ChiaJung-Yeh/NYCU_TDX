@@ -2793,8 +2793,24 @@ dir_file=dir(paste0(tempdir(), "/house_price_tdx"), full.names=T)
 
 dir_file=dir_file[grepl(paste(paste0("lvr_land_", c("a","b","c"), ".csv"), collapse="|"), dir_file)]
 
-write.csv(unique(unlist(mapply(function(x) colnames(read.csv(dir_file[x])), c(1:length(dir_file))))), "temp.csv", row.names=F)
-temp=read.csv(dir_file[35])
+house_price=data.frame()
+for(i in dir_file){
+  house_price_temp=read.csv(i)
+  colnames(house_price_temp)=mapply(function(x) houseprice_name$COL_NAME[which(colnames(house_price_temp)[x]==houseprice_name$ORI_NAME)], c(1:ncol(house_price_temp)))
+  house_price_temp=house_price_temp[-1,]
+  house_price=bind_rows(house_price, house_price_temp)
+}
+c("TOTAL_AREA","ROOM","HALL","")
+house_price$TOTAL_AREA=as.numeric(house_price$TOTAL_AREA)
+house_price$ROOM=as.numeric(house_price$ROOM)
+house_price$HALL=as.numeric(house_price$HALL)
+house_price$ROOM=as.numeric(house_price$)
+
+
+colnames()
+
+houseprice_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/houseprice_name.csv")
+
 
 
 # Ship_Schedule=function(access_token, county, out=F){
