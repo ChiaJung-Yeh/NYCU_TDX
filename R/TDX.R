@@ -2235,6 +2235,7 @@ Population=function(district, time, age=F, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
+  if (!require(sf)) install.packages("sf")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
@@ -2669,6 +2670,7 @@ Landuse=function(district, year, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
+  if (!require(sf)) install.packages("sf")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
@@ -2691,8 +2693,10 @@ Landuse=function(district, year, dtype="text", out=F){
     stop()
   }else{
     if(year==2016){
+      cat(paste0("Only data of ", paste(TDX_County$Operator[20:21], collapse="、"), " are available in year ", year, "!"))
       all_county=toupper(url_encode(TDX_County$Operator[1:22]))[20:21]
     }else if(year==2020){
+      cat(paste0("Only data of ", paste(TDX_County$Operator[c(17,11,12,13,14,19,21,15,5,20)], collapse="、"), " are available in year ", year, "!"))
       all_county=toupper(url_encode(TDX_County$Operator[1:22]))[c(17,11,12,13,14,19,21,15,5,20)]
     }else{
       all_county=toupper(url_encode(TDX_County$Operator[1:22]))
@@ -2730,6 +2734,11 @@ Landuse=function(district, year, dtype="text", out=F){
     download.file(url, paste0(tempdir(), "/temp_landuse_TDX.zip"), mode="wb", quiet=T)
     untar(paste0(tempdir(), "/temp_landuse_TDX.zip"), exdir=paste0(tempdir(), "/temp_landuse_TDX"))
     dir_file=dir(dir(paste0(tempdir(), "/temp_landuse_TDX"), full.names=T), full.names=T)
+
+    if(length(dir_file)==0){
+      cli_alert_warning(paste0("Data of ", TDX_County$Operator[which(url==url_all)], " is not available!"))
+      next
+    }
 
     if(dtype=="text"){
       dir_file=dir_file[grepl(".csv", dir_file)]
@@ -2773,11 +2782,6 @@ Landuse=function(district, year, dtype="text", out=F){
   }
   return(landuse)
 }
-
-
-
-
-
 
 
 
