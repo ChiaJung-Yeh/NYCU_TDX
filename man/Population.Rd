@@ -5,7 +5,7 @@
 Retrieve the demographic data with given month
 }
 \description{
-The function is used to download the demographic data of districts in Taiwan, including county, town, village, minimum statistical area, statistical area 1 (SA1), and statistical area 2 (SA2). The data is downloaded from \href{https://segis.moi.gov.tw/STAT/Web/Portal/STAT_PortalHome.aspx}{Social Economic Geographic Information System (SEGIS)} by Ministry of the Interior. The data can be pure text or shapefile with the polygon of specific district.
+The function is used to download the demographic data of districts in Taiwan for the specific time, including county, town, village, minimum statistical area, statistical area 1 (SA1), and statistical area 2 (SA2). The data is downloaded from \href{https://segis.moi.gov.tw/STAT/Web/Portal/STAT_PortalHome.aspx}{Social Economic Geographic Information System (SEGIS)} by Ministry of the Interior. The data can be pure text or shapefile with the polygon of specific district.
 }
 \usage{
 Population(district, time, age=F, dtype="text", out=F)
@@ -15,7 +15,7 @@ Population(district, time, age=F, dtype="text", out=F)
 }
 \arguments{
   \item{district}{Please fill in the district type. The valid input includes \code{County}, \code{Town}, \code{Village}, \code{SA0} (minimum statistical area), \code{SA1} (statistical area 1), \code{SA2} (statistical area 2).}
-  \item{time}{The time (year-month) of the data. Note that the demographic data is updated every three months, thus, only March, June, September, and December are provided. The format of time should be \code{YYYY-MM}.}
+  \item{time}{The time (year-month) of the data. The format of time should be \code{YYYY-MM}. Note that demographic data for `County`, `Town`, and `Village` is updated every three months, only March, June, September, and December are provided. Data for `SA0`, `SA1`, and `SA2` is updated half a year, only June and December are provided.}
   \item{age}{If the population of each age is required, please set \code{TRUE}.}
   \item{dtype}{The class of data, including \code{text} (data frame) and \code{sf} (simple feature). The default value is \code{text}.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data.}

@@ -2228,16 +2228,12 @@ District_Shape=function(access_token, district, dtype="text", out=F){
 }
 
 
-temp=Population("SA1", "2017-06")
-temp=Population("SA2", time="2017-12", age=T, dtype="sf")
-
 
 #' @export
 Population=function(district, time, age=F, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
-  if (!require(xlsx)) install.packages("xlsx")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
@@ -2265,16 +2261,21 @@ Population=function(district, time, age=F, dtype="text", out=F){
   if(as.numeric(substr(time, 1, regexpr("-", time)-1))<2008){
     stop("Only year after 2008 is provided!")
   }
-  download.file("https://segis.moi.gov.tw/STAT/Resources/Project/Template/STATCatalog.xlsx", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
-  catalog=read.xlsx2(paste0(tempdir(), "./STATCatalog.xlsx"), sheetIndex=1)
-  area1=gsub("\\n|\u6708", "", unlist(strsplit(catalog[2, 4], "\r")))
-  area1=area1[area1!=""]
-  area1=unlist(mapply(function(x) paste0(substr(area1[x], 1, regexpr("\u5e74", area1[x])-1), "Y", unlist(strsplit(substr(area1[x], regexpr("\u5e74", area1[x])+1, 100), ",")), "M"), c(1:length(area1))))
-  area2=gsub("\\n|\u6708", "", unlist(strsplit(catalog[3, 4], "\r")))
-  area2=area2[area2!=""]
-  area2=unlist(mapply(function(x) paste0(substr(area2[x], 1, regexpr("\u5e74", area2[x])-1), "Y", unlist(strsplit(substr(area2[x], regexpr("\u5e74", area2[x])+1, 100), ",")), "M"), c(1:length(area2))))
-  pop_area_time=data.frame(area1=paste(area1, collapse="|"), area2=paste(area2, collapse="|"))
-  write.csv(pop_area_time, "./others/pop_area_time.csv", row.names=F)
+
+  #---need to update periodically---#
+  # download.file("https://segis.moi.gov.tw/STAT/Resources/Project/Template/STATCatalog.xlsx", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
+  # catalog=read.xlsx2(paste0(tempdir(), "./STATCatalog.xlsx"), sheetIndex=1)
+  # area1=gsub("\\n|\u6708", "", unlist(strsplit(catalog[2, 4], "\r")))
+  # area1=area1[area1!=""]
+  # area1=unlist(mapply(function(x) paste0(substr(area1[x], 1, regexpr("\u5e74", area1[x])-1), "Y", unlist(strsplit(substr(area1[x], regexpr("\u5e74", area1[x])+1, 100), ",")), "M"), c(1:length(area1))))
+  # area2=gsub("\\n|\u6708", "", unlist(strsplit(catalog[3, 4], "\r")))
+  # area2=area2[area2!=""]
+  # area2=unlist(mapply(function(x) paste0(substr(area2[x], 1, regexpr("\u5e74", area2[x])-1), "Y", unlist(strsplit(substr(area2[x], regexpr("\u5e74", area2[x])+1, 100), ",")), "M"), c(1:length(area2))))
+  # pop_area_time=data.frame(area1=paste(area1, collapse="|"), area2=paste(area2, collapse="|"))
+  # write.csv(pop_area_time, "./others/pop_area_time.csv", row.names=F)
+  pop_area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/pop_area_time.csv")
+  area1=unlist(strsplit(pop_area_time$area1, split="\\|"))
+  area2=unlist(strsplit(pop_area_time$area2, split="\\|"))
 
   time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
   if(district %in% c("County", "Town", "Village")){
@@ -2355,13 +2356,15 @@ Population=function(district, time, age=F, dtype="text", out=F){
       # }
       # write.csv(col_new_name, "./others/pop_col_new_name.csv", row.names=F)
       colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
+      population_temp$SPECODE=NULL
       population_temp=st_sf(population_temp, crs=3826)%>%
-        st_transform(crs=4326)%>%
-        st_zm()
+        st_zm()%>%
+        st_transform(crs=4326)
 
       unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
       file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
     }
+    population=rbind(population, population_temp)
     rm(population_temp)
   }
   cli_progress_done()

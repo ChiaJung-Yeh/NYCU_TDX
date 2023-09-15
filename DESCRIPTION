@@ -20,6 +20,5 @@ Imports:
     data.table,
     cli,
     xml2,
-    progress,
-    xlsx
+    progress
 RoxygenNote: 7.2.3
