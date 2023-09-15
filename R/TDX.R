@@ -2784,8 +2784,17 @@ Landuse=function(district, year, dtype="text", out=F){
 }
 
 
+unlink(list.files(tempdir(), full.names=T), recursive=T)
 
+url="https://plvr.land.moi.gov.tw//DownloadSeason?season=112S2&type=zip&fileName=lvr_landcsv.zip"
+download.file(url, paste0(tempdir(), "/house_price_tdx.zip"), mode="wb", quiet=T)
+untar(paste0(tempdir(), "/house_price_tdx.zip"), exdir=paste0(tempdir(), "/house_price_tdx"))
+dir_file=dir(paste0(tempdir(), "/house_price_tdx"), full.names=T)
 
+dir_file=dir_file[grepl(paste(paste0("lvr_land_", c("a","b","c"), ".csv"), collapse="|"), dir_file)]
+
+write.csv(unique(unlist(mapply(function(x) colnames(read.csv(dir_file[x])), c(1:length(dir_file))))), "temp.csv", row.names=F)
+temp=read.csv(dir_file[35])
 
 
 # Ship_Schedule=function(access_token, county, out=F){
