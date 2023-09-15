@@ -7,7 +7,6 @@ library(urltools)
 library(cli)
 library(data.table)
 library(progress)
-library(xlsx)
 
 usethis::use_package("dplyr")
 usethis::use_package("jsonlite")
@@ -18,7 +17,6 @@ usethis::use_package("urltools")
 usethis::use_package("cli")
 usethis::use_package("data.table")
 usethis::use_package("progress")
-usethis::use_package("xlsx")
 
 # TDX_County=read.table("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt", encoding="UTF-8", sep=",", header=T)
 # usethis::use_data(TDX_County, overwrite=T)
@@ -58,7 +56,7 @@ usethis::use_package("xlsx")
 # for(i in c(4:7)){
 #   all_api[[i]]=mapply(function(x) ifelse(is.null(all_api[[i]][[x]]), NA, all_api[[i]][[x]]), c(1:nrow(all_api)))
 # }
-# write.csv(all_api, "./all_api_attribute.csv", row.names=F)
+# write.csv(all_api, "./others/all_api_attribute.csv", row.names=F)
 
 
 
@@ -2230,6 +2228,9 @@ District_Shape=function(access_token, district, dtype="text", out=F){
 }
 
 
+temp=Population("SA1", "2017-06")
+temp=Population("SA2", time="2017-12", age=T, dtype="sf")
+
 
 #' @export
 Population=function(district, time, age=F, dtype="text", out=F){
@@ -2342,21 +2343,23 @@ Population=function(district, time, age=F, dtype="text", out=F){
     }else{
       untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"))
       dir_file=dir(paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"), full.names=T)
-      population_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
-      if(sum(grepl("DBFFieldMapping", dir_file))!=0){
-        col_new_name=read.table(dir_file[grepl("DBFFieldMapping", dir_file)], sep="=", header=T)
-        colnames(col_new_name)=c("NEW_NAME","ORI_NAME")
-        col_new_name$NEW_NAME=gsub(" ", "", toupper(col_new_name$NEW_NAME))
-        col_new_name$ORI_NAME=gsub(" ", "", toupper(col_new_name$ORI_NAME))
-        colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
-      }
+      # population_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
+      # if(sum(grepl("DBFFieldMapping", dir_file))!=0){
+      #   col_new_name=read.table(dir_file[grepl("DBFFieldMapping", dir_file)], sep="=", header=T)
+      #   colnames(col_new_name)=c("NEW_NAME","ORI_NAME")
+      #   col_new_name$NEW_NAME=gsub(" ", "", toupper(col_new_name$NEW_NAME))
+      #   col_new_name$ORI_NAME=gsub(" ", "", toupper(col_new_name$ORI_NAME))
+      #   colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
+      # }
+      # write.csv(col_new_name, "./others/pop_col_new_name.csv", row.names=F)
+
       population_temp=st_sf(population_temp, crs=3826)%>%
         st_transform(crs=4326)%>%
         st_zm()
+
       unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
       file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
     }
-    population=rbind(population, population_temp)
     rm(population_temp)
   }
   cli_progress_done()
