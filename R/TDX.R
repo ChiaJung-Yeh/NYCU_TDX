@@ -2356,7 +2356,9 @@ Population=function(district, time, age=F, dtype="text", out=F){
       #   col_new_name$ORI_NAME=gsub(" ", "", toupper(col_new_name$ORI_NAME))
       # }
       # write.csv(col_new_name, "./others/pop_col_new_name.csv", row.names=F)
-      colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
+      if(sum(col_new_name$ORI_NAME %in% colnames(population_temp))>0){
+        colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
+      }
       population_temp$SPECODE=NULL
       population_temp=st_sf(population_temp, crs=3826)%>%
         st_zm()%>%
@@ -2660,11 +2662,9 @@ Bike_OD_His=function(bikesys, time, out=F){
   return(bike_od_his)
 }
 
-temp=Population("Village", "2022-03")
 
 
-
-Landuse=function(district, year, age=F, dtype="text", out=F){
+Landuse=function(district, year, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
@@ -2689,6 +2689,13 @@ Landuse=function(district, year, age=F, dtype="text", out=F){
   if(year<2014){
     stop()
   }else{
+    if(year==2016){
+      all_county=toupper(url_encode(TDX_County$Operator[1:22]))[20:21]
+    }else if(year==2020){
+      all_county=toupper(url_encode(TDX_County$Operator[1:22]))[c(17,11,12,13,14,19,21,15,5,20)]
+    }else{
+      all_county=toupper(url_encode(TDX_County$Operator[1:22]))
+    }
     year_rev=paste0(year-1911, "Y")
   }
 
@@ -2705,53 +2712,68 @@ Landuse=function(district, year, age=F, dtype="text", out=F){
   landuse_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/landuse_name.csv")
   if(year %in% c(2014,2015)){
     landuse_name=landuse_name[landuse_name$CATEGORY=="95-104",]
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=40B0320211D3E6476011CBC80C4B1C80&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", toupper(url_encode(TDX_County$Operator[1:22])), "&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=40B0320211D3E6476011CBC80C4B1C80&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
   }else if(year %in% c(2016:2019)){
     landuse_name=landuse_name[landuse_name$CATEGORY=="105-108",]
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=B11F0EEAAB3753EF83F7930C9EC765DF&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", toupper(url_encode(TDX_County$Operator[1:22])), "&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=B11F0EEAAB3753EF83F7930C9EC765DF&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
   }else{
     landuse_name=landuse_name[landuse_name$CATEGORY=="109-",]
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=60B9DDF5BF07FCC53B0F17CD08815027&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", toupper(url_encode(TDX_County$Operator[1:22])), "&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=60B9DDF5BF07FCC53B0F17CD08815027&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
   }
+
+  landuse=data.frame()
+  cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]", total=length(url_all))
+  for(url in url_all){
+    cli_progress_update()
+    unlink(list.files(tempdir(), full.names=T), recursive=T)
+    download.file(url, paste0(tempdir(), "/temp_landuse_TDX.zip"), mode="wb", quiet=T)
+    untar(paste0(tempdir(), "/temp_landuse_TDX.zip"), exdir=paste0(tempdir(), "/temp_landuse_TDX"))
+    dir_file=dir(dir(paste0(tempdir(), "/temp_landuse_TDX"), full.names=T), full.names=T)
+
+    if(dtype=="text"){
+      dir_file=dir_file[grepl(".csv", dir_file)]
+      landuse_temp=read.csv(dir_file, fileEncoding="Big5")
+      landuse_temp[, grepl("L0|SUM", colnames(landuse_temp))]=matrix(suppressWarnings(as.numeric(as.matrix(landuse_temp[, grepl("L0|SUM", colnames(landuse_temp))]))), nrow=nrow(landuse_temp))
+      landuse_temp=replace(landuse_temp, is.na(landuse_temp), 0)
+      colnames(landuse_temp)[mapply(function(x) which(landuse_name$ORI_NAME[x]==colnames(landuse_temp)), c(1:nrow(landuse_name)))]=landuse_name$NEW_NAME
+      landuse_temp=landuse_temp[-1, ]
+      unlink(paste0(tempdir(), "/temp_landuse_TDX"), recursive=T)
+      file.remove(paste0(tempdir(), "/temp_landuse_TDX.zip"))
+    }else{
+      untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/temp_landuse_TDX"), full.names=T), "/temp_landuse_TDX"))
+      dir_file=dir(paste0(dir(paste0(tempdir(), "/temp_landuse_TDX"), full.names=T), "/temp_landuse_TDX"), full.names=T)
+      landuse_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
+      req_col=c("CODE1","CODE2","TOWN_ID","TOWN","COUNTY_ID","COUNTY","X","Y","AREA", colnames(landuse_temp)[grepl("L0|SUM|INFO_TIME", colnames(landuse_temp))])
+      landuse_temp=landuse_temp[, colnames(landuse_temp)[colnames(landuse_temp) %in% req_col]]
+      landuse_temp=replace(landuse_temp, is.na(landuse_temp), 0)
+      colnames(landuse_temp)[mapply(function(x) which(landuse_name$ORI_NAME[x]==colnames(landuse_temp)), c(1:nrow(landuse_name)))]=landuse_name$NEW_NAME
+      landuse_temp=st_sf(landuse_temp, crs=3826)%>%
+        st_zm()%>%
+        st_transform(crs=4326)
+      unlink(paste0(tempdir(), "/temp_landuse_TDX"), recursive=T)
+      file.remove(paste0(tempdir(), "/temp_landuse_TDX.zip"))
+    }
+    landuse=rbind(landuse, landuse_temp)
+    rm(landuse_temp)
+  }
+  cli_progress_done()
+
+  temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(landuse)), c(1:6)))
+  colnames(landuse)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
+
+  if(dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(landuse, out, row.names=F)
+    }
+  }else if(dtype=="sf"){
+    if (grepl(".shp", out) & out!=F){
+      write_sf(landuse, out, layer_options="ENCODING=UTF-8")
+    }
+  }
+  return(landuse)
 }
-year_rev="110Y"
-url=url_all[13]
 
 
-unlink(list.files(tempdir(), full.names=T), recursive=T)
-download.file(url, paste0(tempdir(), "/temp_landuse_TDX.zip"), mode="wb", quiet=T)
-untar(paste0(tempdir(), "/temp_landuse_TDX.zip"), exdir=paste0(tempdir(), "/temp_landuse_TDX"))
-dir_file=dir(dir(paste0(tempdir(), "/temp_landuse_TDX"), full.names=T), full.names=T)
-
-if(dtype=="text"){
-  dir_file=dir_file[grepl(".csv", dir_file)]
-  landuse_temp=read.csv(dir_file, fileEncoding="Big5")
-
-  landuse_temp[1,]
-
-  write.csv(colnames(landuse_temp), "temp.csv", row.names=F)
-
-  landuse_temp[, grepl("L0|SUM", colnames(landuse_temp))]=matrix(suppressWarnings(as.numeric(as.matrix(landuse_temp[, grepl("L0|SUM", colnames(landuse_temp))]))), nrow=nrow(landuse_temp))
-  temp=mapply(function(x) which(landuse_temp[1,x]==landuse_name$CHI_NAME), c(1:ncol(landuse_temp)))
-  colnames(landuse_temp)[!is.na(as.numeric(temp))]=landuse_name$NEW_NAME[unlist(temp)]
-  landuse_temp=landuse_temp[-1, ]
-  unlink(paste0(tempdir(), "/temp_landuse_TDX"), recursive=T)
-  file.remove(paste0(tempdir(), "/temp_landuse_TDX.zip"))
-}else{
-  untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/temp_landuse_TDX"), full.names=T), "/temp_landuse_TDX"))
-  dir_file=dir(paste0(dir(paste0(tempdir(), "/temp_landuse_TDX"), full.names=T), "/temp_landuse_TDX"), full.names=T)
-  landuse_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
-  colnames(landuse_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
-  population_temp=st_sf(population_temp, crs=3826)%>%
-    st_zm()%>%
-    st_transform(crs=4326)
-
-  unlink(paste0(tempdir(), "/temp_landuse_TDX"), recursive=T)
-  file.remove(paste0(tempdir(), "/temp_landuse_TDX.zip"))
-}
-population=rbind(population, population_temp)
-rm(population_temp)
-dir(tempdir(), full.names=T)
 
 
 # Ship_Schedule=function(access_token, county, out=F){
