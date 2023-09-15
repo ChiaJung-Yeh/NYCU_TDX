@@ -2335,7 +2335,6 @@ Population=function(district, time, age=F, dtype="text", out=F){
     cli_progress_update()
     unlink(list.files(tempdir(), full.names=T), recursive=T)
     download.file(url, paste0(tempdir(), "/temp_pop_TDX.zip"), mode="wb", quiet=T)
-
     untar(paste0(tempdir(), "/temp_pop_TDX.zip"), exdir=paste0(tempdir(), "/temp_pop_TDX"))
     dir_file=dir(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), full.names=T)
 
@@ -2343,6 +2342,7 @@ Population=function(district, time, age=F, dtype="text", out=F){
       dir_file=dir_file[grepl(".csv", dir_file)]
       population_temp=read.csv(dir_file, fileEncoding="Big5")
       population_temp=population_temp[-1, ]
+      population_temp[, grepl("CNT|RAT|DEN", colnames(population_temp))]=matrix(as.numeric(as.matrix(population_temp[, grepl("CNT|RAT|DEN", colnames(population_temp))])), nrow=nrow(population_temp))
       unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
       file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
     }else{
@@ -2660,7 +2660,89 @@ Bike_OD_His=function(bikesys, time, out=F){
   return(bike_od_his)
 }
 
+temp=Population("Village", "2022-03")
 
+
+
+Landuse=function(district, year, age=F, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(urltools)) install.packages("urltools")
+  if (!require(cli)) install.packages("cli")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+  if(dtype=="text"){
+    dtype_rev="CSV"
+  }else if(dtype=="sf"){
+    dtype_rev="SHP"
+    col_new_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/pop_col_new_name.csv")
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
+    stop("The file name must contain '.shp' when exporting shapefile.\n")
+  }
+  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  if(year<2014){
+    stop()
+  }else{
+    year_rev=paste0(year-1911, "Y")
+  }
+
+  if(district=="SA0"){
+    dis_code="U0200"
+  }else if(district=="SA1"){
+    dis_code="U0201"
+  }else if(district=="SA2"){
+    dis_code="U0202"
+  }else{
+    stop("The argument of 'district' must be 'SA0', 'SA1', or 'SA2'!")
+  }
+
+  if(year %in% c(2014,2015)){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=40B0320211D3E6476011CBC80C4B1C80&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", toupper(url_encode(TDX_County$Operator[1:22])), "&TYPE=", dtype_rev)
+  }else if(year %in% c(2016:2019)){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=B11F0EEAAB3753EF83F7930C9EC765DF&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", toupper(url_encode(TDX_County$Operator[1:22])), "&TYPE=", dtype_rev)
+  }else{
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=60B9DDF5BF07FCC53B0F17CD08815027&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", toupper(url_encode(TDX_County$Operator[1:22])), "&TYPE=", dtype_rev)
+  }
+}
+year_rev="109Y"
+url=url_all[15]
+
+unlink(list.files(tempdir(), full.names=T), recursive=T)
+download.file(url, paste0(tempdir(), "/temp_landuse_TDX.zip"), mode="wb", quiet=T)
+untar(paste0(tempdir(), "/temp_landuse_TDX.zip"), exdir=paste0(tempdir(), "/temp_landuse_TDX"))
+dir_file=dir(dir(paste0(tempdir(), "/temp_landuse_TDX"), full.names=T), full.names=T)
+
+if(dtype=="text"){
+  dir_file=dir_file[grepl(".csv", dir_file)]
+  landuse_temp=read.csv(dir_file, fileEncoding="Big5")
+  landuse_temp=landuse_temp[-1, ]
+  write.csv(t(landuse_temp[1,]), "temp.csv", row.names=F)
+
+  unlink(paste0(tempdir(), "/temp_landuse_TDX"), recursive=T)
+  file.remove(paste0(tempdir(), "/temp_landuse_TDX.zip"))
+}else{
+  untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"))
+  dir_file=dir(paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"), full.names=T)
+  population_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
+  colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
+  population_temp$SPECODE=NULL
+  population_temp=st_sf(population_temp, crs=3826)%>%
+    st_zm()%>%
+    st_transform(crs=4326)
+
+  unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
+  file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
+}
+population=rbind(population, population_temp)
+rm(population_temp)
+dir(tempdir(), full.names=T)
 
 
 # Ship_Schedule=function(access_token, county, out=F){
