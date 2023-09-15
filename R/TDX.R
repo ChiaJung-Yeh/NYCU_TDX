@@ -2190,6 +2190,7 @@ District_Shape=function(access_token, district, dtype="text", out=F){
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
 
+  cat("If you want to download the shapefile of other type (SA0, SA1, SA2) and data for other period (this function only retrieve the latest shapefile on TDX), please refer to function 'Population'!\n")
   cat("Please wait for a while...\n")
 
   if(!district %in% c("County","Town","Village")){
