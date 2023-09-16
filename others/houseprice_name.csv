@@ -15,10 +15,10 @@
 主要建材,BUILDING_MATERIAL
 建築完成年月,CONSTRUCTION_DATE
 建物移轉總面積平方公尺,BUILD_TOTAL_AREA
-建物現況格局.房,ROOM
-建物現況格局.廳,HALL
-建物現況格局.衛,BATH
-建物現況格局.隔間,COMPARTMENT
+建物現況格局房,ROOM
+建物現況格局廳,HALL
+建物現況格局衛,BATH
+建物現況格局隔間,COMPARTMENT
 有無管理組織,MANAGEMENT
 總價元,TOTAL_PRICE
 單價元平方公尺,UNIT_PRICE
