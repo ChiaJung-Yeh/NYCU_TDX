@@ -19,18 +19,7 @@ House_Price(year, season, out=F)
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data.}
 }
 \value{
-Columns definition of the results are summarized below.
-
-  \tabular{rlll}{
-      \tab \strong{Houses} \tab Number of household for tax.\cr
-      \tab \strong{Amount} \tab Amounts of all income.\cr
-      \tab \strong{MEAN} \tab Average income (Amount/Houses).\cr
-      \tab \strong{MED} \tab Medium of income.\cr
-      \tab \strong{Q1} \tab First quantile of income.\cr
-      \tab \strong{Q3} \tab Thied quantile of income.\cr
-      \tab \strong{SD} \tab Standard deviation of income.\cr
-      \tab \strong{CV} \tab Coefficient of variation of income.\cr
-    }
+Columns definition are summarized \href{https://chiajung-yeh.github.io/TDX_Guide/houseprice_name.pdf}{here}.
 }
 \author{
 Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
@@ -45,7 +34,7 @@ Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-Income(2020)
+House_Price(2023, 2)
 }
 \keyword{datasets}
 

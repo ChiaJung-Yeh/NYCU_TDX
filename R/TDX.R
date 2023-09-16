@@ -2784,7 +2784,7 @@ Landuse=function(district, year, dtype="text", out=F){
 }
 
 
-temp=House_Price(2017, 2)
+
 #' @export
 House_Price=function(year, season, out=F){
   if (!require(dplyr)) install.packages("dplyr")
@@ -2813,6 +2813,7 @@ House_Price=function(year, season, out=F){
   house_price=data.frame()
   for(i in dir_file){
     house_price_temp=read.csv(i)
+    colnames(house_price_temp)=gsub("\\.", "", colnames(house_price_temp))
     colnames(house_price_temp)=mapply(function(x) houseprice_name$COL_NAME[which(colnames(house_price_temp)[x]==houseprice_name$ORI_NAME)], c(1:ncol(house_price_temp)))
     house_price_temp=house_price_temp[-1,]
     house_price=bind_rows(house_price, house_price_temp)
@@ -2837,6 +2838,11 @@ House_Price=function(year, season, out=F){
   }
   return(house_price)
 }
+
+
+# url="https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCC970C22EA6E9B0722&STTIME=111Y&STUNIT=null&BOUNDARY=全國(不含金門、連江、澎湖)&TYPE=CSV"
+
+
 
 
 
