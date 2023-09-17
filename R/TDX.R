@@ -60,6 +60,23 @@ usethis::use_package("progress")
 
 
 
+# #---need to update periodically---#
+# download.file("https://segis.moi.gov.tw/STAT/Resources/Project/Template/STATCatalog.xlsx", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
+# catalog=xlsx::read.xlsx2(paste0(tempdir(), "./STATCatalog.xlsx"), sheetIndex=1)
+#
+# # Population()
+# area1=gsub("\\n|\u6708", "", unlist(strsplit(catalog[2, 4], "\r")))
+# area1=area1[area1!=""]
+# area1=unlist(mapply(function(x) paste0(substr(area1[x], 1, regexpr("\u5e74", area1[x])-1), "Y", unlist(strsplit(substr(area1[x], regexpr("\u5e74", area1[x])+1, 100), ",")), "M"), c(1:length(area1))))
+# area2=gsub("\\n|\u6708", "", unlist(strsplit(catalog[3, 4], "\r")))
+# area2=area2[area2!=""]
+# area2=unlist(mapply(function(x) paste0(substr(area2[x], 1, regexpr("\u5e74", area2[x])-1), "Y", unlist(strsplit(substr(area2[x], regexpr("\u5e74", area2[x])+1, 100), ",")), "M"), c(1:length(area2))))
+# pop_area_time=data.frame(area1=paste(area1, collapse="|"), area2=paste(area2, collapse="|"))
+# write.csv(pop_area_time, "./others/pop_area_time.csv", row.names=F)
+
+
+
+
 #---get the token---#
 #' @export
 get_token=function(client_id, client_secret){
@@ -2261,17 +2278,6 @@ Population=function(district, time, age=F, dtype="text", out=F){
     stop("Only year after 2008 is provided!")
   }
 
-  #---need to update periodically---#
-  # download.file("https://segis.moi.gov.tw/STAT/Resources/Project/Template/STATCatalog.xlsx", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
-  # catalog=read.xlsx2(paste0(tempdir(), "./STATCatalog.xlsx"), sheetIndex=1)
-  # area1=gsub("\\n|\u6708", "", unlist(strsplit(catalog[2, 4], "\r")))
-  # area1=area1[area1!=""]
-  # area1=unlist(mapply(function(x) paste0(substr(area1[x], 1, regexpr("\u5e74", area1[x])-1), "Y", unlist(strsplit(substr(area1[x], regexpr("\u5e74", area1[x])+1, 100), ",")), "M"), c(1:length(area1))))
-  # area2=gsub("\\n|\u6708", "", unlist(strsplit(catalog[3, 4], "\r")))
-  # area2=area2[area2!=""]
-  # area2=unlist(mapply(function(x) paste0(substr(area2[x], 1, regexpr("\u5e74", area2[x])-1), "Y", unlist(strsplit(substr(area2[x], regexpr("\u5e74", area2[x])+1, 100), ",")), "M"), c(1:length(area2))))
-  # pop_area_time=data.frame(area1=paste(area1, collapse="|"), area2=paste(area2, collapse="|"))
-  # write.csv(pop_area_time, "./others/pop_area_time.csv", row.names=F)
   pop_area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/pop_area_time.csv")
   area1=unlist(strsplit(pop_area_time$area1, split="\\|"))
   area2=unlist(strsplit(pop_area_time$area2, split="\\|"))
@@ -2923,9 +2929,6 @@ School=function(type, year, dtype="text", out=F){
   }
   return(school)
 }
-
-
-
 
 
 
