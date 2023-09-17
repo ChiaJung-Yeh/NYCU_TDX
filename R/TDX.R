@@ -1837,6 +1837,7 @@ Ship_Route=function(access_token, county, out=F){
   shiproute=shiproute$Routes
   shiproute$Operators=mapply(function(x) paste(shiproute$Operators[[x]], collapse="|"), c(1:nrow(shiproute)))
   shiproute$RouteName=shiproute$RouteName$Zh_tw
+  shiproute$TicketPriceDescription=shiproute$TicketPriceDescription$Zh_tw
 
   if (nchar(out)!=0 & out!=F){
     write.csv(shiproute, out, row.names=F)
