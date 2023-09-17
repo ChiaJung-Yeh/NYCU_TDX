@@ -37,5 +37,6 @@ Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 \examples{
 School("university", 2022)
 School("junior", 2020, dtype="sf", out="./taiwan_school.shp")
+}
 \keyword{datasets}
 
