@@ -1806,7 +1806,6 @@ Ship_Port=function(access_token, dtype="text", out=F){
 }
 
 
-
 #' @export
 Ship_Route=function(access_token, county, out=F){
   if (!require(dplyr)) install.packages("dplyr")
@@ -1837,6 +1836,7 @@ Ship_Route=function(access_token, county, out=F){
 
   shiproute=shiproute$Routes
   shiproute$Operators=mapply(function(x) paste(shiproute$Operators[[x]], collapse="|"), c(1:nrow(shiproute)))
+  shiproute$RouteName=shiproute$RouteName$Zh_tw
 
   if (nchar(out)!=0 & out!=F){
     write.csv(shiproute, out, row.names=F)
