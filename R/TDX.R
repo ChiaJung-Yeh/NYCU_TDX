@@ -2909,9 +2909,6 @@ School=function(type, year, dtype="text", out=F){
     school=rbind(school, school_temp)
   }
 
-  write.csv(t(school_temp[1,]), "./temp.csv")
-
-
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
       write.csv(school, out, row.names=F)
