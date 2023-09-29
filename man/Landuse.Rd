@@ -5,7 +5,7 @@
 Retrieve the landuse data of given month
 }
 \description{
-The function is used to download the landuse data of districts in Taiwan for the specific time, including minimum statistical area, statistical area 1 (SA1), and statistical area 2 (SA2). The data is downloaded from \href{https://segis.moi.gov.tw/STAT/Web/Portal/STAT_PortalHome.aspx}{Social Economic Geographic Information System (SEGIS)} by Ministry of the Interior. The data can be pure text or shapefile with the polygon of specific district.
+The function is used to download the landuse data of districts in Taiwan for the specific time, including minimum statistical area (SA0), statistical area 1 (SA1), and statistical area 2 (SA2). The data is downloaded from \href{https://segis.moi.gov.tw/STAT/Web/Portal/STAT_PortalHome.aspx}{Social Economic Geographic Information System (SEGIS)} by Ministry of the Interior. The data can be pure text or shapefile with the polygon of specific district.
 }
 \usage{
 Population(district, year, dtype="text", out=F)

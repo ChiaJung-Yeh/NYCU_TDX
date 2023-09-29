@@ -5,7 +5,7 @@
 Retrieve the demographic data with given month
 }
 \description{
-The function is used to download the demographic data of districts in Taiwan for the specific time, including county, town, village, minimum statistical area, statistical area 1 (SA1), and statistical area 2 (SA2). The data is downloaded from \href{https://segis.moi.gov.tw/STAT/Web/Portal/STAT_PortalHome.aspx}{Social Economic Geographic Information System (SEGIS)} by Ministry of the Interior. The data can be pure text or shapefile with the polygon of specific district.
+The function is used to download the demographic data of districts in Taiwan for the specific time, including county, town, village, minimum statistical area (SA0), statistical area 1 (SA1), and statistical area 2 (SA2). The data is downloaded from \href{https://segis.moi.gov.tw/STAT/Web/Portal/STAT_PortalHome.aspx}{Social Economic Geographic Information System (SEGIS)} by Ministry of the Interior. The data can be pure text or shapefile with the polygon of specific district.
 }
 \usage{
 Population(district, time, age=F, dtype="text", out=F)
