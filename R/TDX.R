@@ -64,10 +64,11 @@ usethis::use_package("progress")
 # download.file("https://segis.moi.gov.tw/STAT/Resources/Project/Template/STATCatalog_Source.xlsx", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
 # catalog=readxl::read_xlsx(paste0(tempdir(), "./STATCatalog.xlsx"), sheet=1, skip=1)
 # colnames(catalog)=c("TYPE1","TYPE2","DATANAME","TIME","SPACE","UNIT","COLUMN")
-# catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08",
-#                                         "\u7d71\u8a08\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08"))%>%
-#   group_by(DATANAME, UNIT, TIME)%>%
-#   summarise(SPACE=paste(SPACE, collapse="|"))
+catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08",
+                                        "\u7d71\u8a08\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08"), !TIME %in% c("97Y","98Y"))
+catalog_temp$TIME=factor(catalog_temp$TIME, levels=(data.frame(TIME=unique(catalog_temp$TIME), TIME_temp=as.numeric(gsub("Y|M", "", unique(catalog_temp$TIME)))) %>% arrange(TIME_temp))$TIME)
+  group_by(DATANAME, UNIT, TIME)%>%
+  summarise(SPACE=paste(SPACE, collapse="|"))
 # write.csv(catalog_temp, "./others/hospital_area_time.csv", row.names=F)
 # catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u4eba\u53e3\u7d71\u8a08", "\u7d71\u8a08\u5340\u4eba\u53e3\u7d71\u8a08",
 #                                              "\u884c\u653f\u5340\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08",
@@ -2960,69 +2961,127 @@ School=function(type, year, dtype="text", out=F){
 
 
 
-# if(dtype=="text"){
-#   dtype_rev="CSV"
-# }else if(dtype=="sf"){
-#   dtype_rev="SHP"
-#   col_new_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/pop_col_new_name.csv")
-# }else{
-#   stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
-# }
-# if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
-#   stop("The file name must contain '.shp' when exporting shapefile.\n")
-# }
-# if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
-#   stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
-# }
-#
-# time="2015-06"
-# time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
-#
-#
-# if(district=="County"){
-#   url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE4D4367A22F6B8FF9&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
-# }else if(district=="Town"){
-#   url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE6980D5C9940A11CD&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
-# }else if(district=="Village"){
-#   stop("Village data is not provided!")
-# }else if(district=="SA0"){
-#   # https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE10AEE850E6A85775&STTIME=111Y06M&STUNIT=U0200&BOUNDARY=金門縣&TYPE=CSV
-#   url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE10AEE850E6A85775&STTIME=", time_rev, "&STUNIT=U0200&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
-# }else if(district=="SA1"){
-#   url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE4D4367A22F6B8FF9&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
-# }else if(district=="SA2"){
-#   url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE4D4367A22F6B8FF9&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
-# }
-#
-#
-# unlink(list.files(tempdir(), full.names=T), recursive=T)
-# download.file(url, paste0(tempdir(), "/hospital_TDX.zip"), mode="wb", quiet=T)
-# untar(paste0(tempdir(), "/hospital_TDX.zip"), exdir=paste0(tempdir(), "/hospital_TDX"))
-# dir_file=dir(dir(paste0(tempdir(), "/hospital_TDX"), full.names=T), full.names=T)
-#
-# if(dtype=="text"){
-#   dir_file=dir_file[grepl(".csv", dir_file)]
-#   population_temp=read.csv(dir_file, fileEncoding="Big5")
-#   population_temp=population_temp[-1, ]
-#   population_temp[, grepl("CNT|RAT|DEN", colnames(population_temp))]=matrix(as.numeric(as.matrix(population_temp[, grepl("CNT|RAT|DEN", colnames(population_temp))])), nrow=nrow(population_temp))
-#   unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
-#   file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
-# }else{
-#   untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"))
-#   dir_file=dir(paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"), full.names=T)
-#   population_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
-#   if(sum(col_new_name$ORI_NAME %in% colnames(population_temp))>0){
-#     colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
-#   }
-#   population_temp$SPECODE=NULL
-#   population_temp=st_sf(population_temp, crs=3826)%>%
-#     st_zm()%>%
-#     st_transform(crs=4326)
-#
-#   unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
-#   file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
-# }
-#
+
+
+#' @export
+Hospital=function(district, time, age=F, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(urltools)) install.packages("urltools")
+  if (!require(cli)) install.packages("cli")
+  if (!require(sf)) install.packages("sf")
+
+  if(dtype=="text"){
+    dtype_rev="CSV"
+  }else if(dtype=="sf"){
+    dtype_rev="SHP"
+    col_new_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/pop_col_new_name.csv")
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
+    stop("The file name must contain '.shp' when exporting shapefile.\n")
+  }
+  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+
+  # check if the month is valid
+  if(nchar(time)!=7 | !grepl("-", time)){
+    stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+  }
+  if(as.numeric(substr(time, 1, regexpr("-", time)-1))<2008){
+    stop("Only year after 2008 is provided!")
+  }
+  time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+  area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/hospital_area_time.csv")
+
+
+  space=c("\u7e23\u5e02","\u9109\u93ae\u5e02\u5340","\u6700\u5c0f\u7d71\u8a08\u5340","\u4e00\u7d1a\u767c\u5e03\u5340","\u4e8c\u7d1a\u767c\u5e03\u5340")[which(district==c("County","Town","SA0","SA1","SA2"))]
+  if(length(space)!=1){
+    space_all=filter(area_time, UNIT==space, TIME==time_rev)
+    if(nrow(space)==1){
+      all_county=toupper(url_encode(unlist(strsplit(space_all$SPACE, "\\|"))))
+    }else{
+      filter(area_time, UNIT==space)$TIME
+    }
+  }else{
+    stop("The argument of 'district' must be 'County', 'Town', 'SA0', 'SA1', or 'SA2'!\nNote that data of village is not provided!")
+  }
+
+  if(district=="County"){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE4D4367A22F6B8FF9&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
+  }else if(district=="Town"){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE6980D5C9940A11CD&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
+  }else if(district=="Village"){
+    stop("Village data is not provided!")
+  }else if(district=="SA0"){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE10AEE850E6A85775&STTIME=", time_rev, "&STUNIT=U0200&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+  }else if(district=="SA1"){
+    url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE4D4367A22F6B8FF9&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
+  }else if(district=="SA2"){
+    url=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE4D4367A22F6B8FF9&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
+  }
+
+  population=data.frame()
+  cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]", total=length(url_all))
+  for(url in url_all){
+    cli_progress_update()
+    unlink(list.files(tempdir(), full.names=T), recursive=T)
+    download.file(url, paste0(tempdir(), "/temp_pop_TDX.zip"), mode="wb", quiet=T)
+    untar(paste0(tempdir(), "/temp_pop_TDX.zip"), exdir=paste0(tempdir(), "/temp_pop_TDX"))
+    dir_file=dir(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), full.names=T)
+
+    if(dtype=="text"){
+      dir_file=dir_file[grepl(".csv", dir_file)]
+      population_temp=read.csv(dir_file, fileEncoding="Big5")
+      population_temp=population_temp[-1, ]
+      population_temp[, grepl("CNT|RAT|DEN", colnames(population_temp))]=matrix(as.numeric(as.matrix(population_temp[, grepl("CNT|RAT|DEN", colnames(population_temp))])), nrow=nrow(population_temp))
+      unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
+      file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
+    }else{
+      untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"))
+      dir_file=dir(paste0(dir(paste0(tempdir(), "/temp_pop_TDX"), full.names=T), "/temp_pop_TDX"), full.names=T)
+      population_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
+      # if(sum(grepl("DBFFieldMapping", dir_file))!=0){
+      #   col_new_name=read.table(dir_file[grepl("DBFFieldMapping", dir_file)], sep="=", header=T)
+      #   colnames(col_new_name)=c("NEW_NAME","ORI_NAME")
+      #   col_new_name$NEW_NAME=gsub(" ", "", toupper(col_new_name$NEW_NAME))
+      #   col_new_name$ORI_NAME=gsub(" ", "", toupper(col_new_name$ORI_NAME))
+      # }
+      # write.csv(col_new_name, "./others/pop_col_new_name.csv", row.names=F)
+      if(sum(col_new_name$ORI_NAME %in% colnames(population_temp))>0){
+        colnames(population_temp)[mapply(function(x) which(col_new_name$ORI_NAME[x]==colnames(population_temp)), c(1:nrow(col_new_name)))]=col_new_name$NEW_NAME
+      }
+      population_temp$SPECODE=NULL
+      population_temp=st_sf(population_temp, crs=3826)%>%
+        st_zm()%>%
+        st_transform(crs=4326)
+
+      unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
+      file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
+    }
+    population=rbind(population, population_temp)
+    rm(population_temp)
+  }
+  cli_progress_done()
+
+  temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(population)), c(1:6)))
+  colnames(population)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
+
+  if(dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(population, out, row.names=F)
+    }
+  }else if(dtype=="sf"){
+    if (grepl(".shp", out) & out!=F){
+      write_sf(population, out, layer_options="ENCODING=UTF-8")
+    }
+  }
+  return(population)
+}
+
+
 
 
 # Ship_Schedule=function(access_token, county, out=F){
