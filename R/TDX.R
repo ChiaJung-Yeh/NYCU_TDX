@@ -64,11 +64,10 @@ usethis::use_package("progress")
 # download.file("https://segis.moi.gov.tw/STAT/Resources/Project/Template/STATCatalog_Source.xlsx", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
 # catalog=readxl::read_xlsx(paste0(tempdir(), "./STATCatalog.xlsx"), sheet=1, skip=1)
 # colnames(catalog)=c("TYPE1","TYPE2","DATANAME","TIME","SPACE","UNIT","COLUMN")
-catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08",
-                                        "\u7d71\u8a08\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08"), !TIME %in% c("97Y","98Y"))
-catalog_temp$TIME=factor(catalog_temp$TIME, levels=(data.frame(TIME=unique(catalog_temp$TIME), TIME_temp=as.numeric(gsub("Y|M", "", unique(catalog_temp$TIME)))) %>% arrange(TIME_temp))$TIME)
-  group_by(DATANAME, UNIT, TIME)%>%
-  summarise(SPACE=paste(SPACE, collapse="|"))
+# catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08",
+#                                         "\u7d71\u8a08\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08"), !TIME %in% c("97Y","98Y"))%>%
+#   group_by(DATANAME, UNIT, TIME)%>%
+#   summarise(SPACE=paste(SPACE, collapse="|"))
 # write.csv(catalog_temp, "./others/hospital_area_time.csv", row.names=F)
 # catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u4eba\u53e3\u7d71\u8a08", "\u7d71\u8a08\u5340\u4eba\u53e3\u7d71\u8a08",
 #                                              "\u884c\u653f\u5340\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08",
@@ -2996,6 +2995,7 @@ Hospital=function(district, time, age=F, dtype="text", out=F){
   time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
   area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/hospital_area_time.csv")
 
+  catalog_temp$TIME=factor(catalog_temp$TIME, levels=(data.frame(TIME=unique(catalog_temp$TIME), TIME_temp=as.numeric(gsub("Y|M", "", unique(catalog_temp$TIME)))) %>% arrange(TIME_temp))$TIME)
 
   space=c("\u7e23\u5e02","\u9109\u93ae\u5e02\u5340","\u6700\u5c0f\u7d71\u8a08\u5340","\u4e00\u7d1a\u767c\u5e03\u5340","\u4e8c\u7d1a\u767c\u5e03\u5340")[which(district==c("County","Town","SA0","SA1","SA2"))]
   if(length(space)!=1){
