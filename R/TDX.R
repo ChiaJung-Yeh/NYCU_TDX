@@ -3064,7 +3064,7 @@ Hospital=function(district, time, dtype="text", out=F){
   return(hospital)
 }
 
-temp=Business("SA2", "2013-06", dtype="sf")
+
 
 #' @export
 Business=function(district, time, dtype="text", out=F){
@@ -3131,7 +3131,7 @@ Business=function(district, time, dtype="text", out=F){
     cli_progress_update()
     unlink(list.files(tempdir(), full.names=T), recursive=T)
     download.file(url, paste0(tempdir(), "/business_TDX.zip"), mode="wb", quiet=T)
-    untar(padste0(tempdir(), "/business_TDX.zip"), exdir=paste0(tempdir(), "/business_TDX"))
+    untar(paste0(tempdir(), "/business_TDX.zip"), exdir=paste0(tempdir(), "/business_TDX"))
     dir_file=dir(dir(paste0(tempdir(), "/business_TDX"), full.names=T), full.names=T)
 
     if(dtype=="text"){
@@ -3139,6 +3139,7 @@ Business=function(district, time, dtype="text", out=F){
       business_temp=read.csv(dir_file, fileEncoding="Big5")
       business_temp=business_temp[-1, ]
       business_temp[, grepl("CNT", colnames(business_temp))]=matrix(as.numeric(as.matrix(business_temp[, grepl("CNT", colnames(business_temp))])), nrow=nrow(business_temp))
+      colnames(business_temp)[mapply(function(x) which(business_name$ORI_NAME[x]==colnames(business_temp)), c(1:nrow(business_name)))]=business_name$NEW_NAME
     }else{
       untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/business_TDX"), full.names=T), "/business_TDX"))
       dir_file=dir(paste0(dir(paste0(tempdir(), "/business_TDX"), full.names=T), "/business_TDX"), full.names=T)
@@ -3146,6 +3147,7 @@ Business=function(district, time, dtype="text", out=F){
       business_temp=st_sf(business_temp, crs=3826)%>%
         st_zm()%>%
         st_transform(crs=4326)
+      colnames(business_temp)[mapply(function(x) which(business_name$ORI_NAME[x]==colnames(business_temp)), c(1:nrow(business_name)))]=business_name$NEW_NAME
     }
     unlink(paste0(tempdir(), "/business_TDX"), recursive=T)
     file.remove(paste0(tempdir(), "/business_TDX.zip"))
