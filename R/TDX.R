@@ -3123,7 +3123,7 @@ Business=function(district, time, dtype="text", out=F){
   }else if(district=="SA2"){
     url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=353AEEEB2A70D08EB964C8DC6A58C2F0&STTIME=", time_rev, "&STUNIT=U0202&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
   }
-  business_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/business_name.csv")
+  business_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/business_name")
 
   business=data.frame()
   cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]", total=length(url_all))
@@ -3172,7 +3172,6 @@ Business=function(district, time, dtype="text", out=F){
   }
   return(business)
 }
-
 
 
 
