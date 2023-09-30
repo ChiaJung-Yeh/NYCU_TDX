@@ -3048,7 +3048,6 @@ Hospital=function(district, time, dtype="text", out=F){
     rm(hospital_temp)
   }
   cli_progress_done()
-  setdiff(names(hospital_temp), names(hospital))
 
   temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(hospital)), c(1:6)))
   colnames(hospital)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
@@ -3065,7 +3064,7 @@ Hospital=function(district, time, dtype="text", out=F){
   return(hospital)
 }
 
-
+temp=Business("SA2", "2013-06", dtype="sf")
 
 #' @export
 Business=function(district, time, dtype="text", out=F){
@@ -3114,66 +3113,66 @@ Business=function(district, time, dtype="text", out=F){
   }
 
   if(district=="County"){
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE4D4367A22F6B8FF9&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=EE602A1FC2DD0B0042C5C56A3F604041&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
   }else if(district=="Town"){
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE6980D5C9940A11CD&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=EE602A1FC2DD0B0064DC1A457DEF3EC1&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
   }else if(district=="SA0"){
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE460E9DA2BF58557E&STTIME=", time_rev, "&STUNIT=U0200&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=EE602A1FC2DD0B0044D64C160D2534B7&STTIME=", time_rev, "&STUNIT=U0200&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
   }else if(district=="SA1"){
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE838B75E02ACC9E6E&STTIME=", time_rev, "&STUNIT=U0201&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=EE602A1FC2DD0B006E41E92D5357C450&STTIME=", time_rev, "&STUNIT=U0201&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
   }else if(district=="SA2"){
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE184F1603ADC8AF64&STTIME=", time_rev, "&STUNIT=U0202&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=353AEEEB2A70D08EB964C8DC6A58C2F0&STTIME=", time_rev, "&STUNIT=U0202&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
   }
+  business_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/business_name.csv")
 
-  hospital=data.frame()
+  business=data.frame()
   cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]", total=length(url_all))
   for(url in url_all){
     cli_progress_update()
     unlink(list.files(tempdir(), full.names=T), recursive=T)
-    download.file(url, paste0(tempdir(), "/hospital_TDX.zip"), mode="wb", quiet=T)
-    untar(paste0(tempdir(), "/hospital_TDX.zip"), exdir=paste0(tempdir(), "/hospital_TDX"))
-    dir_file=dir(dir(paste0(tempdir(), "/hospital_TDX"), full.names=T), full.names=T)
+    download.file(url, paste0(tempdir(), "/business_TDX.zip"), mode="wb", quiet=T)
+    untar(paste0(tempdir(), "/business_TDX.zip"), exdir=paste0(tempdir(), "/business_TDX"))
+    dir_file=dir(dir(paste0(tempdir(), "/business_TDX"), full.names=T), full.names=T)
 
     if(dtype=="text"){
       dir_file=dir_file[grepl(".csv", dir_file)]
-      hospital_temp=read.csv(dir_file, fileEncoding="Big5")
-      hospital_temp=hospital_temp[-1, ]
-      hospital_temp[, grepl("CNT|BED|SRVP|SRVB", colnames(hospital_temp))]=matrix(as.numeric(as.matrix(hospital_temp[, grepl("CNT|BED|SRVP|SRVB", colnames(hospital_temp))])), nrow=nrow(hospital_temp))
+      business_temp=read.csv(dir_file, fileEncoding="Big5")
+      business_temp=business_temp[-1, ]
+      business_temp[, grepl("CNT", colnames(business_temp))]=matrix(as.numeric(as.matrix(business_temp[, grepl("CNT", colnames(business_temp))])), nrow=nrow(business_temp))
     }else{
-      untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/hospital_TDX"), full.names=T), "/hospital_TDX"))
-      dir_file=dir(paste0(dir(paste0(tempdir(), "/hospital_TDX"), full.names=T), "/hospital_TDX"), full.names=T)
-      hospital_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
-      hospital_temp$SPECODE=NULL
-      hospital_temp=st_sf(hospital_temp, crs=3826)%>%
+      untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/business_TDX"), full.names=T), "/business_TDX"))
+      dir_file=dir(paste0(dir(paste0(tempdir(), "/business_TDX"), full.names=T), "/business_TDX"), full.names=T)
+      business_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
+      business_temp=st_sf(business_temp, crs=3826)%>%
         st_zm()%>%
         st_transform(crs=4326)
     }
-    unlink(paste0(tempdir(), "/hospital_TDX"), recursive=T)
-    file.remove(paste0(tempdir(), "/hospital_TDX.zip"))
-    if(nrow(hospital)==0){
-      hospital=hospital_temp
+    unlink(paste0(tempdir(), "/business_TDX"), recursive=T)
+    file.remove(paste0(tempdir(), "/business_TDX.zip"))
+    if(nrow(business)==0){
+      business=business_temp
     }else{
-      hospital=bind_rows(hospital, hospital_temp)
+      business=bind_rows(business, business_temp)
     }
-    rm(hospital_temp)
+    rm(business_temp)
   }
   cli_progress_done()
-  setdiff(names(hospital_temp), names(hospital))
 
-  temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(hospital)), c(1:6)))
-  colnames(hospital)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
+  temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(business)), c(1:6)))
+  colnames(business)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
 
   if(dtype=="text"){
     if (nchar(out)!=0 & out!=F){
-      write.csv(hospital, out, row.names=F)
+      write.csv(business, out, row.names=F)
     }
   }else if(dtype=="sf"){
     if (grepl(".shp", out) & out!=F){
-      write_sf(hospital, out, layer_options="ENCODING=UTF-8")
+      write_sf(business, out, layer_options="ENCODING=UTF-8")
     }
   }
-  return(hospital)
+  return(business)
 }
+
 
 
 
