@@ -84,21 +84,10 @@ usethis::use_package("progress")
 #   group_by(DATANAME, UNIT, TIME)%>%
 #   summarise(SPACE=paste(SPACE, collapse="|"))
 # write.csv(catalog_temp, "./others/landuse_area_time.csv", row.names=F)
-
-
-
-# download.file("https://segis.moi.gov.tw/STAT/Resources/Project/Template/STATCatalog.xlsx", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
-# catalog=xlsx::read.xlsx2(paste0(tempdir(), "./STATCatalog.xlsx"), sheetIndex=1)
-#
-# # Population()
-# area1=gsub("\\n|\u6708", "", unlist(strsplit(catalog[2, 4], "\r")))
-# area1=area1[area1!=""]
-# area1=unlist(mapply(function(x) paste0(substr(area1[x], 1, regexpr("\u5e74", area1[x])-1), "Y", unlist(strsplit(substr(area1[x], regexpr("\u5e74", area1[x])+1, 100), ",")), "M"), c(1:length(area1))))
-# area2=gsub("\\n|\u6708", "", unlist(strsplit(catalog[3, 4], "\r")))
-# area2=area2[area2!=""]
-# area2=unlist(mapply(function(x) paste0(substr(area2[x], 1, regexpr("\u5e74", area2[x])-1), "Y", unlist(strsplit(substr(area2[x], regexpr("\u5e74", area2[x])+1, 100), ",")), "M"), c(1:length(area2))))
-# pop_area_time=data.frame(area1=paste(area1, collapse="|"), area2=paste(area2, collapse="|"))
-# write.csv(pop_area_time, "./others/pop_area_time.csv", row.names=F)
+# catalog_temp=filter(catalog, grepl("\u5de5\u5546\u5bb6\u6578", DATANAME), !TIME %in% c("97Y","98Y"))%>%
+#   group_by(DATANAME, UNIT, TIME)%>%
+#   summarise(SPACE=paste(SPACE, collapse="|"))
+# write.csv(catalog_temp, "./others/business_area_time.csv", row.names=F)
 
 
 
@@ -2999,6 +2988,116 @@ Hospital=function(district, time, dtype="text", out=F){
   }
   time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
   area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/hospital_area_time.csv")
+  area_time$TIME=factor(area_time$TIME, levels=(data.frame(TIME=unique(area_time$TIME), TIME_temp=as.numeric(gsub("Y|M", "", unique(area_time$TIME)))) %>% arrange(TIME_temp))$TIME)
+
+  space=c("\u7e23\u5e02","\u9109\u93ae\u5e02\u5340","\u6700\u5c0f\u7d71\u8a08\u5340","\u4e00\u7d1a\u767c\u5e03\u5340","\u4e8c\u7d1a\u767c\u5e03\u5340")[which(district==c("County","Town","SA0","SA1","SA2"))]
+  if(length(space)==1){
+    space_all=filter(area_time, UNIT==space, TIME==time_rev)
+    if(nrow(space_all)==1){
+      all_county=toupper(url_encode(unlist(strsplit(space_all$SPACE, "\\|"))))
+    }else{
+      temp=sort(unique(filter(area_time, UNIT==space)$TIME))
+      stop(paste0("Data of '", time, "' is not available. Please use the following time :\n", paste(paste0(as.numeric(substr(temp, 1, regexpr("Y", temp)-1))+1911, "-", substr(temp, regexpr("Y", temp)+1, regexpr("M", temp)-1)), collapse=", ")))
+    }
+  }else{
+    stop("The argument of 'district' must be 'County', 'Town', 'SA0', 'SA1', or 'SA2'!\nNote that data of village is not provided!")
+  }
+
+  if(district=="County"){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE4D4367A22F6B8FF9&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
+  }else if(district=="Town"){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE6980D5C9940A11CD&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=", dtype_rev)
+  }else if(district=="SA0"){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE460E9DA2BF58557E&STTIME=", time_rev, "&STUNIT=U0200&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+  }else if(district=="SA1"){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE838B75E02ACC9E6E&STTIME=", time_rev, "&STUNIT=U0201&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+  }else if(district=="SA2"){
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=DD43C811BCD7FDDE184F1603ADC8AF64&STTIME=", time_rev, "&STUNIT=U0202&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+  }
+
+  hospital=data.frame()
+  cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]", total=length(url_all))
+  for(url in url_all){
+    cli_progress_update()
+    unlink(list.files(tempdir(), full.names=T), recursive=T)
+    download.file(url, paste0(tempdir(), "/hospital_TDX.zip"), mode="wb", quiet=T)
+    untar(paste0(tempdir(), "/hospital_TDX.zip"), exdir=paste0(tempdir(), "/hospital_TDX"))
+    dir_file=dir(dir(paste0(tempdir(), "/hospital_TDX"), full.names=T), full.names=T)
+
+    if(dtype=="text"){
+      dir_file=dir_file[grepl(".csv", dir_file)]
+      hospital_temp=read.csv(dir_file, fileEncoding="Big5")
+      hospital_temp=hospital_temp[-1, ]
+      hospital_temp[, grepl("CNT|BED|SRVP|SRVB", colnames(hospital_temp))]=matrix(as.numeric(as.matrix(hospital_temp[, grepl("CNT|BED|SRVP|SRVB", colnames(hospital_temp))])), nrow=nrow(hospital_temp))
+    }else{
+      untar(dir_file, exdir=paste0(dir(paste0(tempdir(), "/hospital_TDX"), full.names=T), "/hospital_TDX"))
+      dir_file=dir(paste0(dir(paste0(tempdir(), "/hospital_TDX"), full.names=T), "/hospital_TDX"), full.names=T)
+      hospital_temp=st_read(dir_file[grepl("SHP", dir_file)], options="ENCODING=Big5", quiet=T)
+      hospital_temp$SPECODE=NULL
+      hospital_temp=st_sf(hospital_temp, crs=3826)%>%
+        st_zm()%>%
+        st_transform(crs=4326)
+    }
+    unlink(paste0(tempdir(), "/hospital_TDX"), recursive=T)
+    file.remove(paste0(tempdir(), "/hospital_TDX.zip"))
+    if(nrow(hospital)==0){
+      hospital=hospital_temp
+    }else{
+      hospital=bind_rows(hospital, hospital_temp)
+    }
+    rm(hospital_temp)
+  }
+  cli_progress_done()
+  setdiff(names(hospital_temp), names(hospital))
+
+  temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(hospital)), c(1:6)))
+  colnames(hospital)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
+
+  if(dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(hospital, out, row.names=F)
+    }
+  }else if(dtype=="sf"){
+    if (grepl(".shp", out) & out!=F){
+      write_sf(hospital, out, layer_options="ENCODING=UTF-8")
+    }
+  }
+  return(hospital)
+}
+
+
+
+#' @export
+Business=function(district, time, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(urltools)) install.packages("urltools")
+  if (!require(cli)) install.packages("cli")
+  if (!require(sf)) install.packages("sf")
+
+  if(dtype=="text"){
+    dtype_rev="CSV"
+  }else if(dtype=="sf"){
+    dtype_rev="SHP"
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
+  }
+  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
+    stop("The file name must contain '.shp' when exporting shapefile.\n")
+  }
+  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+
+  # check if the month is valid
+  if(nchar(time)!=7 | !grepl("-", time)){
+    stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+  }
+  if(as.numeric(substr(time, 1, regexpr("-", time)-1))<2010){
+    stop("Only year after 2010 is provided!")
+  }
+  time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+  area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/business_area_time.csv")
   area_time$TIME=factor(area_time$TIME, levels=(data.frame(TIME=unique(area_time$TIME), TIME_temp=as.numeric(gsub("Y|M", "", unique(area_time$TIME)))) %>% arrange(TIME_temp))$TIME)
 
   space=c("\u7e23\u5e02","\u9109\u93ae\u5e02\u5340","\u6700\u5c0f\u7d71\u8a08\u5340","\u4e00\u7d1a\u767c\u5e03\u5340","\u4e8c\u7d1a\u767c\u5e03\u5340")[which(district==c("County","Town","SA0","SA1","SA2"))]
