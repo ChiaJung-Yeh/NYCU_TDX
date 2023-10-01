@@ -3212,6 +3212,12 @@ Crash=function(access_token, crash, county, time, dtype="text", out=F){
     stop(paste0("Your access token is invalid!"))
   })
 
+  tryCatch({
+    url="https://tdx.transportdata.tw/api/historical/v1/AccidentBasic/TrafficEventCode?$format=json"
+    x=GET(url, add_headers(Accept="application/json", Authorization=paste("Bearer", access_token)))
+    crash_code=fromJSON(content(x, as="text", encoding="UTF-8"))
+  })
+
   if(length(crash_t1)==0 | sum(names(crash_t1) %in% "ErrorMessage")){
     warning(paste0(county, " has no crash in ", time,  " ,or data (crash data) is not avaliable."))
   }
@@ -3238,9 +3244,10 @@ Crash=function(access_token, crash, county, time, dtype="text", out=F){
 
   if(nchar(out)!=0 & out!=F){
     write.csv(crash_t2, paste0(out, "_T2.csv"), row.names=F)
+    write.csv(crash_code, paste0(out, "_DEF.csv"), row.names=F)
   }
 
-  crash_all=list(T1=crash_t1, T2=crash_t2)
+  crash_all=list(T1=crash_t1, T2=crash_t2, DEF=crash_code)
   warning(paste0("Please use '$T1' to retrieve the crash data, and use '$T2' to retrieve the person data."))
   return(crash_all)
 }
