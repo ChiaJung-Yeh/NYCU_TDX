@@ -277,7 +277,7 @@ Bus_StopOfRoute=function(access_token, county, dates=F, dtype="text", out=F){
       write.csv(bus_stop, out, row.names=F)
     }
   }else if(dtype=="sf"){
-    bus_stop$geometry=st_as_sfc(ifelse(!is.na(bus_stop$PositionLon), paste0("POINT(", bus_stop$PositionLon, " ", bus_stop$PositionLat, ")"), "GEOMETRYCOLLECTION EMPTY"))
+    bus_stop$geometry=st_as_sfc(ifelse(!is.na(bus_stop$PositionLon), paste0("POINT(", bus_stop$PositionLon, " ", bus_stop$PositionLat, ")"), "POINT EMPTY"))
     bus_stop=st_sf(bus_stop, crs=4326)
 
     if(grepl(".shp", out) & out!=F){
@@ -757,7 +757,7 @@ Rail_Station=function(access_token, operator, dates=F, dtype="text", out=F){
       write.csv(rail_station, out, row.names=F)
     }
   }else if (dtype=="sf"){
-    rail_station$geometry=st_as_sfc(ifelse(!is.na(rail_station$PositionLon), paste0("POINT(", rail_station$PositionLon, " ", rail_station$PositionLat, ")"), "GEOMETRYCOLLECTION EMPTY"))
+    rail_station$geometry=st_as_sfc(ifelse(!is.na(rail_station$PositionLon), paste0("POINT(", rail_station$PositionLon, " ", rail_station$PositionLat, ")"), "POINT EMPTY"))
     rail_station=st_sf(rail_station, crs=4326)
 
     if(grepl(".shp", out) & out!=F){
@@ -1360,7 +1360,7 @@ Rail_StationExit=function(access_token, operator, dtype="text", out=F){
       write.csv(station_exit, out, row.names=F)
     }
   }else if (dtype=="sf"){
-    station_exit$geometry=st_as_sfc(ifelse(!is.na(station_exit$PositionLon), paste0("POINT(", station_exit$PositionLon, " ", station_exit$PositionLat, ")"), "GEOMETRYCOLLECTION EMPTY"))
+    station_exit$geometry=st_as_sfc(ifelse(!is.na(station_exit$PositionLon), paste0("POINT(", station_exit$PositionLon, " ", station_exit$PositionLat, ")"), "POINT EMPTY"))
     station_exit=st_sf(station_exit, crs=4326)
 
     if (grepl(".shp", out) & out!=F){
@@ -2043,7 +2043,7 @@ Bike_Remain_His=function(access_token, county, dates, out=F){
     if(grepl("2021-06-01", bike_remain$Message)){
       stop(paste0("Historical data can only be retrived after date '2021-06-01'!"))
     }else if(grepl("City", bike_remain$Message)){
-      print(TDX_County)
+      print(print(TDX_County[1:22,]))
       stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
     }else{
       stop(paste0("Date value is invalid! Format of the date:\n", "\nType\t\tFormat\t\t\tExample\n", paste0(rep("=", 61), collapse=""), "\nSingle Date\tYYYY-MM-DD\t\t2023-01-01\nMultiple Dates\tYYYY-MM-DD;YYYY-MM-DD\t2023-01-01;2023-02-01\nDate Range\tYYYY-MM-DD~YYYY-MM-DD\t2023-01-01~2023-01-31"))
@@ -3173,6 +3173,76 @@ Business=function(district, time, dtype="text", out=F){
     }
   }
   return(business)
+}
+
+
+
+#' @export
+Crash=function(access_token, crash, county, time, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(httr)) install.packages("httr")
+
+  if((grepl(".csv|.txt", out)) & out!=F){
+    warning("No need to set '.csv' or '.txt' when exporting the file in this function. Just set the directory and file name!\n")
+  }
+  if(!crash %in% c("A1", "A2")){
+    stop("Argument 'crash' must be either 'A1' or 'A2'!")
+  }
+
+  county_code=c("TPE","NWT","TAO","TXG","TNN","KHH","KEE","HSZ","HSQ","MIA","CHA","NAN","YUN","CYQ","CYI","PIF","ILA","HUA","TTT","KIN","PEN","LIE")[which(county==TDX_County$Code)]
+  if(length(county_code)==0 | is.na(county_code)){
+    print(TDX_County[1:22,])
+    stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+  }
+
+  tryCatch({
+    ym_rev=paste0(time, "-01~", as.Date(paste0(ifelse(substr(time, 6, 7)==12, as.numeric(substr(time, 1, 4))+1, substr(time, 1, 4)), "-", ifelse(substr(time, 6, 7)==12, "01", as.numeric(substr(time, 6, 7))+1), "-01"))-1)
+  }, error=function(err){
+    stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+  })
+
+  tryCatch({
+    url=paste0("https://tdx.transportdata.tw/api/historical/v1/TrafficAccident/", crash, "T1/", county_code, "?Dates=", ym_rev, "&$format=json")
+    x=GET(url, add_headers(Accept="application/json", Authorization=paste("Bearer", access_token)))
+    crash_t1=fromJSON(content(x, as="text", encoding="UTF-8"))
+    url=paste0("https://tdx.transportdata.tw/api/historical/v1/TrafficAccident/", crash, "T2/", county_code, "?Dates=", ym_rev, "&$format=json")
+    x=GET(url, add_headers(Accept="application/json", Authorization=paste("Bearer", access_token)))
+    crash_t2=fromJSON(content(x, as="text", encoding="UTF-8"))
+  }, error=function(err){
+    stop(paste0("Your access token is invalid!"))
+  })
+
+  if(length(crash_t1)==0 | sum(names(crash_t1) %in% "ErrorMessage")){
+    warning(paste0(county, " has no crash in ", time,  " ,or data (crash data) is not avaliable."))
+  }
+  if(length(crash_t2)==0 | sum(names(crash_t2) %in% "ErrorMessage")){
+    warning(paste0(county, " has no crash in ", time,  " ,or data (person data) is not avaliable."))
+  }
+
+  if(dtype=="sf" & length(crash_t1)!=0){
+    crash_t1$geometry=st_as_sfc(ifelse(!(crash_t1$Lon==0 | is.na(crash_t1$Lon) | crash_t1$Lat==0 | is.na(crash_t1$Lat)), paste0("POINT(", crash_t1$Lon, " ", crash_t1$Lat, ")"), "POINT EMPTY"))
+    crash_t1=st_sf(crash_t1, crs=4326)
+    if(sum(st_is_empty(crash_t1$geometry))!=0){
+      warning(paste0("Note that some of latitude and longitude are missing, and cannot retrieve the geometry!"))
+    }
+    if(nchar(out)!=0 & out!=F){
+      write.table(colnames(crash_t1), paste0(out, "_T1colname.txt"), sep=",", row.names=F, col.names=F)
+      write_sf(crash_t1, paste0(out, "_T1.shp"), layer_options="ENCODING=UTF-8")
+      warning(paste0("Some colnames have been shorten. The original column name is retrieved in, '", paste0(out, "_T1colname.txt")), "'")
+    }
+  }else{
+    if(nchar(out)!=0 & out!=F){
+      write.csv(crash_t1, paste0(out, "_T1.csv"), row.names=F)
+    }
+  }
+
+  if(nchar(out)!=0 & out!=F){
+    write.csv(crash_t2, paste0(out, "_T2.csv"), row.names=F)
+  }
+
+  crash_all=list(T1=crash_t1, T2=crash_t2)
+  warning(paste0("Please use '$T1' to retrieve the crash data, and use '$T2' to retrieve the person data."))
+  return(crash_all)
 }
 
 
