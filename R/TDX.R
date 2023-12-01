@@ -28,6 +28,7 @@ usethis::use_package("progress")
 # usethis::use_data(TDX_RoadClass, overwrite=T)
 
 
+
 # #---API Form---#
 # url_all=data.frame(Mode=c("Bus","Rail","Bike","Air","Ship"),
 #                    url=c("https://tdx.transportdata.tw/webapi/File/Swagger/V3/2998e851-81d0-40f5-b26d-77e2f5ac4118",
@@ -607,7 +608,7 @@ Rail_StationOfLine=function(access_token, operator, dates=F, out=F){
       url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/StationOfLine?&%24format=JSON"
     }else if(operator=="THSR"){
       stop("Please use function 'Rail_Station()' to retrieve the station of high speed rail (THSR).")
-    }else if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
+    }else if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT","NTMC","NTALRT")){
       url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=JSON")
     }else if(operator=="AFR"){
       url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/StationOfLine?&%24format=JSON")
@@ -713,7 +714,7 @@ Rail_Station=function(access_token, operator, dates=F, dtype="text", out=F){
       url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/Station?&%24format=JSON"
     }else if(operator=="THSR"){
       url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/Station?&%24format=JSON"
-    }else if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
+    }else if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT","NTMC","NTALRT")){
       url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Station/", operator, "?&%24format=JSON")
     }else if(operator=="AFR"){
       url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/Station?&%24format=JSON")
@@ -1119,7 +1120,7 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
 
     tryCatch({
       if(operator=="TRA"){
-        data_all=fromJSON(content(x, as="text"))$StationTimetables
+        data_all=fromJSON(content(x, as="text", encoding="UTF-8"))$StationTimetables
       }else{
         data_all=fromJSON(content(x, as="text"))
       }
@@ -1161,7 +1162,7 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
       url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/GeneralTimetable?&$format=JSON"
     }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT","TMRT")){
       stop("MRT system does not provide 'general' time table up to now! Please use 'station' time table.")
-    }else if (operator =="AFR"){
+    }else if (operator=="AFR"){
       url="https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/GeneralTrainTimetable?&%24format=JSON"
     }else{
       print(TDX_Railway)
@@ -3251,6 +3252,142 @@ Crash=function(access_token, crash, county, time, dtype="text", out=F){
   warning(paste0("Please use '$T1' to retrieve the crash data, and use '$T2' to retrieve the person data."))
   return(crash_all)
 }
+
+
+
+#' @export
+Bus_ScheduleEst=function(access_token, county, routename, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(data.table)) install.packages("data.table")
+  if (!require(jsonlite)) install.packages("jsonlite")
+  if (!require(httr)) install.packages("httr")
+  if (!require(cli)) install.packages("cli")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  routename=unique(routename)
+  cat(paste0("Total: ", length(routename), " Routes\n"))
+  cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]  {.emph RouteName: {routename[pb_current]}}", total=length(routename))
+  num_of_nodata=0
+
+  sch_est_ALL=data.frame()
+  for (route in routename){
+    cli_progress_update()
+    if (county=="Intercity"){
+      url=paste0("https://tdx.transportdata.tw/api/premium/V3/Map/Estimation/Bus/Schedule/InterCity/RouteName/", toupper(url_encode(route)), "?&%24format=JSON")
+    }else if(county %in% TDX_County$Code[1:22]){
+      url=paste0("https://tdx.transportdata.tw/api/premium/V3/Map/Estimation/Bus/Schedule/City/", county, "/RouteName/", toupper(url_encode(route)), "?&%24format=JSON")
+    }else{
+      print(TDX_County[1:22,])
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+    tryCatch({
+      subroute_info=fromJSON(content(x, as="text"))$Schedules
+    }, error=function(err){
+      stop(paste0("Your access token is invalid!"))
+    })
+    if(length(subroute_info)==0){
+      cli_alert_info(paste0("Data of RouteID: ", route, " is not available."))
+      num_of_nodata=num_of_nodata+1
+      next
+    }
+
+    subroute_info$TripID=c(1:nrow(subroute_info))
+
+    timetable_all=mapply(function(x) subroute_info$Timetables[[x]]$StopTimes, c(1:length(subroute_info$Timetables)))
+    for(i in c(1:length(timetable_all))){
+      timetable_all[[i]]$StopName=timetable_all[[i]]$StopName$Zh_tw
+    }
+    timetable_all=rbindlist(timetable_all)
+
+    rep_id=mapply(function(x) nrow(subroute_info$Timetables[[x]]$StopTimes[[1]]), c(1:length(subroute_info$Timetables)))
+    timetable_all=data.frame(timetable_all, ServiceTag=rep(mapply(function(x) subroute_info$Timetables[[x]]$ServiceDay$ServiceTag, c(1:length(subroute_info$Timetables))), times=rep_id))
+
+    timetable_all=cbind(subroute_info[rep(c(1:nrow(subroute_info)), times=rep_id), c("TripID","SubRouteUID","SubRouteID","SubRouteName","Direction")], timetable_all)
+    row.names(timetable_all)=NULL
+
+    sch_est_ALL=rbind(sch_est_ALL, timetable_all)
+  }
+  cli_alert_info(ifelse(num_of_nodata==0, "All Done!", paste0("All Done!\n", num_of_nodata, " RouteIDs have no data!")))
+  cli_progress_done()
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(sch_est_ALL, out, row.names=F)
+  }
+  return(sch_est_ALL)
+}
+
+
+
+#' @export
+Bus_Distance=function(access_token, county, routeid, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(data.table)) install.packages("data.table")
+  if (!require(jsonlite)) install.packages("jsonlite")
+  if (!require(httr)) install.packages("httr")
+  if (!require(cli)) install.packages("cli")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
+  routeid=unique(routeid)
+  cat(paste0("Total: ", length(routeid), " Routes\n"))
+  cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]  {.emph RouteID: {routeid[pb_current]}}", total=length(routeid))
+  num_of_nodata=0
+
+  busdist_ALL=data.frame()
+  for (route in routeid){
+    cli_progress_update()
+    if (county=="Intercity"){
+      url=paste0("https://tdx.transportdata.tw/api/premium/S2SDistance/InterCity/RouteID/", route, "?&%24format=JSON")
+    }else if(county %in% TDX_County$Code[1:22]){
+      url=paste0("https://tdx.transportdata.tw/api/premium/S2SDistance/City/", county, "/RouteID/", route, "?&%24format=JSON")
+    }else{
+      print(TDX_County[1:22,])
+      stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
+    }
+    x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
+
+    tryCatch({
+      subroute_info=fromJSON(content(x, as="text"))
+    }, error=function(err){
+      stop(paste0("Your access token is invalid!"))
+    })
+    if(length(subroute_info)==0){
+      cli_alert_info(paste0("Data of RouteID: ", route, " is not available."))
+      num_of_nodata=num_of_nodata+1
+      next
+    }else{
+      if(sum(lengths(subroute_info$Stops))==0){
+        cli_alert_info(paste0("Data of RouteID: ", route, " is not available."))
+        num_of_nodata=num_of_nodata+1
+        next
+      }
+    }
+
+    subroute_info$RouteName=subroute_info$RouteName$Zh_tw
+    subroute_info$SubRouteName=subroute_info$SubRouteName$Zh_tw
+
+    rep_id=mapply(function(x) nrow(subroute_info$Stops[[x]]), c(1:nrow(subroute_info)))
+    busdist=cbind(subroute_info[rep(c(1:nrow(subroute_info)), rep_id), c("RouteUID","RouteID","RouteName","SubRouteUID","SubRouteID","SubRouteName","Direction")], rbindlist(subroute_info$Stops))
+
+    row.names(busdist)=NULL
+    busdist_ALL=rbind(busdist_ALL, busdist)
+  }
+  cli_alert_info(ifelse(num_of_nodata==0, "All Done!", paste0("All Done!\n", num_of_nodata, " RouteIDs have no data!")))
+  cli_progress_done()
+
+  if (nchar(out)!=0 & out!=F){
+    write.csv(busdist_ALL, out, row.names=F)
+  }
+  return(busdist_ALL)
+}
+
 
 
 
