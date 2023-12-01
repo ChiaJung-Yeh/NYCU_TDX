@@ -3262,6 +3262,7 @@ Bus_ScheduleEst=function(access_token, county, routename, out=F){
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
   if (!require(cli)) install.packages("cli")
+  if (!require(urltools)) install.packages("urltools")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
