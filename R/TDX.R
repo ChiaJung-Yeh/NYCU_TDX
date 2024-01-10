@@ -3374,12 +3374,16 @@ Bus_Distance=function(access_token, county, routeid, out=F){
     subroute_info$RouteName=subroute_info$RouteName$Zh_tw
     subroute_info$SubRouteName=subroute_info$SubRouteName$Zh_tw
 
-    rep_id=mapply(function(x) nrow(subroute_info$Stops[[x]]), c(1:nrow(subroute_info)))
-    busdist=cbind(subroute_info[rep(c(1:nrow(subroute_info)), rep_id), c("RouteUID","RouteID","RouteName","SubRouteUID","SubRouteID","SubRouteName","Direction")], rbindlist(subroute_info$Stops))
-
-    row.names(busdist)=NULL
-    busdist_ALL=rbind(busdist_ALL, busdist)
+    if(sum(subroute_info$Stops %in% NA)==0){
+      rep_id=mapply(function(x) nrow(subroute_info$Stops[[x]]), c(1:nrow(subroute_info)))
+      busdist=cbind(subroute_info[rep(c(1:nrow(subroute_info)), rep_id), c("RouteUID","RouteID","RouteName","SubRouteUID","SubRouteID","SubRouteName","Direction")], rbindlist(subroute_info$Stops))
+      row.names(busdist)=NULL
+      busdist_ALL=rbind(busdist_ALL, busdist)
+    }else{
+      cli_alert_info(paste0("Data of RouteID: ", route, " is not available."))
+    }
   }
+
   cli_alert_info(ifelse(num_of_nodata==0, "All Done!", paste0("All Done!\n", num_of_nodata, " RouteIDs have no data!")))
   cli_progress_done()
 
