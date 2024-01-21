@@ -2262,7 +2262,7 @@ District_Shape=function(access_token, district, dtype="text", out=F){
   return(district_shape)
 }
 
-temp=Population("Village", age=T, time="2022-06")
+
 
 #' @export
 Population=function(district, time, age=F, dtype="text", out=F){
