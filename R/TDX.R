@@ -2262,7 +2262,7 @@ District_Shape=function(access_token, district, dtype="text", out=F){
   return(district_shape)
 }
 
-
+temp=Population("Village", age=T, time="2022-06")
 
 #' @export
 Population=function(district, time, age=F, dtype="text", out=F){
@@ -3374,7 +3374,9 @@ Bus_Distance=function(access_token, county, routeid, out=F){
     subroute_info$RouteName=subroute_info$RouteName$Zh_tw
     subroute_info$SubRouteName=subroute_info$SubRouteName$Zh_tw
 
-    if(sum(subroute_info$Stops %in% NA)==0){
+    subroute_info=subroute_info[lengths(subroute_info$Stops)!=0,]
+
+    if(nrow(subroute_info)!=0 & sum(subroute_info$Stops %in% NA)==0){
       rep_id=mapply(function(x) nrow(subroute_info$Stops[[x]]), c(1:nrow(subroute_info)))
       busdist=cbind(subroute_info[rep(c(1:nrow(subroute_info)), rep_id), c("RouteUID","RouteID","RouteName","SubRouteUID","SubRouteID","SubRouteName","Direction")], rbindlist(subroute_info$Stops))
       row.names(busdist)=NULL
