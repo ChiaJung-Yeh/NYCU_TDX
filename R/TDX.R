@@ -1956,7 +1956,7 @@ Bus_RouteFare=function(access_token, county, out=F){
                             BZDStopID=unlist(mapply(function(x) temp[[x]]$FareBufferZoneDestination$StopID, c(1:length(temp)))),
                             BZDStopName=unlist(mapply(function(x) temp[[x]]$FareBufferZoneDestination$StopName, c(1:length(temp)))))
     num_of_buffer=lengths(mapply(function(x) temp[[x]]$SectionSequence, c(1:length(temp))))
-    bus_info_bz=cbind(bus_info[rep(c(1:nrow(bus_info)), num_of_buffer), c("RouteID",'RouteName')], route_buffer)
+    bus_info_bz=cbind(bus_info[rep(c(1:nrow(bus_info)), num_of_buffer), c("RouteID","RouteName","SubRouteID","SubRouteName")], route_buffer)
 
     temp=rbindlist(mapply(function(x) list(bus_info$SectionFares[[x]]$Fares[[1]]), c(1:nrow(bus_info))))
     num_of_fare=mapply(function(x) nrow(bus_info$SectionFares[[x]]$Fares[[1]]), c(1:nrow(bus_info)))
