@@ -62,36 +62,42 @@ usethis::use_package("progress")
 
 
 # #---need to update periodically---#
-download.file("https://segis.moi.gov.tw/FileDownload/Download.aspx?u=j0e6LYeQ1bVn3G9Pxpg5fa7y7eVLLN9lAKKOtEZ0Khj4hKtfaYF5I99aRvHukitTJ2QQ%2bfduz9CenperpgRf1w%3d%3d", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
-catalog=readxl::read_xlsx(paste0(tempdir(), "./STATCatalog.xlsx"), sheet=1, skip=1)
-colnames(catalog)=c("TYPE1","TYPE2","DATANAME","TIME","SPACE","UNIT","COLUMN")
-catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08",
-                                        "\u7d71\u8a08\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08"), !TIME %in% c("97Y","98Y"))%>%
-  group_by(DATANAME, UNIT, TIME)%>%
-  summarise(SPACE=paste(SPACE, collapse="|"))
-write.csv(catalog_temp, "./others/hospital_area_time.csv", row.names=F)
-catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u4eba\u53e3\u7d71\u8a08", "\u7d71\u8a08\u5340\u4eba\u53e3\u7d71\u8a08",
-                                             "\u884c\u653f\u5340\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08",
-                                             "\u7d71\u8a08\u5340\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08"))%>%
-  mutate(DATANAME=case_when(
-    grepl("\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08", DATANAME) ~ "\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08",
-    grepl("\u4eba\u53e3\u7d71\u8a08", DATANAME) ~ "\u4eba\u53e3\u7d71\u8a08"
-  ))%>%
-  group_by(DATANAME, UNIT, TIME)%>%
-  summarise(SPACE=paste(SPACE, collapse="|"))
-write.csv(catalog_temp, "./others/pop_area_time.csv", row.names=F)
-catalog_temp=filter(catalog, grepl("\u7d71\u8a08\u5340\u570b\u571f\u5229\u7528\u8abf\u67e5\u7d71\u8a08", DATANAME))%>%
-  mutate(DATANAME="\u7d71\u8a08\u5340\u570b\u571f\u5229\u7528\u8abf\u67e5\u7d71\u8a08")%>%
-  group_by(DATANAME, UNIT, TIME)%>%
-  summarise(SPACE=paste(SPACE, collapse="|"))
-write.csv(catalog_temp, "./others/landuse_area_time.csv", row.names=F)
-catalog_temp=filter(catalog, grepl("\u5de5\u5546\u5bb6\u6578", DATANAME), !TIME %in% c("97Y","98Y"))%>%
-  group_by(DATANAME, UNIT, TIME)%>%
-  summarise(SPACE=paste(SPACE, collapse="|"))
-write.csv(catalog_temp, "./others/business_area_time.csv", row.names=F)
-catalog_temp=filter(catalog, grepl("GML", DATANAME))%>%
-  select(DATANAME, TIME)
-write.csv(catalog_temp, "./others/statistical_area.csv", row.names=F)
+# download.file("https://segis.moi.gov.tw/FileDownload/Download.aspx?u=j0e6LYeQ1bVn3G9Pxpg5fa7y7eVLLN9lAKKOtEZ0Khj4hKtfaYF5I99aRvHukitTJ2QQ%2bfduz9CenperpgRf1w%3d%3d", paste0(tempdir(), "./STATCatalog.xlsx"), mode="wb", quiet=T)
+# catalog=readxl::read_xlsx(paste0(tempdir(), "./STATCatalog.xlsx"), sheet=1, skip=1)
+# colnames(catalog)=c("TYPE1","TYPE2","DATANAME","TIME","SPACE","UNIT","COLUMN")
+# catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08",
+#                                         "\u7d71\u8a08\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08"), !TIME %in% c("97Y","98Y"))%>%
+#   group_by(DATANAME, UNIT, TIME)%>%
+#   summarise(SPACE=paste(SPACE, collapse="|"))
+# write.csv(catalog_temp, "./others/hospital_area_time.csv", row.names=F)
+# catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u4eba\u53e3\u7d71\u8a08", "\u7d71\u8a08\u5340\u4eba\u53e3\u7d71\u8a08",
+#                                              "\u884c\u653f\u5340\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08",
+#                                              "\u7d71\u8a08\u5340\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08"))%>%
+#   mutate(DATANAME=case_when(
+#     grepl("\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08", DATANAME) ~ "\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08",
+#     grepl("\u4eba\u53e3\u7d71\u8a08", DATANAME) ~ "\u4eba\u53e3\u7d71\u8a08"
+#   ))%>%
+#   group_by(DATANAME, UNIT, TIME)%>%
+#   summarise(SPACE=paste(SPACE, collapse="|"))
+# write.csv(catalog_temp, "./others/pop_area_time.csv", row.names=F)
+# catalog_temp=filter(catalog, grepl("\u7d71\u8a08\u5340\u570b\u571f\u5229\u7528\u8abf\u67e5\u7d71\u8a08", DATANAME))%>%
+#   mutate(DATANAME="\u7d71\u8a08\u5340\u570b\u571f\u5229\u7528\u8abf\u67e5\u7d71\u8a08")%>%
+#   group_by(DATANAME, UNIT, TIME)%>%
+#   summarise(SPACE=paste(SPACE, collapse="|"))
+# write.csv(catalog_temp, "./others/landuse_area_time.csv", row.names=F)
+# catalog_temp=filter(catalog, grepl("\u5de5\u5546\u5bb6\u6578", DATANAME), !TIME %in% c("97Y","98Y"))%>%
+#   group_by(DATANAME, UNIT, TIME)%>%
+#   summarise(SPACE=paste(SPACE, collapse="|"))
+# write.csv(catalog_temp, "./others/business_area_time.csv", row.names=F)
+# catalog_temp=filter(catalog, grepl("GML", DATANAME))%>%
+#   select(DATANAME, TIME)%>%
+#   mutate(SA=case_when(
+#     grepl("\u6700\u5c0f", DATANAME) ~ "SA0",
+#     grepl("\u4e00\u7d1a", DATANAME) ~ "SA1",
+#     grepl("\u4e8c\u7d1a", DATANAME) ~ "SA2"
+#   ),
+#   TIME_NUM=mapply(function(x) as.numeric(strsplit(TIME, "Y|M")[[x]][1])*12+as.numeric(strsplit(TIME, "Y|M")[[x]][2]), c(1:nrow(.))))
+# write.csv(catalog_temp, "./others/statistical_area.csv", row.names=F)
 
 
 
@@ -2221,52 +2227,53 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
 
 
 #' @export
-# District_Shape=function(district, time=NULL, dtype="text", out=F){
-#   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(jsonlite)) install.packages("jsonlite")
-#   if (!require(httr)) install.packages("httr")
-#   if (!require(sf)) install.packages("sf")
-#
-#
-#   if(district)
-#   if(district=="County"){
-#     url="https://maps.nlsc.gov.tw/download/%E7%B8%A3%E5%B8%82%E7%95%8C%E7%B7%9A(TWD97%E7%B6%93%E7%B7%AF%E5%BA%A6).zip"
-#   }else if(district=="Town"){
-#     url="https://maps.nlsc.gov.tw/download/%E9%84%89%E9%8E%AE%E5%B8%82%E5%8D%80%E7%95%8C%E7%B7%9A(TWD97%E7%B6%93%E7%B7%AF%E5%BA%A6).zip"
-#   }else if(district=="Village"){
-#     url="https://maps.nlsc.gov.tw/download/%E6%9D%91(%E9%87%8C)%E7%95%8C(TWD97_121%E5%88%86%E5%B8%B6).zip"
-#   }else if(district=="SA0"){
-#     url=""
-#   }else{
-#     stop(paste0("Parameter 'district' should be 'County', 'Town', 'Village', 'SA0', 'SA1', or 'SA2'."))
-#   }
-#
-#   download.file(url, paste0(tempdir(), "/shape.zip"), mode="wb", quiet=T)
-#   untar(paste0(tempdir(), "/shape.zip"), exdir=paste0(tempdir(), "/shape"))
-#   dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="NLSC")
-#
-#   district_shape=rename(district_shape, geometry=Geometry)
-#
-#   temp=data.frame(COUNTYNAME=TDX_County$County[1:22],
-#                   COUNTYCODE=c("63000","65000","68000","66000","67000","64000","10017","10018","10004","10005","10007","10008","10009","10010","10020","10013","10002","10015","10014","09020","10016","09007"))
-#
-#   district_shape=left_join(district_shape, temp, by="COUNTYNAME")
-#   district_shape=dplyr::select(district_shape, all_of(c("COUNTYCODE", "COUNTYNAME", names(district_shape)[2:(ncol(district_shape)-1)])))
-#
-#   if (dtype=="text"){
-#     if (nchar(out)!=0 & out!=F){
-#       write.csv(district_shape, out, row.names=F)
-#     }
-#   }else if (dtype=="sf"){
-#     district_shape$geometry=st_as_sfc(district_shape$geometry)
-#     district_shape=st_sf(district_shape, crs=4326)
-#
-#     if (grepl(".shp", out) & out!=F){
-#       write_sf(district_shape, out, layer_options="ENCODING=UTF-8")
-#     }
-#   }
-#   return(district_shape)
-# }
+District_Shape=function(district, time=NULL, dtype="text", out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(jsonlite)) install.packages("jsonlite")
+  if (!require(httr)) install.packages("httr")
+  if (!require(sf)) install.packages("sf")
+
+  all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/statistical_area.csv")%>%
+    mutate
+
+  if(district=="County"){
+    url="https://maps.nlsc.gov.tw/download/%E7%B8%A3%E5%B8%82%E7%95%8C%E7%B7%9A(TWD97%E7%B6%93%E7%B7%AF%E5%BA%A6).zip"
+  }else if(district=="Town"){
+    url="https://maps.nlsc.gov.tw/download/%E9%84%89%E9%8E%AE%E5%B8%82%E5%8D%80%E7%95%8C%E7%B7%9A(TWD97%E7%B6%93%E7%B7%AF%E5%BA%A6).zip"
+  }else if(district=="Village"){
+    url="https://maps.nlsc.gov.tw/download/%E6%9D%91(%E9%87%8C)%E7%95%8C(TWD97_121%E5%88%86%E5%B8%B6).zip"
+  }else if(district=="SA0"){
+    url=""
+  }else{
+    stop(paste0("Parameter 'district' should be 'County', 'Town', 'Village', 'SA0', 'SA1', or 'SA2'."))
+  }
+
+  download.file(url, paste0(tempdir(), "/shape.zip"), mode="wb", quiet=T)
+  untar(paste0(tempdir(), "/shape.zip"), exdir=paste0(tempdir(), "/shape"))
+  dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="NLSC")
+
+  district_shape=rename(district_shape, geometry=Geometry)
+
+  temp=data.frame(COUNTYNAME=TDX_County$County[1:22],
+                  COUNTYCODE=c("63000","65000","68000","66000","67000","64000","10017","10018","10004","10005","10007","10008","10009","10010","10020","10013","10002","10015","10014","09020","10016","09007"))
+
+  district_shape=left_join(district_shape, temp, by="COUNTYNAME")
+  district_shape=dplyr::select(district_shape, all_of(c("COUNTYCODE", "COUNTYNAME", names(district_shape)[2:(ncol(district_shape)-1)])))
+
+  if (dtype=="text"){
+    if (nchar(out)!=0 & out!=F){
+      write.csv(district_shape, out, row.names=F)
+    }
+  }else if (dtype=="sf"){
+    district_shape$geometry=st_as_sfc(district_shape$geometry)
+    district_shape=st_sf(district_shape, crs=4326)
+
+    if (grepl(".shp", out) & out!=F){
+      write_sf(district_shape, out, layer_options="ENCODING=UTF-8")
+    }
+  }
+  return(district_shape)
+}
 
 
 
