@@ -96,7 +96,7 @@ usethis::use_package("progress")
 #     grepl("\u4e00\u7d1a", DATANAME) ~ "SA1",
 #     grepl("\u4e8c\u7d1a", DATANAME) ~ "SA2"
 #   ),
-#   TIME_NUM=mapply(function(x) as.numeric(strsplit(TIME, "Y|M")[[x]][1])*12+as.numeric(strsplit(TIME, "Y|M")[[x]][2]), c(1:nrow(.))))
+#   TIME_NUM=mapply(function(x) (as.numeric(strsplit(TIME, "Y|M")[[x]][1])+1911)*12+as.numeric(strsplit(TIME, "Y|M")[[x]][2]), c(1:nrow(.))))
 # write.csv(catalog_temp, "./others/statistical_area.csv", row.names=F)
 
 
