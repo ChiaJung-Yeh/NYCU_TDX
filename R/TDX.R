@@ -100,8 +100,10 @@ usethis::use_package("progress")
 #     grepl("\u4e8c\u7d1a", DATANAME) ~ "SA2"
 #   ),
 #   TIME_NUM=mapply(function(x) (as.numeric(strsplit(TIME, "Y|M")[[x]][1])+1911)*12+as.numeric(strsplit(TIME, "Y|M")[[x]][2]), c(1:nrow(.))),
-#   TIME_lab=paste0(TIME_NUM %/% 12, "-", ifelse(TIME_NUM %% 12==0, 12, ifelse(nchar(TIME_NUM %% 12)==1, paste0("0", TIME_NUM %% 12), TIME_NUM %% 12))))
+#   TIME_lab=paste0(as.numeric(mapply(function(x) strsplit(TIME, "Y|M")[[x]][1], c(1:nrow(.))))+1911, "-", mapply(function(x) strsplit(TIME, "Y|M")[[x]][2], c(1:nrow(.)))))
 # write.csv(catalog_temp, "./others/statistical_area.csv", row.names=F)
+#
+
 
 
 
@@ -2251,9 +2253,14 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
       time_num=as.numeric(unlist(strsplit(time, "-")))
       time_num=time_num[1]*12+time_num[2]
       all_data_temp=all_data[which.min(abs(all_data$TIME_NUM-time_num)),]
+      if(all_data_temp$TIME_lab!=time){
+        cat(paste0("Data ", all_data_temp$TIME_lab, ".\n"))
+      }else{
+        cat(paste0("Download the data in ", all_data_temp$TIME_lab, ".\n"))
+      }
     }else{
       all_data_temp=all_data[which.max(all_data$TIME_NUM),]
-      cat(paste0("Download the latest data ", ))
+      cat(paste0("Download the latest data ", all_data_temp$TIME_lab, ".\n"))
     }
   }else{
     if(!is.null(time)){cat("Argument 'time' is deprecated.")}
