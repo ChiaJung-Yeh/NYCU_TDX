@@ -89,7 +89,7 @@ library(archive)
 #     grepl("\u4e8c\u7d1a", UNIT) ~ "SA2",
 #     grepl("\u6751\u91cc", UNIT) ~ "Village",
 #     grepl("\u9109\u93ae\u5e02\u5340", UNIT) ~ "Town",
-#     grepl("\u7e23\u5e02", UNIT) ~ "Village"
+#     grepl("\u7e23\u5e02", UNIT) ~ "County"
 #   ))
 # catalog_temp$TIME_NUM=mapply(function(x) (as.numeric(strsplit(catalog_temp$TIME, "Y|M")[[x]][1])+1911)*12+as.numeric(strsplit(catalog_temp$TIME, "Y|M")[[x]][2]), c(1:nrow(catalog_temp)))
 # catalog_temp$TIME_lab=paste0(as.numeric(mapply(function(x) strsplit(catalog_temp$TIME, "Y|M")[[x]][1], c(1:nrow(catalog_temp))))+1911, "-", mapply(function(x) strsplit(catalog_temp$TIME, "Y|M")[[x]][2], c(1:nrow(catalog_temp))))
@@ -2352,14 +2352,27 @@ Population=function(level, time, age=F, out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  # check if the month is valid
-  if(nchar(time)!=7 | !grepl("-", time)){
-    stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+  time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+  all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/pop_area_time.csv")%>%
+    filter(SA==level)
+
+  if(!is.null(time)){
+    if(nchar(time)!=7 | !grepl("-", time)){
+      stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+    }
+    time_num=as.numeric(unlist(strsplit(time, "-")))
+    time_num=time_num[1]*12+time_num[2]
+    all_data_temp=all_data[which.min(abs(all_data$TIME_NUM-time_num)),]
+    if(all_data_temp$TIME_lab!=time){
+      cat(paste0("Data ", time, " is not avaliable. Download data ", all_data_temp$TIME_lab, " instead.\nAll data available for ", district, " is listed below:\n"), paste(all_data$TIME_lab, collapse=", "), "\n")
+    }else{
+      cat(paste0("Download the data in ", all_data_temp$TIME_lab, ".\n"))
+    }
+  }else{
+    all_data_temp=all_data[which.max(all_data$TIME_NUM),]
+    cat(paste0("Download the latest data ", all_data_temp$TIME_lab, ".\nIf a specific time of data is required, please set the argument 'time'.\n"))
   }
 
-  time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
-  area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/pop_area_time.csv")
-  area_time$TIME=factor(area_time$TIME, levels=(data.frame(TIME=unique(area_time$TIME), TIME_temp=as.numeric(gsub("Y|M", "", unique(area_time$TIME)))) %>% arrange(TIME_temp))$TIME)
 
   space=c("\u7e23\u5e02","\u9109\u93ae\u5e02\u5340","\u6751\u91cc","\u6700\u5c0f\u7d71\u8a08\u5340","\u4e00\u7d1a\u767c\u5e03\u5340","\u4e8c\u7d1a\u767c\u5e03\u5340")[which(district==c("County","Town","Village","SA0","SA1","SA2"))]
   age_temp=c("\u4e94\u6b72\u5e74\u9f61\u7d44\u6027\u5225\u4eba\u53e3\u7d71\u8a08","\u4eba\u53e3\u7d71\u8a08")[which(age==c(T,F))]
