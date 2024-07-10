@@ -2231,24 +2231,23 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
 
 
 #' @export
-District_Shape=function(district, time=NULL, dtype="text", out=F){
+District_Shape=function(district, time=NULL, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
   options(timeout=1000)
 
-  district="Town"
-  time="2018-05"
+  district="Village"
+  time="2022-10"
 
-  if(!district %in% c("County","Town","Village")){
+  if(district %in% c("SA0","SA1","SA2")){
     all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/statistical_area.csv")%>%
       filter(SA==district)
     if(!is.null(time)){
       if(nchar(time)!=7 | !grepl("-", time)){
         stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
       }
-      time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
       time_num=as.numeric(unlist(strsplit(time, "-")))
       time_num=time_num[1]*12+time_num[2]
       all_data_temp=all_data[which.min(abs(all_data$TIME_NUM-time_num)),]
@@ -2261,6 +2260,7 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
       all_data_temp=all_data[which.max(all_data$TIME_NUM),]
       warning(paste0("Download the latest data ", all_data_temp$TIME_lab, ".\nIf a specific time of data is required, please set the argument 'time'."))
     }
+    time_rev=all_data_temp$TIME
   }else{
     if(!is.null(time)){warning("Argument 'time' is deprecated.")}
   }
@@ -2273,12 +2273,11 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
   }else if(district=="Village"){
     url="https://maps.nlsc.gov.tw/download/%E6%9D%91(%E9%87%8C)%E7%95%8C(TWD97_121%E5%88%86%E5%B8%B6).zip"
   }else if(district=="SA0"){
-    if(!is.null(time)){
-      url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=B%2fAMiCXtTLpw0dsuDX3ECw%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
-    }
-
-    time=NULL
-    url=""
+    url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=B%2fAMiCXtTLpw0dsuDX3ECw%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
+  }else if(district=="SA1"){
+    url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=KauzeQbZ0OwB7oPXscC47g%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
+  }else if(district=="SA2"){
+    url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=w6DncCAc5Scpyqawns3cBg%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
   }else{
     stop(paste0("Parameter 'district' should be 'County', 'Town', 'Village', 'SA0', 'SA1', or 'SA2'."))
   }
@@ -2300,32 +2299,27 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
     xml_file=xmlParse(xml_file)
     saveXML(xml_file, file=paste0(tempdir(), "/xml_file.gml"), encoding="UTF-8")
     district_shape=st_read(paste0(tempdir(), "/xml_file.gml"))
-    towncode=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/TOWNCODE.csv")
+    towncode=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/TOWNCODE.csv", colClasses=c("COUNTYCODE"="character","TOWNCODE"="character"))
 
     if(district=="SA0"){
-      st_geometry(district_shape)="geometry"
-      colnames(district_shape)=c("temp0","SA0CODE","temp1","TOWNCODE","temp_TOWNNAME","COUNTYCODE","temp_COUNTYNAME","AREA","temp2","temp3","temp4","temp5","temp6","temp7","SA1CODE","SA2CODE","temp8","Population","Household","Date","geometry")
-      district_shape=district_shape[, !grepl("temp", names(district_shape))]
-      district_shape=left_join(district_shape, towncode)
-      nchar(district_shape$TOWNCODE)
+      colnames(district_shape)=c("temp0","SA0CODE","temp1","TOWNCODE","temp_TOWNNAME","COUNTYCODE","temp_COUNTYNAME","AREA","temp2","temp3","temp4","temp5","temp6","temp7","SA1CODE","SA2CODE","temp8","Population","Household","temp9","geometry")
+    }else if(district=="SA1"){
+      colnames(district_shape)=c("temp0","SA1CODE","temp1","TOWNCODE","temp_TOWNNAME","COUNTYCODE","temp_COUNTYNAME","AREA","temp2","temp3","temp4","temp5","temp6","temp7","temp8","temp9","SA2CODE","Population","Household","temp10","geometry")
+    }else if(district=="SA2"){
+      colnames(district_shape)=c("temp0","SA2CODE","temp1","TOWNCODE","temp_TOWNNAME","COUNTYCODE","temp_COUNTYNAME","AREA","temp2","temp3","temp4","temp5","temp6","temp7","temp8","temp9","temp10","Population","Household","temp10","geometry")
     }
+
+    st_geometry(district_shape)="geometry"
+    district_shape=district_shape[, !grepl("temp", names(district_shape))]
+    district_shape$TOWNCODE=ifelse(nchar(district_shape$TOWNCODE)==7, paste0("0", district_shape$TOWNCODE), district_shape$TOWNCODE)
+    district_shape$COUNTYCODE=ifelse(nchar(district_shape$COUNTYCODE)==4, paste0("0", district_shape$COUNTYCODE), district_shape$COUNTYCODE)
+    district_shape=left_join(district_shape, towncode, by=c("TOWNCODE","COUNTYCODE"))
+    district_shape=st_zm(district_shape, drop=T)
   }
-  district_shape[!district_shape$TOWNCODE %in% ttt$鄉鎮市區代碼,]
-  ttt[!ttt$鄉鎮市區代碼 %in% district_shape$TOWNCODE,]
 
-
-
-  if (dtype=="text"){
-    if (nchar(out)!=0 & out!=F){
-      write.csv(district_shape, out, row.names=F)
-    }
-  }else if (dtype=="sf"){
-    district_shape$geometry=st_as_sfc(district_shape$geometry)
-    district_shape=st_sf(district_shape, crs=4326)
-
-    if (grepl(".shp", out) & out!=F){
-      write_sf(district_shape, out, layer_options="ENCODING=UTF-8")
-    }
+  district_shape=st_sf(district_shape, crs=3826)
+  if (grepl(".shp", out) & out!=F){
+    write_sf(district_shape, out, layer_options="ENCODING=UTF-8")
   }
   return(district_shape)
 }
