@@ -10,17 +10,17 @@ library(data.table)
 library(progress)
 library(archive)
 
-usethis::use_package("dplyr")
-usethis::use_package("jsonlite")
-usethis::use_package("XML")
-usethis::use_package("xml2")
-usethis::use_package("httr")
-usethis::use_package("sf")
-usethis::use_package("urltools")
-usethis::use_package("cli")
-usethis::use_package("data.table")
-usethis::use_package("progress")
-usethis::use_package("archive")
+# usethis::use_package("dplyr")
+# usethis::use_package("jsonlite")
+# usethis::use_package("XML")
+# usethis::use_package("xml2")
+# usethis::use_package("httr")
+# usethis::use_package("sf")
+# usethis::use_package("urltools")
+# usethis::use_package("cli")
+# usethis::use_package("data.table")
+# usethis::use_package("progress")
+# usethis::use_package("archive")
 
 # TDX_County=read.table("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt", encoding="UTF-8", sep=",", header=T)
 # usethis::use_data(TDX_County, overwrite=T)
@@ -82,7 +82,17 @@ usethis::use_package("archive")
 #     grepl("\u4eba\u53e3\u7d71\u8a08", DATANAME) ~ "\u4eba\u53e3\u7d71\u8a08"
 #   ))%>%
 #   group_by(DATANAME, UNIT, TIME)%>%
-#   summarise(SPACE=paste(SPACE, collapse="|"))
+#   summarise(SPACE=paste(SPACE, collapse="|"))%>%
+#   mutate(SA=case_when(
+#     grepl("\u6700\u5c0f", UNIT) ~ "SA0",
+#     grepl("\u4e00\u7d1a", UNIT) ~ "SA1",
+#     grepl("\u4e8c\u7d1a", UNIT) ~ "SA2",
+#     grepl("\u6751\u91cc", UNIT) ~ "Village",
+#     grepl("\u9109\u93ae\u5e02\u5340", UNIT) ~ "Town",
+#     grepl("\u7e23\u5e02", UNIT) ~ "Village"
+#   ))
+# catalog_temp$TIME_NUM=mapply(function(x) (as.numeric(strsplit(catalog_temp$TIME, "Y|M")[[x]][1])+1911)*12+as.numeric(strsplit(catalog_temp$TIME, "Y|M")[[x]][2]), c(1:nrow(catalog_temp)))
+# catalog_temp$TIME_lab=paste0(as.numeric(mapply(function(x) strsplit(catalog_temp$TIME, "Y|M")[[x]][1], c(1:nrow(catalog_temp))))+1911, "-", mapply(function(x) strsplit(catalog_temp$TIME, "Y|M")[[x]][2], c(1:nrow(catalog_temp))))
 # write.csv(catalog_temp, "./others/pop_area_time.csv", row.names=F)
 # catalog_temp=filter(catalog, grepl("\u7d71\u8a08\u5340\u570b\u571f\u5229\u7528\u8abf\u67e5\u7d71\u8a08", DATANAME))%>%
 #   mutate(DATANAME="\u7d71\u8a08\u5340\u570b\u571f\u5229\u7528\u8abf\u67e5\u7d71\u8a08")%>%
