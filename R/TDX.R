@@ -2239,9 +2239,6 @@ District_Shape=function(district, time=NULL, out=F){
   if (!require(sf)) install.packages("sf")
   options(timeout=1000)
 
-  district="Village"
-  time="2022-10"
-
   if(district %in% c("SA0","SA1","SA2")){
     all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/statistical_area.csv")%>%
       filter(SA==district)
@@ -2262,8 +2259,10 @@ District_Shape=function(district, time=NULL, out=F){
       warning(paste0("Download the latest data ", all_data_temp$TIME_lab, ".\nIf a specific time of data is required, please set the argument 'time'."))
     }
     time_rev=all_data_temp$TIME
-  }else{
+  }else if(district %in% c("County","Town","Village")){
     if(!is.null(time)){warning("Argument 'time' is deprecated.")}
+  }else{
+    stop(paste0("Parameter 'district' should be 'County', 'Town', 'Village', 'SA0', 'SA1', or 'SA2'."))
   }
 
 
@@ -2279,8 +2278,6 @@ District_Shape=function(district, time=NULL, out=F){
     url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=KauzeQbZ0OwB7oPXscC47g%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
   }else if(district=="SA2"){
     url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=w6DncCAc5Scpyqawns3cBg%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
-  }else{
-    stop(paste0("Parameter 'district' should be 'County', 'Town', 'Village', 'SA0', 'SA1', or 'SA2'."))
   }
 
   unlink(list.files(tempdir(), full.names=T), recursive=T)
