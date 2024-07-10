@@ -2237,6 +2237,8 @@ District_Shape=function(district, time=NULL, out=F){
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
+  if (!require(archive)) install.packages("archive")
+  if (!require(XML)) install.packages("XML")
   options(timeout=1000)
 
   if(district %in% c("SA0","SA1","SA2")){
@@ -2264,7 +2266,6 @@ District_Shape=function(district, time=NULL, out=F){
   }else{
     stop(paste0("Parameter 'district' should be 'County', 'Town', 'Village', 'SA0', 'SA1', or 'SA2'."))
   }
-
 
   if(district=="County"){
     url="https://maps.nlsc.gov.tw/download/%E7%B8%A3%E5%B8%82%E7%95%8C%E7%B7%9A(TWD97%E7%B6%93%E7%B7%AF%E5%BA%A6).zip"
