@@ -2289,6 +2289,7 @@ District_Shape=function(district, time=NULL, out=F){
     dir_files=dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="shp")
     dir_files=dir_files[which.max(file.info(dir_files)$size)]
     district_shape=read_sf(dir_files)
+    district_shape=st_transform(district_shape, crs=3826)
   }else{
     dir_files=dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="rar")
     # archive(dir_files)
@@ -2314,9 +2315,10 @@ District_Shape=function(district, time=NULL, out=F){
     district_shape$COUNTYCODE=ifelse(nchar(district_shape$COUNTYCODE)==4, paste0("0", district_shape$COUNTYCODE), district_shape$COUNTYCODE)
     district_shape=left_join(district_shape, towncode, by=c("TOWNCODE","COUNTYCODE"))
     district_shape=st_zm(district_shape, drop=T)
+    district_shape=st_sf(district_shape, crs=3826)
   }
 
-  district_shape=st_sf(district_shape, crs=3826)
+
   if (grepl(".shp", out) & out!=F){
     write_sf(district_shape, out, layer_options="ENCODING=UTF-8")
   }
