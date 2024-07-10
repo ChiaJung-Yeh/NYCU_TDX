@@ -21,5 +21,6 @@ Imports:
     cli,
     xml2,
     progress,
-    XML
+    XML,
+    archive
 RoxygenNote: 7.2.3
