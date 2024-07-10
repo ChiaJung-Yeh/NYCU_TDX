@@ -2740,27 +2740,14 @@ Bike_OD_His=function(bikesys, time, out=F){
 
 
 #' @export
-Landuse=function(district, year, dtype="text", out=F){
+Landuse=function(district, year, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
   if (!require(sf)) install.packages("sf")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
-    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
-  }
-  if(dtype=="text"){
-    dtype_rev="CSV"
-  }else if(dtype=="sf"){
-    dtype_rev="SHP"
-  }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
-  }
-  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
-    stop("The file name must contain '.shp' when exporting shapefile.\n")
-  }
-  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
-    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+    stop("The file name must contain '.csv' or '.txt'.\n")
   }
 
   if(year<2014){
