@@ -99,6 +99,8 @@ library(archive)
 #   mutate(DATANAME="\u7d71\u8a08\u5340\u570b\u571f\u5229\u7528\u8abf\u67e5\u7d71\u8a08")%>%
 #   group_by(DATANAME, UNIT, TIME)%>%
 #   summarise(SPACE=paste(SPACE, collapse="|"))
+# catalog_temp$Year=as.numeric(gsub("Y", "", catalog_temp$TIME))+1911
+# catalog_temp=arrange(catalog_temp, DATANAME, UNIT, Year)
 # write.csv(catalog_temp, "./others/landuse_area_time.csv", row.names=F)
 # catalog_temp=filter(catalog, grepl("\u5de5\u5546\u5bb6\u6578", DATANAME), !TIME %in% c("97Y","98Y"))%>%
 #   group_by(DATANAME, UNIT, TIME)%>%
