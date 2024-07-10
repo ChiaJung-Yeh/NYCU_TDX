@@ -99,7 +99,8 @@ usethis::use_package("progress")
 #     grepl("\u4e00\u7d1a", DATANAME) ~ "SA1",
 #     grepl("\u4e8c\u7d1a", DATANAME) ~ "SA2"
 #   ),
-#   TIME_NUM=mapply(function(x) (as.numeric(strsplit(TIME, "Y|M")[[x]][1])+1911)*12+as.numeric(strsplit(TIME, "Y|M")[[x]][2]), c(1:nrow(.))))
+#   TIME_NUM=mapply(function(x) (as.numeric(strsplit(TIME, "Y|M")[[x]][1])+1911)*12+as.numeric(strsplit(TIME, "Y|M")[[x]][2]), c(1:nrow(.))),
+#   TIME_lab=paste0(TIME_NUM %/% 12, "-", ifelse(TIME_NUM %% 12==0, 12, ifelse(nchar(TIME_NUM %% 12)==1, paste0("0", TIME_NUM %% 12), TIME_NUM %% 12))))
 # write.csv(catalog_temp, "./others/statistical_area.csv", row.names=F)
 
 
@@ -2237,26 +2238,40 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
   if (!require(sf)) install.packages("sf")
   options(timeout=1000)
 
-  all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/statistical_area.csv")
+  time="2018-12"
+
+  if(!district %in% c("County","Town","Village")){
+    all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/statistical_area.csv")%>%
+      filter(SA==district)
+    if(!is.null(time)){
+      if(nchar(time)!=7 | !grepl("-", time)){
+        stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+      }
+      time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+      time_num=as.numeric(unlist(strsplit(time, "-")))
+      time_num=time_num[1]*12+time_num[2]
+      all_data_temp=all_data[which.min(abs(all_data$TIME_NUM-time_num)),]
+    }else{
+      all_data_temp=all_data[which.max(all_data$TIME_NUM),]
+      cat(paste0("Download the latest data ", ))
+    }
+  }else{
+    if(!is.null(time)){cat("Argument 'time' is deprecated.")}
+  }
+
+
 
   if(district=="County"){
     url="https://maps.nlsc.gov.tw/download/%E7%B8%A3%E5%B8%82%E7%95%8C%E7%B7%9A(TWD97%E7%B6%93%E7%B7%AF%E5%BA%A6).zip"
-    if(!is.null(time)){cat("Argument 'time' is deprecated.")}
   }else if(district=="Town"){
     url="https://maps.nlsc.gov.tw/download/%E9%84%89%E9%8E%AE%E5%B8%82%E5%8D%80%E7%95%8C%E7%B7%9A(TWD97%E7%B6%93%E7%B7%AF%E5%BA%A6).zip"
-    if(!is.null(time)){cat("Argument 'time' is deprecated.")}
   }else if(district=="Village"){
     url="https://maps.nlsc.gov.tw/download/%E6%9D%91(%E9%87%8C)%E7%95%8C(TWD97_121%E5%88%86%E5%B8%B6).zip"
-    if(!is.null(time)){cat("Argument 'time' is deprecated.")}
   }else if(district=="SA0"){
-    time="2021-12"
-    time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
     if(!is.null(time)){
       url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=B%2fAMiCXtTLpw0dsuDX3ECw%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
     }
-    if(nchar(time)!=7 | !grepl("-", time)){
-      stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
-    }
+
     time=NULL
     url=""
   }else{
@@ -2280,15 +2295,13 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
     district_shape=st_read(paste0(tempdir(), "/xml_file.gml"))
     towncode=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/TOWNCODE.csv")
 
-
     if(district=="SA0"){
-      colnames(district_shape)=c("gml_id","SA0CODE","temp1","TOWNCODE","")
-      district_shape$gml_id=NULL
+      st_geometry(district_shape)="geometry"
+      colnames(district_shape)=c("temp0","SA0CODE","temp1","TOWNCODE","temp_TOWNNAME","COUNTYCODE","temp_COUNTYNAME","AREA","temp2","temp3","temp4","temp5","temp6","temp7","SA1CODE","SA2CODE","temp8","Population","Household","Date","geometry")
+      district_shape=district_shape[,!grepl("temp", names(district_shape))]
+      district_shape=left_join(district_shape, towncode)
     }
-
   }
-
-
 
 
   if (dtype=="text"){
