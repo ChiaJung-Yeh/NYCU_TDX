@@ -2252,17 +2252,17 @@ District_Shape=function(district, time=NULL, out=F){
       time_num=time_num[1]*12+time_num[2]
       all_data_temp=all_data[which.min(abs(all_data$TIME_NUM-time_num)),]
       if(all_data_temp$TIME_lab!=time){
-        warning(paste0("Data ", time, " is not avaliable. Download data ", all_data_temp$TIME_lab, " instead.\nAll data available for ", district, " is listed below:\n"), paste(all_data$TIME_lab, collapse=", "))
+        cat(paste0("Data ", time, " is not avaliable. Download data ", all_data_temp$TIME_lab, " instead.\nAll data available for ", district, " is listed below:\n"), paste(all_data$TIME_lab, collapse=", "), "\n")
       }else{
-        warning(paste0("Download the data in ", all_data_temp$TIME_lab, ".\n"))
+        cat(paste0("Download the data in ", all_data_temp$TIME_lab, ".\n"))
       }
     }else{
       all_data_temp=all_data[which.max(all_data$TIME_NUM),]
-      warning(paste0("Download the latest data ", all_data_temp$TIME_lab, ".\nIf a specific time of data is required, please set the argument 'time'."))
+      cat(paste0("Download the latest data ", all_data_temp$TIME_lab, ".\nIf a specific time of data is required, please set the argument 'time'.\n"))
     }
     time_rev=all_data_temp$TIME
   }else if(district %in% c("County","Town","Village")){
-    if(!is.null(time)){warning("Argument 'time' is deprecated.")}
+    if(!is.null(time)){cat("Argument 'time' is deprecated.\n")}
   }else{
     stop(paste0("Parameter 'district' should be 'County', 'Town', 'Village', 'SA0', 'SA1', or 'SA2'."))
   }
