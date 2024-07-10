@@ -20,7 +20,7 @@ usethis::use_package("urltools")
 usethis::use_package("cli")
 usethis::use_package("data.table")
 usethis::use_package("progress")
-usethis::use_package("progress")
+usethis::use_package("archive")
 
 # TDX_County=read.table("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt", encoding="UTF-8", sep=",", header=T)
 # usethis::use_data(TDX_County, overwrite=T)
@@ -2241,6 +2241,10 @@ District_Shape=function(district, time=NULL, out=F){
   if (!require(XML)) install.packages("XML")
   options(timeout=1000)
 
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+  }
+
   if(district %in% c("SA0","SA1","SA2")){
     all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/statistical_area.csv")%>%
       filter(SA==district)
@@ -2328,42 +2332,19 @@ District_Shape=function(district, time=NULL, out=F){
 
 
 #' @export
-Population=function(level, time, age=F, dtype="text", out=F){
+Population=function(level, time, age=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
   if (!require(sf)) install.packages("sf")
 
-  if(dtype=="text"){
-    dtype_rev="CSV"
-  }else if(dtype=="sf"){
-    dtype_rev="SHP"
-    col_new_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/pop_col_new_name.csv")
-  }else{
-    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
-  }
-  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
-    stop("The file name must contain '.shp' when exporting shapefile.\n")
-  }
-  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
+  if(!(grepl(".csv|.txt", out)) & out!=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
-
 
   # check if the month is valid
   if(nchar(time)!=7 | !grepl("-", time)){
     stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
-  }
-  if(as.numeric(substr(time, 1, regexpr("-", time)-1))<2008){
-    stop("Only year after 2008 is provided!")
-  }
-  if(age==F){
-    if(!as.numeric(substr(time, regexpr("-", time)+1, 7)) %in% c(3,6,9,12)){
-      stop("Data of ", time, " is not available!\nNote that the month must be March, June, September, or December. This demographic data is updated every three months!")
-    }
-  }else{
-    if(!as.numeric(substr(time, regexpr("-", time)+1, 7)) %in% c(6,12)){
-      stop("Data of ", time, " is not available!\nNote that the month must be June or December. This demographic data is updated every six months!")    }
   }
 
   time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
@@ -2437,10 +2418,6 @@ Population=function(level, time, age=F, dtype="text", out=F){
     population_temp[, grepl("CNT|RAT|DEN", colnames(population_temp))]=matrix(as.numeric(as.matrix(population_temp[, grepl("CNT|RAT|DEN", colnames(population_temp))])), nrow=nrow(population_temp))
     unlink(paste0(tempdir(), "/temp_pop_TDX"), recursive=T)
     file.remove(paste0(tempdir(), "/temp_pop_TDX.zip"))
-
-    # if(dtype=="sf"){
-    #
-    # }
 
     population=rbind(population, population_temp)
     rm(population_temp)
@@ -3439,106 +3416,4 @@ Bus_Distance=function(access_token, county, routeid, out=F){
   }
   return(busdist_ALL)
 }
-
-
-
-
-
-# Ship_Schedule=function(access_token, county, out=F){
-#   if (!require(dplyr)) install.packages("dplyr")
-#   if (!require(jsonlite)) install.packages("jsonlite")
-#   if (!require(httr)) install.packages("httr")
-#
-#   url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/GeneralSchedule/Domestic/City/", county, "?&%24format=JSON")
-#   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#
-#   tryCatch({
-#     ship_schedule=fromJSON(content(x, as="text"))
-#   }, error=function(err){
-#     stop(paste0("Your access token is invalid!"))
-#   })
-#   if("Message" %in% names(ship_schedule)){
-#     if(county %in% TDX_County$Code){
-#       stop(paste0("'",county, "' has no ship route or data is not avaliable.\n", ship_schedule$Message))
-#     }
-#     else{
-#       print(TDX_County)
-#       stop(paste0("City: '", county, "' is not valid. Please check out the parameter table above."))
-#     }
-#   }
-#
-#   ship_schedule=ship_schedule$GeneralSchedules
-#   ship_serviceday=mapply(function(x) ifelse(is.null(ship_schedule$Timetables[[x]]$ServiceDay), list(data.frame("Monday"=NA, "Tuesday"=NA, "Wednesday"=NA, "Thursday"=NA, "Friday"=NA,
-#                                                                                                                "Saturday"=NA, "Sunday"=NA, "NationalHolidays"=NA)), list(ship_schedule$Timetables[[x]]$ServiceDay)),
-#                          c(1:nrow(ship_schedule)))%>%
-#     rbindlist()
-#   ship_tripid=unlist(mapply(function(x) ifelse(is.null(ship_schedule$Timetables[[x]]$TripID), NA, list(ship_schedule$Timetables[[x]]$TripID)), c(1:nrow(ship_schedule))))
-#
-#   mapply(function(x) ifelse(is.null(ship_schedule$Timetables[[x]]$Stoptimes), list(data.frame("Monday"=NA, "Tuesday"=NA, "Wednesday"=NA, "Thursday"=NA, "Friday"=NA,
-#                                                                                                "Saturday"=NA, "Sunday"=NA, "NationalHolidays"=NA)), list(ship_schedule$Timetables[[x]]$Stoptimes)),
-#          c(1:nrow(ship_schedule)))
-#
-#
-#   ship_serviceday
-#   ship_table=mapply(function(x) ifelse(is.null(ship_schedule$Timetables[[x]]$ServiceDay), list(data.frame("Monday"=NA, "Tuesday"=NA, "Wednesday"=NA, "Thursday"=NA, "Friday"=NA,
-#                                                                                                           "Saturday"=NA, "Sunday"=NA, "NationalHolidays"=NA)), list(ship_schedule$Timetables[[x]]$ServiceDay)),
-#                     c(1:nrow(ship_schedule)))
-#
-#   ship_schedule$Timetables[[1]]$ServiceDay
-#
-#
-#   mapply(function(x) ship_schedule$Frequencies[[x]], c(1:nrow(ship_schedule)))
-#
-#   x=xml_find_all(x, xpath = ".//d1:GeneralSchedules")
-#   route_info=data.frame(RouteID=xml_text(xml_find_all(x, xpath=".//d1:RouteID")),
-#                         RouteName=xml_text(xml_find_all(x, xpath=".//d1:RouteName//d1:Zh_tw")),
-#                         Direction=xml_text(xml_find_all(x, xpath=".//d1:Direction")),
-#                         EffectiveDate=xml_text(xml_find_all(x, xpath=".//d1:EffectiveDate")),
-#                         ExpireDate=xml_text(xml_find_all(x, xpath=".//d1:ExpireDate")),
-#                         OperatorID=xml_text(xml_find_all(x, xpath=".//d1:OperatorID")))
-#
-#   url=paste0("https://tdx.transportdata.tw/api/basic/v3/Ship/Operator/Domestic/City/", county, "?&%24format=XML")
-#   x_temp=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
-#   x_temp=read_xml(x_temp)
-#   operator_info=data.frame(OperatorID=xml_text(xml_find_all(x_temp, xpath=".//d1:OperatorID")),
-#                         OperatorName=xml_text(xml_find_all(x_temp, xpath=".//d1:OperatorName//d1:Zh_tw")))
-#   route_info=left_join(route_info, operator_info)
-#
-#
-#   # check whether the schedule is in timetable form or frequency form
-#   tt=as.character(xml_children(x))
-#   route_info1=route_info[grepl("Timetables", tt),]
-#   route_info2=route_info[grepl("Frequencies", tt),]
-#
-#   if (nrow(route_info1)!=0){
-#     ship_schedule_1=data.frame(temp_id=c(1:length(xml_find_all(x, xpath = ".//d1:Timetable"))))
-#
-#     xml_node=c("Timetable//d1:ServiceDay//d1:Sunday","Timetable//d1:ServiceDay//d1:Monday","Timetable//d1:ServiceDay//d1:Tuesday",
-#                "Timetable//d1:ServiceDay//d1:Wednesday","Timetable//d1:ServiceDay//d1:Thursday","Timetable//d1:ServiceDay//d1:Friday",
-#                "Timetable//d1:ServiceDay//d1:Saturday","Timetable//d1:ServiceDay//d1:NationalHolidays","Timetable//d1:StopTimes//d1:StopTime//d1:StopSequence",
-#                "Timetable//d1:StopTimes//d1:StopTime//d1:StopUID","Timetable//d1:StopTimes//d1:StopTime//d1:StopName//d1:Zh_tw",
-#                "Timetable//d1:StopTimes//d1:StopTime//d1:ArrivalTime","Timetable//d1:StopTimes//d1:StopTime//d1:DepartureTime")
-#     xml_node_name=c("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","NationalHolidays","StopSequence","StopUID","StopName","ArrivalTime","DepartureTime")
-#     xml_text(xml_find_all(x, xpath=paste0(".//d1:StopSequence")))
-#     for (i in xml_node){
-#       node_name=xml_node_name[which(xml_node==i)]
-#       temp=xml_text(xml_find_all(x, xpath=paste0(".//d1:Timetables//d1:", i)))
-#       temp_id=grepl(node_name, xml_find_all(x, xpath=".//d1:Timetable"))
-#       temp_id=which(temp_id)
-#       temp=data.frame(temp_id, temp)
-#       colnames(temp)[2]=node_name
-#       ship_schedule_1=left_join(ship_schedule_1, temp, by="temp_id")
-#       cat(paste0("Attribute '", node_name, "' is parsed\n"))
-#     }
-#   }
-#
-#
-#   xml_length(xml_find_all(x, xpath = ".//d1:Frequencies"))
-#
-#
-#   if (nchar(out)!=0 & out!=F){
-#     write.csv(stopofroute, out, row.names=F)
-#   }
-#   return(stopofroute)
-# }
 
