@@ -102,8 +102,6 @@ usethis::use_package("progress")
 #   TIME_NUM=mapply(function(x) (as.numeric(strsplit(TIME, "Y|M")[[x]][1])+1911)*12+as.numeric(strsplit(TIME, "Y|M")[[x]][2]), c(1:nrow(.))),
 #   TIME_lab=paste0(as.numeric(mapply(function(x) strsplit(TIME, "Y|M")[[x]][1], c(1:nrow(.))))+1911, "-", mapply(function(x) strsplit(TIME, "Y|M")[[x]][2], c(1:nrow(.)))))
 # write.csv(catalog_temp, "./others/statistical_area.csv", row.names=F)
-#
-
 
 
 
@@ -2240,7 +2238,8 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
   if (!require(sf)) install.packages("sf")
   options(timeout=1000)
 
-  time="2018-12"
+  district="Town"
+  time="2018-05"
 
   if(!district %in% c("County","Town","Village")){
     all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/statistical_area.csv")%>%
@@ -2254,18 +2253,17 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
       time_num=time_num[1]*12+time_num[2]
       all_data_temp=all_data[which.min(abs(all_data$TIME_NUM-time_num)),]
       if(all_data_temp$TIME_lab!=time){
-        cat(paste0("Data ", all_data_temp$TIME_lab, ".\n"))
+        warning(paste0("Data ", time, " is not avaliable. Download data ", all_data_temp$TIME_lab, " instead.\nAll data available for ", district, " is listed below:\n"), paste(all_data$TIME_lab, collapse=", "))
       }else{
-        cat(paste0("Download the data in ", all_data_temp$TIME_lab, ".\n"))
+        warning(paste0("Download the data in ", all_data_temp$TIME_lab, ".\n"))
       }
     }else{
       all_data_temp=all_data[which.max(all_data$TIME_NUM),]
-      cat(paste0("Download the latest data ", all_data_temp$TIME_lab, ".\n"))
+      warning(paste0("Download the latest data ", all_data_temp$TIME_lab, ".\nIf a specific time of data is required, please set the argument 'time'."))
     }
   }else{
-    if(!is.null(time)){cat("Argument 'time' is deprecated.")}
+    if(!is.null(time)){warning("Argument 'time' is deprecated.")}
   }
-
 
 
   if(district=="County"){
@@ -2290,7 +2288,9 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
   untar(paste0(tempdir(), "/shape.zip"), exdir=paste0(tempdir(), "/shape"))
 
   if(district %in% c("County","Town","Village")){
-    dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="NLSC")
+    dir_files=dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="shp")
+    dir_files=dir_files[which.max(file.info(dir_files)$size)]
+    district_shape=read_sf(dir_files)
   }else{
     dir_files=dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="rar")
     # archive(dir_files)
@@ -2305,10 +2305,14 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
     if(district=="SA0"){
       st_geometry(district_shape)="geometry"
       colnames(district_shape)=c("temp0","SA0CODE","temp1","TOWNCODE","temp_TOWNNAME","COUNTYCODE","temp_COUNTYNAME","AREA","temp2","temp3","temp4","temp5","temp6","temp7","SA1CODE","SA2CODE","temp8","Population","Household","Date","geometry")
-      district_shape=district_shape[,!grepl("temp", names(district_shape))]
+      district_shape=district_shape[, !grepl("temp", names(district_shape))]
       district_shape=left_join(district_shape, towncode)
+      nchar(district_shape$TOWNCODE)
     }
   }
+  district_shape[!district_shape$TOWNCODE %in% ttt$鄉鎮市區代碼,]
+  ttt[!ttt$鄉鎮市區代碼 %in% district_shape$TOWNCODE,]
+
 
 
   if (dtype=="text"){
