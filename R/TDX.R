@@ -2293,11 +2293,11 @@ District_Shape=function(district, time=NULL, out=F){
     dir_files=dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="rar")
     # archive(dir_files)
     con=archive_read(dir_files)
-    xml_file=readLines(con, ok=T)
+    suppressWarnings({xml_file=readLines(con, ok=T)})
     close(con)
     xml_file=xmlParse(xml_file)
     saveXML(xml_file, file=paste0(tempdir(), "/xml_file.gml"), encoding="UTF-8")
-    district_shape=st_read(paste0(tempdir(), "/xml_file.gml"))
+    district_shape=read_sf(paste0(tempdir(), "/xml_file.gml"))
     towncode=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/TOWNCODE.csv", colClasses=c("COUNTYCODE"="character","TOWNCODE"="character"))
 
     if(district=="SA0"){
