@@ -1,5 +1,6 @@
 library(dplyr)
 library(jsonlite)
+library(XML)
 library(xml2)
 library(httr)
 library(sf)
@@ -7,9 +8,11 @@ library(urltools)
 library(cli)
 library(data.table)
 library(progress)
+library(archive)
 
 usethis::use_package("dplyr")
 usethis::use_package("jsonlite")
+usethis::use_package("XML")
 usethis::use_package("xml2")
 usethis::use_package("httr")
 usethis::use_package("sf")
@@ -2232,32 +2235,61 @@ District_Shape=function(district, time=NULL, dtype="text", out=F){
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
+  options(timeout=1000)
 
   all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/statistical_area.csv")
 
   if(district=="County"){
     url="https://maps.nlsc.gov.tw/download/%E7%B8%A3%E5%B8%82%E7%95%8C%E7%B7%9A(TWD97%E7%B6%93%E7%B7%AF%E5%BA%A6).zip"
+    if(!is.null(time)){cat("Argument 'time' is deprecated.")}
   }else if(district=="Town"){
     url="https://maps.nlsc.gov.tw/download/%E9%84%89%E9%8E%AE%E5%B8%82%E5%8D%80%E7%95%8C%E7%B7%9A(TWD97%E7%B6%93%E7%B7%AF%E5%BA%A6).zip"
+    if(!is.null(time)){cat("Argument 'time' is deprecated.")}
   }else if(district=="Village"){
     url="https://maps.nlsc.gov.tw/download/%E6%9D%91(%E9%87%8C)%E7%95%8C(TWD97_121%E5%88%86%E5%B8%B6).zip"
+    if(!is.null(time)){cat("Argument 'time' is deprecated.")}
   }else if(district=="SA0"){
+    time="2021-12"
+    time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+    if(!is.null(time)){
+      url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=B%2fAMiCXtTLpw0dsuDX3ECw%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
+    }
+    if(nchar(time)!=7 | !grepl("-", time)){
+      stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+    }
+    time=NULL
     url=""
   }else{
     stop(paste0("Parameter 'district' should be 'County', 'Town', 'Village', 'SA0', 'SA1', or 'SA2'."))
   }
 
+  unlink(list.files(tempdir(), full.names=T), recursive=T)
   download.file(url, paste0(tempdir(), "/shape.zip"), mode="wb", quiet=T)
   untar(paste0(tempdir(), "/shape.zip"), exdir=paste0(tempdir(), "/shape"))
-  dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="NLSC")
 
-  district_shape=rename(district_shape, geometry=Geometry)
+  if(district %in% c("County","Town","Village")){
+    dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="NLSC")
+  }else{
+    dir_files=dir(paste0(tempdir(), "/shape"), full.names=T, recursive=T, pattern="rar")
+    # archive(dir_files)
+    con=archive_read(dir_files)
+    xml_file=readLines(con, ok=T)
+    close(con)
+    xml_file=xmlParse(xml_file)
+    saveXML(xml_file, file=paste0(tempdir(), "/xml_file.gml"), encoding="UTF-8")
+    district_shape=st_read(paste0(tempdir(), "/xml_file.gml"))
+    towncode=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/TOWNCODE.csv")
 
-  temp=data.frame(COUNTYNAME=TDX_County$County[1:22],
-                  COUNTYCODE=c("63000","65000","68000","66000","67000","64000","10017","10018","10004","10005","10007","10008","10009","10010","10020","10013","10002","10015","10014","09020","10016","09007"))
 
-  district_shape=left_join(district_shape, temp, by="COUNTYNAME")
-  district_shape=dplyr::select(district_shape, all_of(c("COUNTYCODE", "COUNTYNAME", names(district_shape)[2:(ncol(district_shape)-1)])))
+    if(district=="SA0"){
+      colnames(district_shape)=c("gml_id","SA0CODE","temp1","TOWNCODE","")
+      district_shape$gml_id=NULL
+    }
+
+  }
+
+
+
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
