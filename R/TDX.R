@@ -20,6 +20,7 @@ usethis::use_package("urltools")
 usethis::use_package("cli")
 usethis::use_package("data.table")
 usethis::use_package("progress")
+usethis::use_package("progress")
 
 # TDX_County=read.table("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt", encoding="UTF-8", sep=",", header=T)
 # usethis::use_data(TDX_County, overwrite=T)
