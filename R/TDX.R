@@ -2356,7 +2356,6 @@ Population=function(district, time=NULL, age=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
-  if (!require(sf)) install.packages("sf")
   options(timeout=1000)
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
@@ -2752,7 +2751,7 @@ Landuse=function(district, year, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
-  if (!require(sf)) install.packages("sf")
+  if (!require(fs)) install.packages("fs")
   options(timeout=1000)
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
