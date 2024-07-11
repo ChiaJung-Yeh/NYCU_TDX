@@ -98,7 +98,12 @@ library(archive)
 # catalog_temp=filter(catalog, grepl("\u7d71\u8a08\u5340\u570b\u571f\u5229\u7528\u8abf\u67e5\u7d71\u8a08", DATANAME))%>%
 #   mutate(DATANAME="\u7d71\u8a08\u5340\u570b\u571f\u5229\u7528\u8abf\u67e5\u7d71\u8a08")%>%
 #   group_by(DATANAME, UNIT, TIME)%>%
-#   summarise(SPACE=paste(SPACE, collapse="|"))
+#   summarise(SPACE=paste(SPACE, collapse="|"))%>%
+#   mutate(SA=case_when(
+#     grepl("\u6700\u5c0f", UNIT) ~ "SA0",
+#     grepl("\u4e00\u7d1a", UNIT) ~ "SA1",
+#     grepl("\u4e8c\u7d1a", UNIT) ~ "SA2"
+#   ))
 # catalog_temp$Year=as.numeric(gsub("Y", "", catalog_temp$TIME))+1911
 # catalog_temp=arrange(catalog_temp, DATANAME, UNIT, Year)
 # write.csv(catalog_temp, "./others/landuse_area_time.csv", row.names=F)
@@ -2750,8 +2755,10 @@ Landuse=function(district, year, out=F){
     stop("The file name must contain '.csv' or '.txt'.\n")
   }
 
-  if(year<2014){
-    stop("The data only provided after 2014!")
+  all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/landuse_area_time.csv")%>%
+    filter(Year==year)
+  if(year<min(all_data$Year)){
+    stop(paste0("The data only provided after ", min(all_data$Year), "!"))
   }else{
     if(year==2016){
       cat(paste0("Only data of ", paste(TDX_County$Operator[20:21], collapse="、"), " are available in year ", year, "!"))
@@ -2778,13 +2785,13 @@ Landuse=function(district, year, out=F){
   landuse_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/landuse_name.csv")
   if(year %in% c(2014,2015)){
     landuse_name=landuse_name[landuse_name$CATEGORY=="95-104",]
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=40B0320211D3E6476011CBC80C4B1C80&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=40B0320211D3E6476011CBC80C4B1C80&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", all_county)
   }else if(year %in% c(2016:2019)){
     landuse_name=landuse_name[landuse_name$CATEGORY=="105-108",]
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=B11F0EEAAB3753EF83F7930C9EC765DF&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=B11F0EEAAB3753EF83F7930C9EC765DF&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", all_county)
   }else{
     landuse_name=landuse_name[landuse_name$CATEGORY=="109-",]
-    url_all=paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=60B9DDF5BF07FCC53B0F17CD08815027&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", all_county, "&TYPE=", dtype_rev)
+    url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=UobMnDnnf0xMbxoTeOgmPA%3d%3d&STTIME=", year_rev, "&STUNIT=", dis_code, "&BOUNDARY=", all_county)
   }
 
   landuse=data.frame()
