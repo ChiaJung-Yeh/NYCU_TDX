@@ -44,7 +44,7 @@ Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 }
 \examples{
 Landuse(district="SA0", year=2022)
-Landuse(district="SA1", year=2021, dtype="sf", out="./taiwan_landuse.shp")
+Landuse(district="SA1", year=2021, out="./taiwan_landuse.csv")
 }
 \keyword{datasets}
 

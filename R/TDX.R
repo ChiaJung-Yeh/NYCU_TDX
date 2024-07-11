@@ -2746,7 +2746,7 @@ Bike_OD_His=function(bikesys, time, out=F){
 }
 
 
-
+# landuse
 #' @export
 Landuse=function(district, year, out=F){
   if (!require(dplyr)) install.packages("dplyr")

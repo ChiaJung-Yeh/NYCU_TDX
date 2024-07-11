@@ -45,7 +45,7 @@ Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 }
 \examples{
 Population(district="County", time="2022-06")
-Population(district="SA0", time="2022-06", age=T, dtype="sf", out="./taiwan_village_population.shp")
+Population(district="SA0", time="2022-06", age=T, out="./taiwan_SA0_population.csv")
 }
 \keyword{datasets}
 
