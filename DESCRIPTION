@@ -22,5 +22,6 @@ Imports:
     xml2,
     progress,
     XML,
-    archive
+    archive,
+    fs
 RoxygenNote: 7.2.3
