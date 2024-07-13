@@ -126,7 +126,7 @@ library(fs)
 # catalog_temp=filter(catalog, grepl("\u6821\u5225\u6982\u89bd", DATANAME), !grepl("\u7a7a\u5927", DATANAME))%>%
 #   filter(grepl("\u9ad8\u7d1a\u4e2d\u7b49\u5b78\u6821|\u5927\u5c08\u6821\u9662|\u570b\u6c11\u4e2d\u5b78|\u570b\u6c11\u5c0f\u5b78", DATANAME))%>%
 #   select(DATANAME, TIME, SPACE)%>%
-#   mutate(Year=as.numeric(gsub("Y", "", TIME)))%>%
+#   mutate(Year=as.numeric(gsub("Y", "", TIME))+1911)%>%
 #   mutate(Level=case_when(
 #     grepl("\u9ad8\u7d1a\u4e2d\u7b49\u5b78\u6821", DATANAME) ~ "senior",
 #     grepl("\u5927\u5c08\u6821\u9662", DATANAME) ~ "university",
@@ -2904,15 +2904,27 @@ School=function(level, year, dtype="text", out=F){
     stop("The file name must contain '.csv' or '.txt'.\n")
   }
 
+  all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/school_year.csv")
+  all_data_temp=filter(all_data, Year==year, Level==tolower(level))
+  if(nrow(all_data_temp)==0){
+    if(!tolower(level) %in% c("elementary","junior","senior","university")){
+      stop(paste0("'", level, "' is invalid! Argument 'level' must be 'elementary', 'junior', 'senior', or 'university'!"))
+    }else{
+      stop(paste0("Date of '", tolower(level), "' is only available in the following years:\n", paste(sort(unique(filter(all_data, Level==tolower(level))$Year+1911)), collapse=", ")))
+    }
+  }else{
+    year_rev=paste0(year-1911, "Y")
+  }
+
+  url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=uqj1F9fpF00qkT7GLYw22Q%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE)))
+
   if(level=="elementary"){
-    if(year>=2016){
-      url_all=c(paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=WGDFRsnkUB3m2QbnA2f3gA%3d%3d&STTIME=112Y&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B"),
-                paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCC63FAEBDC45AAB048&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)&TYPE=CSV"))
+    if(year)
+      url_all=c(paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=uqj1F9fpF00qkT7GLYw22Q%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3"),
+                paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=LY2FN3oajNfrb%2btxCUBeWw%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)"))
     }else if(year>=2011){
       url_all=c(paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=4D4C0271E1885C92C3C6ABC031BA48CF&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3&TYPE=CSV"),
                 paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=4D4C0271E1885C925D2A0E78C8526388&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)&TYPE=CSV"))
-    }else{
-      stop("Data of junior high school is available only year after 2011!")
     }
   }else if(type=="junior"){
     if(year>=2016){
@@ -2941,14 +2953,13 @@ School=function(level, year, dtype="text", out=F){
     }else{
       stop("Data of senior high school is available only year after 2010!")
     }
-  }else{
-    stop(paste0("'", type, "' is invalid! Argument 'type' must be 'elementary', 'junior', 'senior', or 'university'!"))
   }
 
   school=data.frame()
-  for(url in url_all){
+  for(url in c(1:length(url_all))){
+url=url_all[2]
     unlink(list.files(tempdir(), full.names=T), recursive=T)
-    download.file(url, paste0(tempdir(), "/school_tdx.zip"), mode="wb", quiet=T)
+    download.file(url_all[url], paste0(tempdir(), "/school_tdx.zip"), mode="wb", quiet=T)
     untar(paste0(tempdir(), "/school_tdx.zip"), exdir=paste0(tempdir(), "/school_tdx"))
     dir_file=dir(dir(paste0(tempdir(), "/school_tdx"), full.names=T), full.names=T)
     dir_file=dir_file[grepl("csv", dir_file)]
