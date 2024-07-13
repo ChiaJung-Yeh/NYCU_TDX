@@ -123,7 +123,11 @@ library(fs)
 #   TIME_NUM=mapply(function(x) (as.numeric(strsplit(TIME, "Y|M")[[x]][1])+1911)*12+as.numeric(strsplit(TIME, "Y|M")[[x]][2]), c(1:nrow(.))),
 #   TIME_lab=paste0(as.numeric(mapply(function(x) strsplit(TIME, "Y|M")[[x]][1], c(1:nrow(.))))+1911, "-", mapply(function(x) strsplit(TIME, "Y|M")[[x]][2], c(1:nrow(.)))))
 # write.csv(catalog_temp, "./others/statistical_area.csv", row.names=F)
-
+# catalog_temp=filter(catalog, grepl("\u6821\u5225\u6982\u89bd", DATANAME), !grepl("\u7a7a\u5927", DATANAME))%>%
+#   filter(grepl("\u9ad8\u7d1a\u4e2d\u7b49\u5b78\u6821|\u5927\u5c08\u6821\u9662|\u570b\u6c11\u4e2d\u5b78|\u570b\u6c11\u5c0f\u5b78", DATANAME))%>%
+#   select(DATANAME, TIME, SPACE)%>%
+#   mutate(Year=as.numeric(gsub("Y", "", TIME)))
+# write.csv(catalog_temp, "./others/school_year.csv", row.names=F)
 
 
 #---get the token---#
@@ -2745,7 +2749,7 @@ Bike_OD_His=function(bikesys, time, out=F){
 }
 
 
-# landuse
+
 #' @export
 Landuse=function(district, year, out=F){
   if (!require(dplyr)) install.packages("dplyr")
@@ -2835,7 +2839,7 @@ House_Price=function(year, season, out=F){
   if (!require(dplyr)) install.packages("dplyr")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
-    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+    stop("The file name must contain '.csv' or '.txt'.\n")
   }
   if(year<2012){
     stop("Year is invalid. The data is available from year 2012!")
@@ -2887,20 +2891,16 @@ House_Price=function(year, season, out=F){
 
 
 #' @export
-School=function(type, year, dtype="text", out=F){
+School=function(level, year, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
-  if (!require(sf)) install.packages("sf")
 
-  if(!(grepl(".shp", out)) & out!=F & dtype=="sf"){
-    stop("The file name must contain '.shp' when exporting shapefile.\n")
-  }
   if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
-    stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+    stop("The file name must contain '.csv' or '.txt'.\n")
   }
 
-  if(type=="elementary"){
+  if(level=="elementary"){
     if(year>=2016){
-      url_all=c(paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCC83284A3890F610DF&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3&TYPE=CSV"),
+      url_all=c(paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=WGDFRsnkUB3m2QbnA2f3gA%3d%3d&STTIME=112Y&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B"),
                 paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCC63FAEBDC45AAB048&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)&TYPE=CSV"))
     }else if(year>=2011){
       url_all=c(paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=4D4C0271E1885C92C3C6ABC031BA48CF&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3&TYPE=CSV"),
