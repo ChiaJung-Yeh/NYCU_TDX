@@ -126,7 +126,13 @@ library(fs)
 # catalog_temp=filter(catalog, grepl("\u6821\u5225\u6982\u89bd", DATANAME), !grepl("\u7a7a\u5927", DATANAME))%>%
 #   filter(grepl("\u9ad8\u7d1a\u4e2d\u7b49\u5b78\u6821|\u5927\u5c08\u6821\u9662|\u570b\u6c11\u4e2d\u5b78|\u570b\u6c11\u5c0f\u5b78", DATANAME))%>%
 #   select(DATANAME, TIME, SPACE)%>%
-#   mutate(Year=as.numeric(gsub("Y", "", TIME)))
+#   mutate(Year=as.numeric(gsub("Y", "", TIME)))%>%
+#   mutate(Level=case_when(
+#     grepl("\u9ad8\u7d1a\u4e2d\u7b49\u5b78\u6821", DATANAME) ~ "senior",
+#     grepl("\u5927\u5c08\u6821\u9662", DATANAME) ~ "university",
+#     grepl("\u570b\u6c11\u5c0f\u5b78", DATANAME) ~ "elementary",
+#     grepl("\u570b\u6c11\u4e2d\u5b78", DATANAME) ~ "junior"
+#   ))
 # write.csv(catalog_temp, "./others/school_year.csv", row.names=F)
 
 
