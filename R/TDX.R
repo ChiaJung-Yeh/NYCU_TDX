@@ -2899,6 +2899,9 @@ House_Price=function(year, season, out=F){
 #' @export
 School=function(level, year, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
+  if (!require(urltools)) install.packages("urltools")
+  if (!require(sf)) install.packages("sf")
+  if (!require(fs)) install.packages("fs")
 
   if(dtype=="text"){
     if(!(grepl(".csv|.txt", out)) & out!=F){
