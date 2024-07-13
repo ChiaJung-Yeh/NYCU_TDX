@@ -2900,8 +2900,16 @@ House_Price=function(year, season, out=F){
 School=function(level, year, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
 
-  if(!(grepl(".csv|.txt", out)) & out!=F & dtype=="text"){
-    stop("The file name must contain '.csv' or '.txt'.\n")
+  if(dtype=="text"){
+    if(!(grepl(".csv|.txt", out)) & out!=F){
+      stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
+    }
+  }else if(dtype=="sf"){
+    if(!(grepl(".shp", out)) & out!=F){
+      stop("The file name must contain '.shp' when exporting shapefile.\n")
+    }
+  }else{
+    stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
   }
 
   all_data=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/school_year.csv")
@@ -2910,74 +2918,77 @@ School=function(level, year, dtype="text", out=F){
     if(!tolower(level) %in% c("elementary","junior","senior","university")){
       stop(paste0("'", level, "' is invalid! Argument 'level' must be 'elementary', 'junior', 'senior', or 'university'!"))
     }else{
-      stop(paste0("Date of '", tolower(level), "' is only available in the following years:\n", paste(sort(unique(filter(all_data, Level==tolower(level))$Year+1911)), collapse=", ")))
+      stop(paste0("Date of '", tolower(level), "' is only available in the following years:\n", paste(sort(unique(filter(all_data, Level==tolower(level))$Year)), collapse=", ")))
     }
   }else{
     year_rev=paste0(year-1911, "Y")
   }
 
-  url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=uqj1F9fpF00qkT7GLYw22Q%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE)))
-
-  if(level=="elementary"){
-    if(year)
-      url_all=c(paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=uqj1F9fpF00qkT7GLYw22Q%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3"),
-                paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=LY2FN3oajNfrb%2btxCUBeWw%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)"))
-    }else if(year>=2011){
-      url_all=c(paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=4D4C0271E1885C92C3C6ABC031BA48CF&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3&TYPE=CSV"),
-                paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=4D4C0271E1885C925D2A0E78C8526388&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)&TYPE=CSV"))
-    }
-  }else if(type=="junior"){
-    if(year>=2016){
-      url_all=c(paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCCA7ED44A9BE7FA28C&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3&TYPE=CSV"),
-                paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCC3B45BB24E61800D9&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)&TYPE=CSV"))
-    }else if(year>=2010){
-      url_all=c(paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=ED2E7534024B53EE5D2A0E78C8526388&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3&TYPE=CSV"),
-                paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=ED2E7534024B53EEC3C6ABC031BA48CF&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)&TYPE=CSV"))
+  if(tolower(level)=="elementary"){
+    if(year<=2015){
+      url_all=ifelse(all_data_temp$SPACE=="\u5168\u570b(\u4e0d\u542b\u91d1\u9580\u3001\u9023\u6c5f\u3001\u6f8e\u6e56)",
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=zPzp%2fhQW6gJCn0esWovJpg%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))),
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=SJCPGkQm3KtYoC3pTYtCdw%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))))
     }else{
-      stop("Data of junior high school is available only year after 2010!")
+      url_all=ifelse(all_data_temp$SPACE=="\u5168\u570b(\u4e0d\u542b\u91d1\u9580\u3001\u9023\u6c5f\u3001\u6f8e\u6e56)",
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=Ywl8HJm92fAisiMe4xmGAw%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))),
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=uqj1F9fpF00qkT7GLYw22Q%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))))
     }
-  }else if(type=="senior"){
-    if(year>=2014){
-      url_all=c(paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCC83F7930C9EC765DF&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3&TYPE=CSV"),
-                paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCC970C22EA6E9B0722&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)&TYPE=CSV"))
-    }else if(year>=2010){
-      url_all=c(paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=1A75D19CC0C12DC0235189B78B46E7FF&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3&TYPE=CSV"),
-                paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=1A75D19CC0C12DC083F7930C9EC765DF&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)&TYPE=CSV"))
+  }else if(tolower(level)=="junior"){
+    if(year<=2015){
+      url_all=ifelse(all_data_temp$SPACE=="\u5168\u570b(\u4e0d\u542b\u91d1\u9580\u3001\u9023\u6c5f\u3001\u6f8e\u6e56)",
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=BoS3OzTL6YBOxfojkr3v6Q%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))),
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=cIOfve6OcAkzVfS8433JSQ%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))))
     }else{
-      stop("Data of senior high school is available only year after 2010!")
+      url_all=ifelse(all_data_temp$SPACE=="\u5168\u570b(\u4e0d\u542b\u91d1\u9580\u3001\u9023\u6c5f\u3001\u6f8e\u6e56)",
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=wSnHwaMwjUruS14yh91lIA%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))),
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=qO17yG6gEf44WCJ3kNnqaw%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))))
     }
-  }else if(type=="university"){
-    if(year>=2010){
-      url_all=c(paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCC184F1603ADC8AF64&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E6%BE%8E%E6%B9%96%E7%B8%A3%E3%80%81%E9%87%91%E9%96%80%E7%B8%A3%E3%80%81%E9%80%A3%E6%B1%9F%E7%B8%A3&TYPE=CSV"),
-                paste0("https://segis.moi.gov.tw/STAT/Generic/Project/GEN_STAT.ashx?method=downloadproductfile&code=5C3933B1188B0DCCE67A682B798C17CF&STTIME=", year-1911, "Y&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B(%E4%B8%8D%E5%90%AB%E9%87%91%E9%96%80%E3%80%81%E9%80%A3%E6%B1%9F%E3%80%81%E6%BE%8E%E6%B9%96)&TYPE=CSV"))
+  }else if(tolower(level)=="senior"){
+    if(year<=2013){
+      url_all=ifelse(all_data_temp$SPACE=="\u5168\u570b(\u4e0d\u542b\u91d1\u9580\u3001\u9023\u6c5f\u3001\u6f8e\u6e56)",
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=3VXKvoXzKHUw7l9w4dn7YA%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))),
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=Q49B6SRee7ql5pYobe2aBQ%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))))
     }else{
-      stop("Data of senior high school is available only year after 2010!")
+      url_all=ifelse(all_data_temp$SPACE=="\u5168\u570b(\u4e0d\u542b\u91d1\u9580\u3001\u9023\u6c5f\u3001\u6f8e\u6e56)",
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=uWD8BdyU4K6oRx27MFGYbw%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))),
+                     paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=0%2fiLe8nwWzCK5k7tEJ0k4Q%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))))
     }
+  }else if(tolower(level)=="university"){
+    url_all=ifelse(all_data_temp$SPACE=="\u5168\u570b(\u4e0d\u542b\u91d1\u9580\u3001\u9023\u6c5f\u3001\u6f8e\u6e56)",
+                   paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=V0hFaorLGCnjkSeiT9FIFA%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))),
+                   paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=vV2xmoaMzm7yaic2cRgS9g%3d%3d&STTIME=", year_rev, "&STUNIT=null&BOUNDARY=", toupper(url_encode(all_data_temp$SPACE))))
   }
 
   school=data.frame()
   for(url in c(1:length(url_all))){
-url=url_all[2]
     unlink(list.files(tempdir(), full.names=T), recursive=T)
     download.file(url_all[url], paste0(tempdir(), "/school_tdx.zip"), mode="wb", quiet=T)
     untar(paste0(tempdir(), "/school_tdx.zip"), exdir=paste0(tempdir(), "/school_tdx"))
-    dir_file=dir(dir(paste0(tempdir(), "/school_tdx"), full.names=T), full.names=T)
+    dir_file=dir_ls(paste0(tempdir(), "/school_tdx"), recurse=T)
     dir_file=dir_file[grepl("csv", dir_file)]
-    school_temp=read.csv(dir_file, fileEncoding="Big5")
-    school_temp=school_temp[-1,]
+
+    suppressWarnings({
+      school_temp=read.csv(dir_file, fileEncoding="Big5")
+      school_temp=school_temp=school_temp[-1,]
+    })
+    if(nrow(school_temp)==0){
+      school_temp=read.csv(dir_file)
+      school_temp=school_temp=school_temp[-1,]
+    }
+
     req_col=c(colnames(school_temp)[grepl("CNT|AREA", colnames(school_temp))], "X", "Y")
     school_temp[, req_col]=matrix(as.numeric(unlist(school_temp[, req_col])), nrow=nrow(school_temp))
     school=rbind(school, school_temp)
   }
 
-  if (dtype=="text"){
+  if(dtype=="text"){
     if (nchar(out)!=0 & out!=F){
       write.csv(school, out, row.names=F)
     }
-  }else if (dtype=="sf"){
-    school$geometry=st_as_sfc(paste0("POINT(", school$X, " ", school$Y, ")"))
-    school=st_sf(school, crs=3826)%>%
-      st_transform(crs=4326)
+  }else if(dtype=="sf"){
+    school=mutate(school, geometry=st_as_sfc(ifelse(is.na(X) | is.na(Y), "POINT EMPTY", paste0("POINT(", X, " ", Y, ")"))))%>%
+      st_sf(crs=3826)
     if (grepl(".shp", out) & out!=F){
       write_sf(school, out, layer_options="ENCODING=UTF-8")
     }

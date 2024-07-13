@@ -8,14 +8,14 @@ Retrieve different level of school in Taiwan
 The function is used to download all the level of schools in Taiwan.
 }
 \usage{
-School(type, year, dtype="text", out=F)
+School(level, year, dtype="text", out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
 }
 \arguments{
-  \item{type}{Level of school. It should be \code{elementary}, \code{junior}, \code{senior}, or \code{university}.}
-  \item{year}{Please fill in the year of required data. It shold be the year after 2010.}
+  \item{level}{Level of school. It should be \code{elementary}, \code{junior}, \code{senior}, or \code{university}.}
+  \item{year}{Please fill in the year of required data. It should be the year after 2010.}
   \item{dtype}{The class of data, including \code{text} (data frame) and \code{sf} (simple feature). The default value is \code{text}.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data. Note that the directory must contain ".shp" when exporting simple feature. And the directory must contain ".csv" or ".txt" when exporting text file.}
 }
