@@ -199,7 +199,8 @@ date_rev=function(dates){
   return(dates_all)
 }
 
-histo_data(access_token, "Bus", "StopOfRoute", "Tainan", "2023-06-30")
+
+
 histo_data=function(access_token, mode, type, cou_ope, dates){
   if (!require(cli)) install.packages("cli")
 
