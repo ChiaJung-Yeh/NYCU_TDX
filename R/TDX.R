@@ -199,8 +199,7 @@ date_rev=function(dates){
   return(dates_all)
 }
 
-
-
+histo_data(access_token, "Bus", "StopOfRoute", "Tainan", "2023-06-30")
 histo_data=function(access_token, mode, type, cou_ope, dates){
   if (!require(cli)) install.packages("cli")
 
@@ -235,7 +234,10 @@ histo_data=function(access_token, mode, type, cou_ope, dates){
 
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
-    if(content(x, "text", encoding="UTF-8")==""){
+    if(is.na(content(x, "text", encoding="UTF-8"))){
+      num_of_nodata=num_of_nodata+1
+      cli_alert_info(paste0("Data of ", i, " is not avaliable!\n"))
+    }else if(content(x, "text", encoding="UTF-8")==""){
       num_of_nodata=num_of_nodata+1
       cli_alert_info(paste0("Data of ", i, " is not avaliable!\n"))
     }else{
