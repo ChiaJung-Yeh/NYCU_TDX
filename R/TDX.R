@@ -655,13 +655,13 @@ Rail_StationOfLine=function(access_token, operator, dates=F, out=F){
       url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/StationOfLine?&%24format=JSON"
     }else if(operator=="THSR"){
       stop("Please use function 'Rail_Station()' to retrieve the station of high speed rail (THSR).")
-    }else if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT","NTMC","NTALRT")){
-      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=JSON")
     }else if(operator=="AFR"){
       url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/StationOfLine?&%24format=JSON")
+    }else if(operator %in% TDX_Railway$Code){
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationOfLine/", operator, "?&%24format=JSON")
     }else{
       print(TDX_Railway)
-      stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+      stop(paste0("'", operator, "' is not valid operator. Please check out the table of railway code above"))
     }
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
@@ -761,13 +761,13 @@ Rail_Station=function(access_token, operator, dates=F, dtype="text", out=F){
       url="https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/Station?&%24format=JSON"
     }else if(operator=="THSR"){
       url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/Station?&%24format=JSON"
-    }else if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT","NTMC","NTALRT")){
-      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Station/", operator, "?&%24format=JSON")
     }else if(operator=="AFR"){
       url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/Station?&%24format=JSON")
+    }else if(operator %in% TDX_Railway$Code){
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Station/", operator, "?&%24format=JSON")
     }else{
       print(TDX_Railway)
-      stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
+      stop(paste0("'", operator, "' is not valid operator. Please check out the table of railway code above."))
     }
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
@@ -839,13 +839,13 @@ Rail_Shape=function(access_token, operator, dates=F, dtype="text", out=F){
       url="https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/Shape?%24format=JSON"
     }else if(operator=="THSR"){
       url="https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/Shape?%24format=JSON"
-    }else if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
-      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Shape/", operator, "?&%24format=JSON")
     }else if(operator=="AFR"){
       stop("AFR does not provide route geometry data up to now! Please check out other rail system.")
+    }else if(operator %in% TDX_Railway$Code){
+      url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/Shape/", operator, "?&%24format=JSON")
     }else{
       print(TDX_Railway)
-      stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+      stop(paste0("'", operator, "' is not valid operator. Please check out the table of railway code above"))
     }
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
@@ -1161,7 +1161,7 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
       stop(paste0(operator, " does not provide 'station' time table up to now! Please check out other rail system."))
     }else{
       print(TDX_Railway)
-      stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above."))
+      stop(paste0("'", operator, "' is not valid operator. Please check out the table of railway code above."))
     }
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
@@ -1213,7 +1213,7 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
       url="https://tdx.transportdata.tw/api/basic/v3/Rail/AFR/GeneralTrainTimetable?&%24format=JSON"
     }else{
       print(TDX_Railway)
-      stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+      stop(paste0("'", operator, "' is not valid operator. Please check out the table of railway code above"))
     }
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
@@ -1695,7 +1695,7 @@ Rail_ODFare=function(access_token, operator, out=F){
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
   }else{
     print(TDX_Railway)
-    stop(paste0("'", operator, "' is not allowed operator. Please check out the table of railway code above"))
+    stop(paste0("'", operator, "' is not valid operator. Please check out the table of railway code above"))
   }
 
   tryCatch({

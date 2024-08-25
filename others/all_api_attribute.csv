@@ -55,6 +55,8 @@
 "Bus","BusA2Data","BusStatus","integer","Int32","行車狀況 : [0:'正常',1:'車禍',2:'故障',3:'塞車',4:'緊急求援',5:'加油',90:'不明',91:'去回不明',98:'偏移路線',99:'非營運狀態',100:'客滿',101:'包車出租',255:'未知']",NA
 "Bus","BusA2Data","A2EventType","integer","Int32","進站離站 : [0:'離站',1:'進站']",NA
 "Bus","BusA2Data","GPSTime","string","DateTime","車機時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz) [觸發到離站的GPS時間]","date-time"
+"Bus","BusA2Data","TripStartTimeType","integer","Int32","班次發車時間類型 : [0:'實際發車時間',1:'預估發車時間',2:'無法推估發車時間']",NA
+"Bus","BusA2Data","TripStartTime","string","String","首站發車時間(HH:mm:ss)",NA
 "Bus","BusA2Data","TransTime","string",NA,"車機資料傳輸時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)[多數單位沒有提供此欄位資訊]","date-time"
 "Bus","BusA2Data","SrcRecTime","string",NA,"來源端平台接收時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Bus","BusA2Data","SrcTransTime","string",NA,"來源端平台資料傳出時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)[公總使用動態即時推播故有提供此欄位, 而非公總系統因使用整包資料更新, 故沒有提供此欄位]","date-time"
@@ -215,11 +217,13 @@
 "Bus","BusSchedule","Direction","integer","Int32","去返程 : [0:'去程',1:'返程',2:'迴圈',255:'未知']",NA
 "Bus","BusSchedule","OperatorID","string","String","營運業者代碼",NA
 "Bus","BusSchedule","OperatorCode","string","String","營運業者簡碼",NA
+"Bus","BusSchedule","OperatorNo","string","String","營運業者編號[交通部票證資料系統定義]",NA
 "Bus","BusSchedule","Timetables","array","Array","預定班表",NA
 "Bus","BusSchedule","Frequencys","array","Array","發車班距",NA
 "Bus","BusSchedule","UpdateTime","string","DateTime","資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Bus","BusSchedule","VersionID","integer","Int32","資料版本編號","int32"
 "Bus","BusTimetable","TripID","string","String","班次代碼",NA
+"Bus","BusTimetable","IsLowFloor","boolean",NA,"該路線班次是否使用低地板公車車輛",NA
 "Bus","BusTimetable","ServiceDay",NA,"ServiceDay","週內營運日",NA
 "Bus","BusTimetable","SpecialDays","array","Array","特殊營運日",NA
 "Bus","BusTimetable","StopTimes","array","Array","公車停靠時間資料",NA
@@ -253,15 +257,17 @@
 "Bus","BusVehicleInfo","PlateNumb","string","String","車牌號碼",NA
 "Bus","BusVehicleInfo","OperatorID","string","String","營運業者代碼",NA
 "Bus","BusVehicleInfo","OperatorCode","string","String","營運業者簡碼",NA
-"Bus","BusVehicleInfo","VehicleClass","integer","Int32","車輛種類 : [1:'大型巴士',2:'中型巴士',3:'小型巴士',4:'雙層巴士',5:'雙節巴士',6:'計程車']",NA
-"Bus","BusVehicleInfo","VehicleType","integer","Int32","車輛種類 : [0:'一般',1:'無障礙公車',2:'復康巴士',3:'小型巴士',4:'專車',5:'其他']",NA
-"Bus","BusVehicleInfo","CardReaderLayout","integer",NA,"讀卡機配置(0:無讀卡機配置;1:前門刷卡;2:前後門刷卡)","int32"
-"Bus","BusVehicleInfo","IsElectric","boolean",NA,"是否為電動公車",NA
-"Bus","BusVehicleInfo","IsHybrid","boolean",NA,"是否為油電混合公車",NA
-"Bus","BusVehicleInfo","IsLowFloor","boolean",NA,"是否為低地板",NA
-"Bus","BusVehicleInfo","HasLiftOrRamp","boolean",NA,"是否有活動坡道",NA
-"Bus","BusVehicleInfo","HasWifi","boolean",NA,"是否有提供Wifi服務",NA
+"Bus","BusVehicleInfo","OperatorNo","string","String","營運業者編號[交通部票證資料系統定義]",NA
+"Bus","BusVehicleInfo","VehicleClass","integer","Int32","車輛種類 : [1:'大型巴士',2:'中型巴士',3:'小型巴士',4:'雙層巴士',5:'雙節巴士',6:'營業用小客車',99:'其他']",NA
+"Bus","BusVehicleInfo","VehicleType","integer","Int32","車輛種類 : [1:'一般',2:'復康巴士',3:'專車',4:'其他']",NA
+"Bus","BusVehicleInfo","CardReaderLayout","integer","Int32","讀卡機配置(0:無讀卡機配置;1:前門刷卡;2:前後門刷卡)","int32"
+"Bus","BusVehicleInfo","IsElectric","integer","Int32","是否為電動公車 : [0:'否',1:'是']",NA
+"Bus","BusVehicleInfo","IsHybrid","integer","Int32","是否為油電混合公車 : [0:'否',1:'是']",NA
+"Bus","BusVehicleInfo","IsLowFloor","integer","Int32","是否為低地板 : [0:'否',1:'是']",NA
+"Bus","BusVehicleInfo","HasLiftOrRamp","integer","Int32","是否有升降或斜坡板設備 : [0:'否',1:'是']",NA
+"Bus","BusVehicleInfo","HasWifi","integer","Int32","是否有提供Wifi服務(-1: 未設定; 0: 無; 1: 有)","int32"
 "Bus","BusVehicleInfo","InBoxID","string","String","車機代號",NA
+"Bus","BusVehicleInfo","PurchaseTime","string",NA,"購入時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Bus","BusVehicleInfo","UpdateTime","string","DateTime","資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Bus","BusShape","RouteUID","string","String","路線唯一識別代碼，規則為 {業管機關簡碼} + {RouteID}，其中 {業管機關簡碼} 可於Authority API中的AuthorityCode欄位查詢",NA
 "Bus","BusShape","RouteID","string","String","地區既用中之路線代碼(為原資料內碼)",NA
@@ -429,6 +435,14 @@
 "Bus","TravelTime","FromStationID","string","String","起始站位代碼",NA
 "Bus","TravelTime","ToStationID","string","String","終點站位代碼",NA
 "Bus","TravelTime","RunTime","integer","Int32","站間預估行駛時間 [當RunTime值為-1時，代表該區間無提供旅行時間資料。]","int32"
+"Bus","BusRouteTPASS","RouteID","string","String","機關定義路線代號",NA
+"Bus","BusRouteTPASS","RouteName",NA,"NameType","路線名稱",NA
+"Bus","BusRouteTPASS","SubRouteID","string","String","機關定義附屬路線代號",NA
+"Bus","BusRouteTPASS","SubRouteName",NA,"NameType","附屬路線名稱",NA
+"Bus","BusRouteTPASS","Operators","array","Array","營運業者",NA
+"Bus","Operator","OperatorID","string","String","營運業者代碼",NA
+"Bus","Operator","OperatorNo","string","String","營運業者編號",NA
+"Bus","Operator","OperatorName",NA,"NameType","營運業者名稱",NA
 "Bus","BusDailyTimeTable","BusDate","string","DateTime","適用日期","date-time"
 "Bus","BusDailyTimeTable","RouteUID","string","String","路線唯一識別代碼，規則為 {業管機關簡碼} + {RouteID}，其中 {業管機關簡碼} 可於Authority API中的AuthorityCode欄位查詢",NA
 "Bus","BusDailyTimeTable","RouteID","string","String","地區既用中之路線代碼(為原資料內碼)",NA
@@ -599,6 +613,7 @@
 "Rail","Route","RailRouteType","integer","Int32","軌道路線類別(33:都市捷運;34:機場捷運)","int32"
 "Rail","Route","LineNo","string","String","營運路線所屬之路線編號",NA
 "Rail","Route","LineID","string","String","營運路線所屬之路線代碼",NA
+"Rail","Route","Direction","integer","Int32","營運路線方向描述(0:去程,1:返程)","int32"
 "Rail","Route","StartStationID","string","String","營運路線起站代號",NA
 "Rail","Route","StartStationName",NA,"NameType","營運路線起站名稱",NA
 "Rail","Route","EndStationID","string","String","營運路線迄站代號",NA
@@ -719,6 +734,7 @@
 "Rail","Timetable","ArrivalTime","string","String","到站時刻(hh:mm)",NA
 "Rail","Timetable","DepartureTime","string","String","發車時刻(hh:mm)",NA
 "Rail","Timetable","TrainType","integer",NA,"車種(0:不分車種, 1:普通車, 2:直達車)","int32"
+"Rail","Timetable","StoppingPatternID","string","String","停站模式代碼",NA
 "Rail","SpecialDay","SaterDate","string","DateTime","開始時間","date-time"
 "Rail","SpecialDay","EndDate","string","DateTime","結束時間","date-time"
 "Rail","SpecialDay","Description","string","String","描述",NA
@@ -788,6 +804,45 @@
 "Rail","AlertScopeLineSection","EndingStationName","string","String","區間迄站車站名稱",NA
 "Rail","AlertScopeLineSection","Description","string","String","影響區間輔助描述",NA
 "Rail","AlertScopeNetwork","NetworkID","string","String","路網代碼",NA
+"Rail","MRTStoppingPatternList","UpdateTime","string",NA,"本平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Rail","MRTStoppingPatternList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
+"Rail","MRTStoppingPatternList","SrcUpdateTime","string","DateTime","來源端平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Rail","MRTStoppingPatternList","SrcUpdateInterval","integer","Int32","來源端平台資料更新週期(秒)['-1: 不定期更新']","int32"
+"Rail","MRTStoppingPatternList","AuthorityCode","string","String","業管機關簡碼",NA
+"Rail","MRTStoppingPatternList","StoppingPatterns","array","Array","資料(陣列)",NA
+"Rail","MRTStoppingPatternList","Count","integer",NA,"資料總筆數","int64"
+"Rail","StoppingPattern","StoppingPatternID","string","String","停站模式代碼",NA
+"Rail","StoppingPattern","StoppingPatternName",NA,"NameType","停站模式名稱",NA
+"Rail","StoppingPattern","RouteID","string","String","營運路線代碼",NA
+"Rail","StoppingPattern","Stations","array","Array","停站資訊",NA
+"Rail","Station","Sequence","integer","Int32","站序","int32"
+"Rail","Station","StationID","string","String","車站代碼",NA
+"Rail","Station","StationName",NA,"NameType","車站名稱",NA
+"Rail","Station","CumulativeDistance","number",NA,"已累積之里程距離(公里)","float"
+"Rail","Station","TravelTime","integer",NA,"已累積的旅行時間(分)","int32"
+"Rail","MRTLivePositionList","UpdateTime","string",NA,"本平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Rail","MRTLivePositionList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
+"Rail","MRTLivePositionList","SrcUpdateTime","string","DateTime","來源端平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Rail","MRTLivePositionList","SrcUpdateInterval","integer","Int32","來源端平台資料更新週期(秒)['-1: 不定期更新']","int32"
+"Rail","MRTLivePositionList","AuthorityCode","string","String","業管機關簡碼",NA
+"Rail","MRTLivePositionList","LivePositions","array","Array","資料(陣列)",NA
+"Rail","MRTLivePositionList","Count","integer",NA,"資料總筆數","int64"
+"Rail","LivePosition","TripID","string","String","班次代碼",NA
+"Rail","LivePosition","OperatorCode","string","String","營運業者代碼",NA
+"Rail","LivePosition","LineID","string","String","路線代碼",NA
+"Rail","LivePosition","LineName",NA,"NameType","路線名稱",NA
+"Rail","LivePosition","Direction","integer","Int32","車輛去返程(0: 去程, 1: 返程, 2: 迴圈, 255: 未知)","int32"
+"Rail","LivePosition","MessageType","integer",NA,"資料型態種類(0: 未知, 1: 定期, 2: 非定期)","int32"
+"Rail","LivePosition","TrainPosition",NA,"BasePointType","列車位置經緯度",NA
+"Rail","LivePosition","Speed","number","Double","行駛速度","double"
+"Rail","LivePosition","Azimuth","number","Double","方位角","double"
+"Rail","LivePosition","DutyStatus","integer","Int32","勤務狀態(0: 正常, 1: 開始, 2: 結束)","int32"
+"Rail","LivePosition","TrainStatus","integer","Int32","勤務狀態(0: 正常, 1: 車禍, 2: 故障, 3: 塞車, 4: 緊急求援, 98: 偏移路線, 99: 非營運狀態, 100: 客滿, 255: 未知)","int32"
+"Rail","LivePosition","GPSTime","string","DateTime","GPS紀錄時間","date-time"
+"Rail","LivePosition","GPSTransTime","string","DateTime","車機系統傳送日期時間","date-time"
+"Rail","LivePosition","UpdateTime","string","DateTime","本筆資料之更新日期時間","date-time"
+"Rail","BasePointType","PositionLat","number",NA,NA,"double"
+"Rail","BasePointType","PositionLon","number",NA,NA,"double"
 "Rail","RailStation","StationUID","string","String","車站唯一識別代碼",NA
 "Rail","RailStation","StationID","string","String","車站代碼",NA
 "Rail","RailStation","StationCode","string","String","車站簡碼(訂票系統用)",NA
@@ -806,7 +861,7 @@
 "Rail","RailODFare","OriginStationName",NA,"NameType","起點車站名稱",NA
 "Rail","RailODFare","DestinationStationID","string","String","迄點車站代碼",NA
 "Rail","RailODFare","DestinationStationName",NA,"NameType","迄點車站名稱",NA
-"Rail","RailODFare","Direction","integer","Int32","行駛方向 : [0:'南下',1:'北上']",NA
+"Rail","RailODFare","Direction","integer","Int32","行駛方向 : [0:'南下',1:'北上',2:'雙向']",NA
 "Rail","RailODFare","Fares","array","Array","票價收費資訊(本項僅列標準、商務及自由之基本票價，其他優待票及團體票之折扣計算請參考高鐵網站票價產品一覽表http://www.thsrc.com.tw/tw/Article/ArticleContent/caa6fac8-b875-4ad6-b1e6-96c2902d12a6 說明)",NA
 "Rail","RailODFare","SrcUpdateTime","string","DateTime","來源端平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Rail","RailODFare","UpdateTime","string","DateTime","本平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
@@ -830,7 +885,7 @@
 "Rail","RailStopTime","ArrivalTime","string","String","到站時間(格式: HH:mm:ss)",NA
 "Rail","RailStopTime","DepartureTime","string","String","離站時間(格式: HH:mm:ss)",NA
 "Rail","RailGeneralTrainInfo","TrainNo","string","String","車次代碼",NA
-"Rail","RailGeneralTrainInfo","Direction","integer","Int32","行駛方向 : [0:'南下',1:'北上']",NA
+"Rail","RailGeneralTrainInfo","Direction","integer","Int32","行駛方向 : [0:'南下',1:'北上',2:'雙向']",NA
 "Rail","RailGeneralTrainInfo","StartingStationID","string","String","列車起點車站代號",NA
 "Rail","RailGeneralTrainInfo","StartingStationName",NA,"NameType","列車起點車站名稱",NA
 "Rail","RailGeneralTrainInfo","EndingStationID","string","String","列車終點車站代號",NA
@@ -844,7 +899,7 @@
 "Rail","ServiceDay","Saturday","integer","Int32","星期六是否營運 : [0:'否',1:'是']",NA
 "Rail","ServiceDay","Sunday","integer","Int32","星期日是否營運 : [0:'否',1:'是']",NA
 "Rail","RailDailyTrainInfo","TrainNo","string","String","車次代碼",NA
-"Rail","RailDailyTrainInfo","Direction","integer","Int32","行駛方向 : [0:'南下',1:'北上']",NA
+"Rail","RailDailyTrainInfo","Direction","integer","Int32","行駛方向 : [0:'南下',1:'北上',2:'雙向']",NA
 "Rail","RailDailyTrainInfo","StartingStationID","string","String","列車起點車站代號",NA
 "Rail","RailDailyTrainInfo","StartingStationName",NA,"NameType","列車起點車站名稱",NA
 "Rail","RailDailyTrainInfo","EndingStationID","string","String","列車終點車站代號",NA
@@ -858,7 +913,7 @@
 "Rail","RailDailyTimetable","UpdateTime","string","DateTime","資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Rail","RailDailyTimetable","VersionID","integer","Int32","資料版本編號","int32"
 "Rail","RailDailyTrainInfo","TrainNo","string","String","車次代碼",NA
-"Rail","RailDailyTrainInfo","Direction","integer","Int32","行駛方向 : [0:'南下',1:'北上']",NA
+"Rail","RailDailyTrainInfo","Direction","integer","Int32","行駛方向 : [0:'南下',1:'北上',2:'雙向']",NA
 "Rail","RailDailyTrainInfo","StartingStationID","string","String","列車起點車站代號",NA
 "Rail","RailDailyTrainInfo","StartingStationName",NA,"NameType","列車起點車站名稱",NA
 "Rail","RailDailyTrainInfo","EndingStationID","string","String","列車終點車站代號",NA
@@ -872,7 +927,7 @@
 "Rail","RailStationTimetable","StationID","string","String","車站代號",NA
 "Rail","RailStationTimetable","StationName",NA,"NameType","車站名稱",NA
 "Rail","RailStationTimetable","TrainNo","string","String","車次代號",NA
-"Rail","RailStationTimetable","Direction","integer","Int32","順逆行 : [0:'南下',1:'北上']",NA
+"Rail","RailStationTimetable","Direction","integer","Int32","順逆行 : [0:'南下',1:'北上',2:'雙向']",NA
 "Rail","RailStationTimetable","StartingStationID","string","String","起點車站代號",NA
 "Rail","RailStationTimetable","StartingStationName",NA,"NameType","起點車站名稱",NA
 "Rail","RailStationTimetable","EndingStationID","string","String","終點車站代號",NA
@@ -887,19 +942,29 @@
 "Rail","RailODDailyTimetable","DestinationStopTime",NA,"RailStopTime","迄站停靠時間資料",NA
 "Rail","RailODDailyTimetable","UpdateTime","string","DateTime","資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Rail","RailODDailyTimetable","VersionID","integer","Int32","資料版本編號","int32"
-"Rail","AlertInfo","Level","integer","Int32","動態事件影響等級(本資料僅作參考，實際資料請參考高鐵http://www.thsrc.com.tw/tw/Operation) : [1:'全線正常運行',2:'有異常狀況']",NA
-"Rail","AlertInfo","Status","string","String","營運狀態 = ['空白: 正常' or '▲: 其他的異常狀態' or 'X: 全線停止運行']",NA
-"Rail","AlertInfo","Title","string","String","標題",NA
-"Rail","AlertInfo","Description","string","String","事件簡易描述",NA
-"Rail","AlertInfo","Effects","string","String","影響狀態",NA
-"Rail","AlertInfo","Direction","string","String","運行方向",NA
-"Rail","AlertInfo","EffectedSection","string","String","影響區間",NA
-"Rail","AlertInfo","OccuredTime","string",NA,"發生日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Rail","AlertInfo","AlertID","string","String","通阻訊息代碼",NA
+"Rail","AlertInfo","Title","string","String","通阻訊息標題",NA
+"Rail","AlertInfo","Description","string","String","通阻訊息說明",NA
+"Rail","AlertInfo","Status","string","String","營運狀況 = ['空白: 正常' or '▲: 其他的異常狀態' or 'X: 全線停止運行']",NA
+"Rail","AlertInfo","Scope",NA,"THSRAlertScope","影響範圍",NA
+"Rail","AlertInfo","Direction","integer","Int32","影響方向 : [0:'南下',1:'北上',2:'雙向']",NA
+"Rail","AlertInfo","Level","integer","Int32","影響等級程度 : [1:'重度',2:'中度',3:'輕度']",NA
+"Rail","AlertInfo","Effect","string","String","影響說明",NA
+"Rail","AlertInfo","Reason","string","String","影響原因",NA
+"Rail","AlertInfo","AlertURL","string","String","通阻訊息網址連結",NA
+"Rail","AlertInfo","OccuredTime","string",NA,"發生日期時間","date-time"
+"Rail","AlertInfo","StartTime","string",NA,"訊息起始日期時間","date-time"
+"Rail","AlertInfo","EndTime","string",NA,"訊息結束日期時間","date-time"
 "Rail","AlertInfo","PublishTime","string",NA,"訊息發布日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
-"Rail","AlertInfo","StartTime","string",NA,"開始時間","date-time"
-"Rail","AlertInfo","EndTime","string",NA,"結束時間","date-time"
 "Rail","AlertInfo","SrcUpdateTime","string","DateTime","來源端平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Rail","AlertInfo","UpdateTime","string","DateTime","本平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Rail","THSRAlertScope","LineSections","array","Array",NA,NA
+"Rail","THSRAlertLineSection","LineID","string","String",NA,NA
+"Rail","THSRAlertLineSection","StartingStationID","string","String",NA,NA
+"Rail","THSRAlertLineSection","StartingStationName","string","String",NA,NA
+"Rail","THSRAlertLineSection","EndingStationID","string","String",NA,NA
+"Rail","THSRAlertLineSection","EndingStationName","string","String",NA,NA
+"Rail","THSRAlertLineSection","Description","string","String",NA,NA
 "Rail","News","NewsID","string","Guid","消息編號","uuid"
 "Rail","News","Language","string","String","語系",NA
 "Rail","News","NewsCategory","string","String","消息類別",NA
@@ -920,7 +985,7 @@
 "Rail","AvailableSeatStatus","AvailableSeats","array","Array","對號座位狀態資訊(依高鐵規定若營運狀態有異常狀況時，剩餘座位資訊將停留在最後正常運行時間之狀態不做更新，實際資料請參考高鐵各車站現場對號座剩餘座位資訊看板)",NA
 "Rail","AvailableSeatStatus","Count","integer",NA,"資料總筆數","int64"
 "Rail","AvailableSeat","TrainNo","string","String","車次號碼",NA
-"Rail","AvailableSeat","Direction","integer","Int32","方向 : [0:'南下',1:'北上']",NA
+"Rail","AvailableSeat","Direction","integer","Int32","方向 : [0:'南下',1:'北上',2:'雙向']",NA
 "Rail","AvailableSeat","StationID","string","String","查詢車站代碼",NA
 "Rail","AvailableSeat","StationName",NA,"NameType","查詢車站名稱",NA
 "Rail","AvailableSeat","DepartureTime","string","String","發車時間(格式: HH:mm)",NA
@@ -951,7 +1016,7 @@
 "Rail","AvailableSeatStatus","TrainDate","string","String","營運日說明(格式: yyyy-MM-dd)",NA
 "Rail","AvailableSeatStatus","AvailableSeats","array","Array","對號座位狀態資訊(依高鐵規定若營運狀態有異常狀況時，剩餘座位資訊將停留在最後正常運行時間之狀態不做更新，實際資料請參考高鐵各車站現場對號座剩餘座位資訊看板)",NA
 "Rail","AvailableSeat","TrainNo","string","String","車次號碼",NA
-"Rail","AvailableSeat","Direction","integer","Int32","方向 : [0:'南下',1:'北上']",NA
+"Rail","AvailableSeat","Direction","integer","Int32","方向 : [0:'南下',1:'北上',2:'雙向']",NA
 "Rail","AvailableSeat","StartingStationID","string","String","起點車站代碼",NA
 "Rail","AvailableSeat","StartingStationCode","string","String","起站車站簡碼(訂票系統用)",NA
 "Rail","AvailableSeat","StartingStationName",NA,"NameType","起點車站名稱",NA
@@ -985,6 +1050,15 @@
 "Rail","AvailableSeat","DestinationStationName",NA,"NameType","迄點車站名稱",NA
 "Rail","AvailableSeat","StandardSeatStatus","string","String","標準席剩餘座位狀態",NA
 "Rail","AvailableSeat","BusinessSeatStatus","string","String","商務席剩餘座位狀態",NA
+"Rail","THSRFreeSeatingCarList","UpdateTime","string",NA,"本平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Rail","THSRFreeSeatingCarList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
+"Rail","THSRFreeSeatingCarList","AuthorityCode","string","String","業管機關簡碼",NA
+"Rail","THSRFreeSeatingCarList","TrainDate","string","String","營運日說明",NA
+"Rail","THSRFreeSeatingCarList","FreeSeatingCars","array","Array","資料(陣列)",NA
+"Rail","THSRFreeSeatingCarList","Count","integer",NA,"資料總筆數","int64"
+"Rail","FreeSeatingCar","TrainNo","string","String","車次代碼",NA
+"Rail","FreeSeatingCar","CarConfig","string","String","自由座車廂配置",NA
+"Rail","FreeSeatingCar","Cars","array","Array","自由座車廂",NA
 "Rail","Network","NetworkID","string","String","臺鐵路網代碼",NA
 "Rail","Network","NetworkNameZh","string","String","臺鐵路網中文名稱",NA
 "Rail","Network","NetworkNameEn","string","String","臺鐵路網英文名稱",NA
@@ -1210,6 +1284,14 @@
 "Rail","RailLiveTrainDelay","DelayTime","integer","Int32","誤點時間(0:準點;>=1誤點)","int32"
 "Rail","RailLiveTrainDelay","SrcUpdateTime","string","DateTime","來源端平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Rail","RailLiveTrainDelay","UpdateTime","string","DateTime","本平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Rail","StationOfLine","LineNo","string","String","路線編號",NA
+"Rail","StationOfLine","LineID","string","String","路線代碼",NA
+"Rail","StationOfLine","Stations","array","Array","路線車站資訊",NA
+"Rail","StationOfLine","UpdateTime","string","DateTime","本平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Rail","Station","Sequence","integer","Int32","站序","int32"
+"Rail","Station","StationID","string","String","車站代碼",NA
+"Rail","Station","StationName",NA,"NameType","車站名稱",NA
+"Rail","Station","CumulativeDistance","number",NA,"已累積之里程距離(公里)","float"
 "Bike","BikeStation","StationUID","string","String","站點唯一識別代碼，規則為 {業管機關代碼} + {StationID}，其中 {業管機關代碼} 可於Authority API中的AuthorityCode欄位查詢",NA
 "Bike","BikeStation","StationID","string","String","站點代碼",NA
 "Bike","BikeStation","AuthorityID","string","String","業管單位代碼",NA
@@ -1217,8 +1299,8 @@
 "Bike","BikeStation","StationPosition",NA,"PointType","站點位置",NA
 "Bike","BikeStation","StationAddress",NA,"NameType","站點地址",NA
 "Bike","BikeStation","StopDescription","string","String","站點描述",NA
-"Bike","BikeStation","BikesCapacity","integer","Int32","可容納之自行車總數","int32"
-"Bike","BikeStation","ServiceType","integer","Int32","服務類型 : [1:'YouBike1.0',2:'YouBike2.0',3:'T-Bike',4:'P-Bike',5:'K-Bike']",NA
+"Bike","BikeStation","BikesCapacity","integer",NA,"可容納之自行車總數","int32"
+"Bike","BikeStation","ServiceType","integer","Int32","服務類型 : [1:'YouBike1.0',2:'YouBike2.0',3:'Moovo']",NA
 "Bike","BikeStation","SrcUpdateTime","string",NA,"來源端平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Bike","BikeStation","UpdateTime","string","DateTime","資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Bike","NameType","Zh_tw","string","String","中文繁體名稱",NA
@@ -1239,9 +1321,9 @@
 "Bike","BikeAvailability","StationUID","string","String","站點唯一識別代碼，規則為 {業管機關代碼} + {StationID}，其中 {業管機關代碼} 可於Authority API中的AuthorityCode欄位查詢",NA
 "Bike","BikeAvailability","StationID","string","String","站點代碼",NA
 "Bike","BikeAvailability","ServiceStatus","integer","Int32","服務狀態 : [0:'停止營運',1:'正常營運',2:'暫停營運']",NA
-"Bike","BikeAvailability","ServiceType","integer","Int32","服務類型 : [1:'YouBike1.0',2:'YouBike2.0',3:'T-Bike',4:'P-Bike',5:'K-Bike']",NA
-"Bike","BikeAvailability","AvailableRentBikes","integer","Int32","可租借車數","int32"
-"Bike","BikeAvailability","AvailableReturnBikes","integer","Int32","可歸還車數","int32"
+"Bike","BikeAvailability","ServiceType","integer","Int32","服務類型 : [1:'YouBike1.0',2:'YouBike2.0',3:'Moovo']",NA
+"Bike","BikeAvailability","AvailableRentBikes","integer",NA,"可租借車數","int32"
+"Bike","BikeAvailability","AvailableReturnBikes","integer",NA,"可歸還車數","int32"
 "Bike","BikeAvailability","SrcUpdateTime","string",NA,"來源端平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Bike","BikeAvailability","UpdateTime","string","DateTime","資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Bike","BikeAvailability","AvailableRentBikesDetail",NA,"AvailableRentBikesDetail","可租借一般自行車、電動輔助車數量",NA
@@ -1412,6 +1494,63 @@
 "Air","GeneralFlightSchedule","VersionID","integer","Int32","資料版本編號","int32"
 "Air","CodeShare","AirlineID","string","String","航空公司IATA國際代碼",NA
 "Air","CodeShare","FlightNumber","string","String","航機班號(不包含航空公司的AirlineID，僅有班號數字)",NA
+"Air","DailyFlightSchedule","AirlineID","string","String","航空公司IATA國際代碼",NA
+"Air","DailyFlightSchedule","AirRouteID","string","String","航線代碼",NA
+"Air","DailyFlightSchedule","FlightDate","string","String","航班日期，格式為 yyyy-MM-dd",NA
+"Air","DailyFlightSchedule","FlightNumber","string","String","班機號碼",NA
+"Air","DailyFlightSchedule","DepartureAirport",NA,"Airport","起點機場",NA
+"Air","DailyFlightSchedule","DepartureTime","string","String","起飛時間，以當地時間 HH:mm 表示，跨日以「+1」表示",NA
+"Air","DailyFlightSchedule","TransitAirports","array","Array","中繼機場資料",NA
+"Air","DailyFlightSchedule","AircraftType","string","String","主要機型代號(IATA)",NA
+"Air","DailyFlightSchedule","SecondaryAircraftTypes","array","Array","次要機型",NA
+"Air","DailyFlightSchedule","CodeShares","array","Array","航班共用班號",NA
+"Air","DailyFlightSchedule","ArrivalAirport",NA,"Airport","目的地機場",NA
+"Air","DailyFlightSchedule","ArrivalTime","string","String","抵達目的地機場時間，以當地時間 HH:mm 表示，跨日以「+1」表示",NA
+"Air","DailyFlightSchedule","FlightRemark","string","String","班次註記，其中：X:班次取消, S:共用班號, 空白:一般班次",NA
+"Air","DailyFlightSchedule","AirFlightType","integer","Int32","航班種類 : [-2:'特殊',1:'國際',2:'國內',3:'兩岸',4:'國際包機',5:'國內包機',6:'兩岸包機']",NA
+"Air","DailyFlightSchedule","IsCargo","integer","Int32","是否為全貨機 : [0:'否',1:'是']",NA
+"Air","DailyFlightSchedule","SeatCapacity","integer",NA,"可售最大座位數","int32"
+"Air","DailyFlightSchedule","LoadCapacity","number",NA,"負載容量噸數(噸)","float"
+"Air","DailyFlightSchedule","FlightDistance","number",NA,"航線航段飛航哩程(哩)","float"
+"Air","DailyFlightSchedule","SrcUpdateTime","string","DateTime","來源端平台資料更新時間 (ISO8601 格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Air","DailyFlightSchedule","UpdateTime","string","DateTime","本平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Air","TransitAirport","TransitSequence","integer","Int32","中繼資料次序(由 1 開始)","int32"
+"Air","TransitAirport","TransitAirportID","string","String","中繼機場IATA國際代碼",NA
+"Air","TransitAirport","TransitCause","string","String","中繼原因",NA
+"Air","TransitAirport","ArrivalTime","string","String","中繼機場到場時間，以當地時間 HH:mm 表示，跨日以「+1」表示",NA
+"Air","TransitAirport","DepartureTime","string","String","中繼機場離場時間，以當地時間 HH:mm 表示，跨日以「+1」表示",NA
+"Air","SecondaryAircraftType","Priority","integer","Int32","中次要機型優先順序(由 1 開始)","int32"
+"Air","SecondaryAircraftType","AircraftType","string","String","次要機型代號(IATA)",NA
+"Air","CodeShare","FlightNumber","string","String","班機號碼",NA
+"Air","Airport","AirportID","string","String","機場IATA國際代碼",NA
+"Air","Airport","AirportName",NA,"NameType","機場名稱",NA
+"Air","RouteFare","AirlineID","string","String","航空公司 IATA 國際代碼",NA
+"Air","RouteFare","AirRouteID","string","String","航線代碼",NA
+"Air","RouteFare","DepartureAirport",NA,"Airport","起點機場資訊",NA
+"Air","RouteFare","ArrivalAirport",NA,"Airport","迄點機場資訊",NA
+"Air","RouteFare","Fares","array","Array","票價內容",NA
+"Air","RouteFare","SrcUpdateTime","string","DateTime","來源端平台資料更新時間 (ISO8601 格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Air","RouteFare","UpdateTime","string","DateTime","本平台資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Air","Fare","FareName","string","String","票價名稱",NA
+"Air","Fare","TicketType","integer","Int32","票種類型 : [1:'一般民眾',2:'離島居民']",NA
+"Air","Fare","FareClass","integer","Int32","費率等級 : [1:'成人',2:'學生',3:'孩童',4:'敬老',5:'愛心',6:'愛心孩童',7:'愛心優待/愛心陪伴',8:'軍警',9:'縣府補助愛心',10:'縣府補助愛心陪同',11:'促銷優惠']",NA
+"Air","Fare","CabinClass","integer","Int32","艙等 : [1:'頭等艙',2:'商務艙',3:'豪華經濟艙',4:'經濟艙']",NA
+"Air","Fare","Price","integer","Int32","計費價格(新臺幣)","int32"
+"Air","SeatAvailability","AirlineID","string","String","航空公司IATA國際代碼",NA
+"Air","SeatAvailability","AirRouteID","string","String","航線代碼",NA
+"Air","SeatAvailability","FlightDate","string","String","航班日期，格式為 yyyy-MM-dd",NA
+"Air","SeatAvailability","FlightNumber","string","String","班機號碼",NA
+"Air","SeatAvailability","DepartureAirport",NA,"Airport","起點機場資訊",NA
+"Air","SeatAvailability","ArrivalAirport",NA,"Airport","迄點機場資訊",NA
+"Air","SeatAvailability","TotalSeats","integer",NA,"機艙客位數","int32"
+"Air","SeatAvailability","SoldSeats","integer",NA,"已售座位數","int32"
+"Air","SeatAvailability","SeatStatus","integer","Int32","機艙售票狀態 : [1:'尚有空位',2:'座位有限(小於 5 位)',3:'無座位']",NA
+"Air","SeatAvailability","CabinSeats","array","Array","艙等座位資訊",NA
+"Air","SeatAvailability","UpdateTime","string","DateTime","訊息更新時間","date-time"
+"Air","CabinSeat","CabinClass","integer","Int32","艙等 : [1:'頭等艙',2:'商務艙',3:'豪華經濟艙',4:'經濟艙']",NA
+"Air","CabinSeat","TotalSeats","integer","Int32","艙等客位數","int32"
+"Air","CabinSeat","SoldSeats","integer","Int32","艙等已售座位數","int32"
+"Air","CabinSeat","SeatStatus","integer","Int32","艙等售票狀態 : [1:'尚有空位',2:'座位有限(小於 5 位)',3:'無座位']",NA
 "Ship","ShipDailySchedule","UpdateTime","string","DateTime","[平臺]資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Ship","ShipDailySchedule","UpdateInterval","integer","Int32","[平臺]資料更新週期(秒)","int32"
 "Ship","ShipDailySchedule","AuthorityCode","string","String","業管機關簡碼",NA
@@ -1599,6 +1738,63 @@
 "Ship","Authority","AuthorityUrl","string","String","業管機關官網網址",NA
 "Ship","Authority","LogoURL","string","String","業管機關Logo網址",NA
 "Ship","Authority","UpdateTime","string","DateTime","資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Ship","ShipGeneralScheduleList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
+"Ship","ShipGeneralScheduleList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
+"Ship","ShipGeneralScheduleList","AuthorityCode","string","String","業管機關簡碼",NA
+"Ship","ShipGeneralScheduleList","VersionID","integer",NA,"資料版本編號<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的版本編號[該欄位由本平台自動產製]""></span>","int32"
+"Ship","ShipGeneralScheduleList","GeneralSchedules","array","Array","資料(陣列)",NA
+"Ship","ShipGeneralScheduleList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數[該欄位由本平台自動產製]""></span>","int64"
+"Ship","ShipGeneralScheduleList","UpdateTime","string",NA,"XML更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Ship","ShipGeneralScheduleList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
+"Ship","GeneralSchedule","RouteID","string","String","航線代碼",NA
+"Ship","GeneralSchedule","RouteName",NA,"NameType","航線名稱",NA
+"Ship","GeneralSchedule","OperatorID","string","String","營運業者代碼",NA
+"Ship","GeneralSchedule","EffectiveDate","string","String","有效起始日期",NA
+"Ship","GeneralSchedule","ExpireDate","string","String","有效終止日期",NA
+"Ship","GeneralSchedule","Direction","integer","Int32","方向性描述 : [0:'去程',1:'返程',2:'迴圈']",NA
+"Ship","GeneralSchedule","Timetables","array","Array","營運定期班表資訊",NA
+"Ship","GeneralSchedule","Frequencies","array","Array","發車班距資訊",NA
+"Ship","ShipShipLiveBoardsList","UpdateTime","string",NA,"[平臺]資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為中心端處理完後提供資料的更新時間""></span>","date-time"
+"Ship","ShipShipLiveBoardsList","UpdateInterval","integer","Int32","[平臺]資料更新週期(秒)<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為中心端更新資料的週期""></span>","int32"
+"Ship","ShipShipLiveBoardsList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
+"Ship","ShipShipLiveBoardsList","SrcUpdateInterval","integer","Int32","[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
+"Ship","ShipShipLiveBoardsList","AuthorityCode","string","String","業管機關簡碼",NA
+"Ship","ShipShipLiveBoardsList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數  [該欄位由本平台自動產製]""></span>","int64"
+"Ship","ShipShipLiveBoardsList","ShipLiveBoardses","array","Array","資料(陣列)",NA
+"Ship","ShipLiveBoards","ShipDate","string","DateTime","航行日期","date-time"
+"Ship","ShipLiveBoards","PortID","string","String","港口代碼",NA
+"Ship","ShipLiveBoards","PortName",NA,"ShipPortName","港口名稱",NA
+"Ship","ShipLiveBoards","DepartureLiveBoards","array","Array","離港資訊",NA
+"Ship","ShipLiveBoards","ArrivalLiveBoards","array","Array","到港資訊",NA
+"Ship","ShipLiveBoards","UpdateTime","string","DateTime","訊息更新時間","date-time"
+"Ship","DepartureLiveBoard","RouteID","string","String","航線代碼",NA
+"Ship","DepartureLiveBoard","VesselID","string","String","船舶代碼",NA
+"Ship","DepartureLiveBoard","VesselName",NA,"VesselName","船舶名稱",NA
+"Ship","DepartureLiveBoard","ArrivalPortID","string","String","目的地港口",NA
+"Ship","DepartureLiveBoard","ArrivalPortName",NA,"ShipPortName","目的地港口名稱",NA
+"Ship","DepartureLiveBoard","ScheduledDepartureTime","string","DateTime","表訂離港日期時間","date-time"
+"Ship","DepartureLiveBoard","ActualDepartureTime","string",NA,"實際離港日期時間","date-time"
+"Ship","DepartureLiveBoard","EstimateDepartureTime","string",NA,"預估離港日期時間","date-time"
+"Ship","DepartureLiveBoard","DepartureRemark","string","String","航班屬性狀態",NA
+"Ship","DepartureLiveBoard","DepartureRemarkEn","string","String","航班屬性英文狀態",NA
+"Ship","DepartureLiveBoard","CancelReason","string","String","航班取消/停航原因文字性描述",NA
+"Ship","DepartureLiveBoard","ChangeNotice","string","String","航班異動通知文字性描述",NA
+"Ship","VesselName","Zh_tw","string","String",NA,NA
+"Ship","VesselName","En","string","String",NA,NA
+"Ship","ShipPortName","ZhTw","string","String","港口中文名稱",NA
+"Ship","ShipPortName","En","string","String","港口英文名稱",NA
+"Ship","ArrivalLiveBoard","RouteID","string","String","航線代碼",NA
+"Ship","ArrivalLiveBoard","VesselID","string","String","船舶代碼",NA
+"Ship","ArrivalLiveBoard","VesselName",NA,"VesselName","船舶名稱",NA
+"Ship","ArrivalLiveBoard","DeparturePortID","string","String","離港港口",NA
+"Ship","ArrivalLiveBoard","DeparturePortName",NA,"ShipPortName","離港港口名稱",NA
+"Ship","ArrivalLiveBoard","ScheduledArrivalTime","string","DateTime","表訂抵港日期時間","date-time"
+"Ship","ArrivalLiveBoard","ActualArrivalTime","string",NA,"實際抵港日期時間","date-time"
+"Ship","ArrivalLiveBoard","EstimateArrivalTime","string",NA,"預估抵港日期時間","date-time"
+"Ship","ArrivalLiveBoard","ArrivalRemark","string","String","航班屬性狀態",NA
+"Ship","ArrivalLiveBoard","ArrivalRemarkEn","string","String","航班屬性英文狀態",NA
+"Ship","ArrivalLiveBoard","CancelReason","string","String","航班取消/停航原因文字性描述",NA
+"Ship","ArrivalLiveBoard","ChangeNotice","string","String","航班異動通知文字性描述",NA
 "Ship","ShipLivePositionList","UpdateTime","string",NA,"[平臺]資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為中心端處理完後提供資料的更新時間""></span>","date-time"
 "Ship","ShipLivePositionList","UpdateInterval","integer","Int32","[平臺]資料更新週期(秒)<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為中心端更新資料的週期""></span>","int32"
 "Ship","ShipLivePositionList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
@@ -1615,8 +1811,8 @@
 "Ship","LivePosition","COG","number","Single","對地航向(Course Over Ground，單位: degree(度，真北為零))，精度至 1/10 degree","float"
 "Ship","LivePosition","VesselType","integer","Int32","船舶種類 : [0:'N/A',20:'WIG',30:'Vessel-Fishing',31:'not under command',32:'Vessel-Tow>200m,breadth>25m',33:'Vessel-Dredge,Underwater OP',34:'Vessel-Diving OP',35:'Vessel-Military OP',36:'Vessel-Sailing',37:'Vessel-Pleasure craft',40:'HSC',50:'Pilot vessel',51:'Search & rescue vessel',52:'Tug',53:'Port tender',54:'Anti-pollution vessel',55:'Law enforcement vessel',58:'Medical transport',59:'Resolution 18(Mob-83)',60:'Passenger ship',70:'Cargo ship',80:'Tanker',90:'Other',101:'Undefined']",NA
 "Ship","LivePosition","GPSTime","string","DateTime","GPS 記錄時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
-"Ship","PointType","PositionLat","number","Double","位置緯度","double"
-"Ship","PointType","PositionLon","number","Double","位置經度","double"
+"Ship","PointType","PositionLat","number",NA,"位置緯度","double"
+"Ship","PointType","PositionLon","number",NA,"位置經度","double"
 "Ship","ShipNewsList","UpdateTime","string",NA,"[平臺]資料更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為中心端處理完後提供資料的更新時間""></span>","date-time"
 "Ship","ShipNewsList","UpdateInterval","integer","Int32","[平臺]資料更新週期(秒)<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為中心端更新資料的週期""></span>","int32"
 "Ship","ShipNewsList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
@@ -1658,56 +1854,6 @@
 "Ship","Port","Country","string","String","港口所屬國家",NA
 "Ship","Port","CountryCode","string","String","國家簡碼",NA
 "Ship","Port","PortURL","string","String","港口官網網址",NA
-"Ship","ShipDailyScheduleList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
-"Ship","ShipDailyScheduleList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
-"Ship","ShipDailyScheduleList","AuthorityCode","string","String","業管機關簡碼",NA
-"Ship","ShipDailyScheduleList","VersionID","integer",NA,"資料版本編號<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的版本編號[該欄位由本平台自動產製]""></span>","int32"
-"Ship","ShipDailyScheduleList","DailySchedules","array","Array","資料(陣列)",NA
-"Ship","ShipDailyScheduleList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數[該欄位由本平台自動產製]""></span>","int64"
-"Ship","ShipDailyScheduleList","UpdateTime","string",NA,"XML更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
-"Ship","ShipDailyScheduleList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
-"Ship","DailySchedule","RouteID","string","String","航線代碼",NA
-"Ship","DailySchedule","RouteName",NA,"NameType","航線名稱",NA
-"Ship","DailySchedule","OperatorID","string","String","營運業者代碼",NA
-"Ship","DailySchedule","Date","string","String","航行日期",NA
-"Ship","DailySchedule","Direction","integer","Int32","方向性描述 : [0:'去程',1:'返程',2:'迴圈']",NA
-"Ship","DailySchedule","Timetables","array","Array","營運定期班表資訊",NA
-"Ship","DailySchedule","Frequencies","array","Array","發車班距資訊",NA
-"Ship","ShipGeneralScheduleList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
-"Ship","ShipGeneralScheduleList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
-"Ship","ShipGeneralScheduleList","AuthorityCode","string","String","業管機關簡碼",NA
-"Ship","ShipGeneralScheduleList","VersionID","integer",NA,"資料版本編號<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的版本編號[該欄位由本平台自動產製]""></span>","int32"
-"Ship","ShipGeneralScheduleList","GeneralSchedules","array","Array","資料(陣列)",NA
-"Ship","ShipGeneralScheduleList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數[該欄位由本平台自動產製]""></span>","int64"
-"Ship","ShipGeneralScheduleList","UpdateTime","string",NA,"XML更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
-"Ship","ShipGeneralScheduleList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
-"Ship","GeneralSchedule","RouteID","string","String","航線代碼",NA
-"Ship","GeneralSchedule","RouteName",NA,"NameType","航線名稱",NA
-"Ship","GeneralSchedule","OperatorID","string","String","營運業者代碼",NA
-"Ship","GeneralSchedule","EffectiveDate","string","String","有效起始日期",NA
-"Ship","GeneralSchedule","ExpireDate","string","String","有效終止日期",NA
-"Ship","GeneralSchedule","Direction","integer","Int32","方向性描述 : [0:'去程',1:'返程',2:'迴圈']",NA
-"Ship","GeneralSchedule","Timetables","array","Array","營運定期班表資訊",NA
-"Ship","GeneralSchedule","Frequencies","array","Array","發車班距資訊",NA
-"Ship","ShipOperatorList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
-"Ship","ShipOperatorList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
-"Ship","ShipOperatorList","AuthorityCode","string","String","業管機關簡碼",NA
-"Ship","ShipOperatorList","VersionID","integer",NA,"資料版本編號<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的版本編號[該欄位由本平台自動產製]""></span>","int32"
-"Ship","ShipOperatorList","Operators","array","Array","資料(陣列)",NA
-"Ship","ShipOperatorList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數[該欄位由本平台自動產製]""></span>","int64"
-"Ship","ShipOperatorList","UpdateTime","string",NA,"XML更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
-"Ship","ShipOperatorList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
-"Ship","Operator","OperatorID","string","String","營運業者代碼",NA
-"Ship","Operator","OperatorName",NA,"NameType","營運業者名稱",NA
-"Ship","Operator","OperatorPhone","string","String","營運業者連絡電話",NA
-"Ship","Operator","OperatorEmail","string","String","營運業者電子信箱",NA
-"Ship","Operator","OperatorAddress","string","String","營運業者地址",NA
-"Ship","Operator","OperatorURL","string","String","營運業者網址連結",NA
-"Ship","Operator","FareURL","string","String","營運業者票價網址連結",NA
-"Ship","Operator","ReservationURL","string","String","營運業者訂票網站",NA
-"Ship","Operator","ReservationPhone","string","String","營運業者訂票電話",NA
-"Ship","Operator","OperatorLogoURL","string","String","營運業者Logo網址",NA
-"Ship","Operator","BusinessAdminstrationNo","string","String","統一編號",NA
 "Ship","ShipRouteList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
 "Ship","ShipRouteList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
 "Ship","ShipRouteList","AuthorityCode","string","String","業管機關簡碼",NA
@@ -1738,22 +1884,6 @@
 "Ship","ShipRouteFareList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數[該欄位由本平台自動產製]""></span>","int64"
 "Ship","ShipRouteFareList","UpdateTime","string",NA,"XML更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
 "Ship","ShipRouteFareList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
-"Ship","ShipSpecificScheduleList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
-"Ship","ShipSpecificScheduleList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
-"Ship","ShipSpecificScheduleList","AuthorityCode","string","String","業管機關簡碼",NA
-"Ship","ShipSpecificScheduleList","VersionID","integer",NA,"資料版本編號<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的版本編號[該欄位由本平台自動產製]""></span>","int32"
-"Ship","ShipSpecificScheduleList","SpecificSchedules","array","Array","資料(陣列)",NA
-"Ship","ShipSpecificScheduleList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數[該欄位由本平台自動產製]""></span>","int64"
-"Ship","ShipSpecificScheduleList","UpdateTime","string",NA,"XML更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
-"Ship","ShipSpecificScheduleList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
-"Ship","SpecificSchedule","RouteID","string","String","航線代碼",NA
-"Ship","SpecificSchedule","RouteName",NA,"NameType","航線名稱",NA
-"Ship","SpecificSchedule","OperatorID","string","String","營運業者代碼",NA
-"Ship","SpecificSchedule","EffectiveDate","string","String","有效起始日期",NA
-"Ship","SpecificSchedule","ExpireDate","string","String","有效終止日期",NA
-"Ship","SpecificSchedule","Direction","integer","Int32","方向性描述 : [0:'去程',1:'返程',2:'迴圈']",NA
-"Ship","SpecificSchedule","Timetables","array","Array","營運定期班表資訊",NA
-"Ship","SpecificSchedule","Frequencies","array","Array","發車班距資訊",NA
 "Ship","ShipStopOfRouteList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
 "Ship","ShipStopOfRouteList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
 "Ship","ShipStopOfRouteList","AuthorityCode","string","String","業管機關簡碼",NA
@@ -1790,3 +1920,53 @@
 "Ship","Vessel","VesselClass","string","String","船舶分類",NA
 "Ship","Vessel","LoadDraft","number",NA,"吃水深度","float"
 "Ship","Vessel","Note","string","String","備註",NA
+"Ship","ShipDailyScheduleList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
+"Ship","ShipDailyScheduleList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
+"Ship","ShipDailyScheduleList","AuthorityCode","string","String","業管機關簡碼",NA
+"Ship","ShipDailyScheduleList","VersionID","integer",NA,"資料版本編號<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的版本編號[該欄位由本平台自動產製]""></span>","int32"
+"Ship","ShipDailyScheduleList","DailySchedules","array","Array","資料(陣列)",NA
+"Ship","ShipDailyScheduleList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數[該欄位由本平台自動產製]""></span>","int64"
+"Ship","ShipDailyScheduleList","UpdateTime","string",NA,"XML更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Ship","ShipDailyScheduleList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
+"Ship","DailySchedule","RouteID","string","String","航線代碼",NA
+"Ship","DailySchedule","RouteName",NA,"NameType","航線名稱",NA
+"Ship","DailySchedule","OperatorID","string","String","營運業者代碼",NA
+"Ship","DailySchedule","Date","string","String","航行日期",NA
+"Ship","DailySchedule","Direction","integer","Int32","方向性描述 : [0:'去程',1:'返程',2:'迴圈']",NA
+"Ship","DailySchedule","Timetables","array","Array","營運定期班表資訊",NA
+"Ship","DailySchedule","Frequencies","array","Array","發車班距資訊",NA
+"Ship","ShipOperatorList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
+"Ship","ShipOperatorList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
+"Ship","ShipOperatorList","AuthorityCode","string","String","業管機關簡碼",NA
+"Ship","ShipOperatorList","VersionID","integer",NA,"資料版本編號<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的版本編號[該欄位由本平台自動產製]""></span>","int32"
+"Ship","ShipOperatorList","Operators","array","Array","資料(陣列)",NA
+"Ship","ShipOperatorList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數[該欄位由本平台自動產製]""></span>","int64"
+"Ship","ShipOperatorList","UpdateTime","string",NA,"XML更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Ship","ShipOperatorList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
+"Ship","Operator","OperatorID","string","String","營運業者代碼",NA
+"Ship","Operator","OperatorName",NA,"NameType","營運業者名稱",NA
+"Ship","Operator","OperatorPhone","string","String","營運業者連絡電話",NA
+"Ship","Operator","OperatorEmail","string","String","營運業者電子信箱",NA
+"Ship","Operator","OperatorAddress","string","String","營運業者地址",NA
+"Ship","Operator","OperatorURL","string","String","營運業者網址連結",NA
+"Ship","Operator","FareURL","string","String","營運業者票價網址連結",NA
+"Ship","Operator","ReservationURL","string","String","營運業者訂票網站",NA
+"Ship","Operator","ReservationPhone","string","String","營運業者訂票電話",NA
+"Ship","Operator","OperatorLogoURL","string","String","營運業者Logo網址",NA
+"Ship","Operator","BusinessAdminstrationNo","string","String","統一編號",NA
+"Ship","ShipSpecificScheduleList","UpdateInterval","integer","Int32","本平台資料更新週期(秒)","int32"
+"Ship","ShipSpecificScheduleList","SrcUpdateInterval","integer",NA,"[來源端平臺]資料更新週期(秒)['-1: 不定期更新']<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateInterval [該欄位由本平台自動產製]""></span>","int32"
+"Ship","ShipSpecificScheduleList","AuthorityCode","string","String","業管機關簡碼",NA
+"Ship","ShipSpecificScheduleList","VersionID","integer",NA,"資料版本編號<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的版本編號[該欄位由本平台自動產製]""></span>","int32"
+"Ship","ShipSpecificScheduleList","SpecificSchedules","array","Array","資料(陣列)",NA
+"Ship","ShipSpecificScheduleList","Count","integer",NA,"資料總筆數<span class=""emphasis fas fa-pen"" rel=""與來源Inbound XML不同，為提供資料的總筆數[該欄位由本平台自動產製]""></span>","int64"
+"Ship","ShipSpecificScheduleList","UpdateTime","string",NA,"XML更新日期時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)","date-time"
+"Ship","ShipSpecificScheduleList","SrcUpdateTime","string",NA,"[來源端平臺]資料更新時間(ISO8601格式:yyyy-MM-ddTHH:mm:sszzz)<span class=""emphasis fas fa-pen"" rel=""為來源Inbound XML中的UpdateTime [該欄位由本平台自動產製]""></span>","date-time"
+"Ship","SpecificSchedule","RouteID","string","String","航線代碼",NA
+"Ship","SpecificSchedule","RouteName",NA,"NameType","航線名稱",NA
+"Ship","SpecificSchedule","OperatorID","string","String","營運業者代碼",NA
+"Ship","SpecificSchedule","EffectiveDate","string","String","有效起始日期",NA
+"Ship","SpecificSchedule","ExpireDate","string","String","有效終止日期",NA
+"Ship","SpecificSchedule","Direction","integer","Int32","方向性描述 : [0:'去程',1:'返程',2:'迴圈']",NA
+"Ship","SpecificSchedule","Timetables","array","Array","營運定期班表資訊",NA
+"Ship","SpecificSchedule","Frequencies","array","Array","發車班距資訊",NA
