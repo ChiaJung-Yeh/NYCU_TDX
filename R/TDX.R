@@ -24,7 +24,13 @@ library(fs)
 # usethis::use_package("archive")
 # usethis::use_package("fs")
 
-# TDX_County=read.table("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt", encoding="UTF-8", sep=",", header=T)
+# TDX_County=content(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=JSON", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
+# TDX_County=data.frame(Operator=unlist(lapply(TDX_County, function(x) x$CityName)),
+#                       Code=unlist(lapply(TDX_County, function(x) x$City)),
+#                       CityCode=unlist(lapply(TDX_County, function(x) x$CityCode)))%>%
+#   rbind(data.frame(Operator="公路客運", Code="Intercity", CityCode="THB"))
+# write.csv(TDX_County, "C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt", row.names=F)
+# TDX_County=read.csv("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt")
 # usethis::use_data(TDX_County, overwrite=T)
 #
 # TDX_Railway=read.table("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_railway.txt", encoding="UTF-8", sep=",", header=T)
