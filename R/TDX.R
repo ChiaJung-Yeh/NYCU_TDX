@@ -29,6 +29,8 @@ library(fs)
 #                       Code=unlist(lapply(TDX_County, function(x) x$City)),
 #                       CityCode=unlist(lapply(TDX_County, function(x) x$CityCode)))%>%
 #   rbind(data.frame(Operator="公路客運", Code="Intercity", CityCode="THB"))
+# TDX_County$Operator=factor(TDX_County$Operator, c("臺北市","新北市","基隆市","桃園市","新竹縣","新竹市","苗栗縣","臺中市","彰化縣","南投縣","雲林縣","嘉義縣","嘉義市","臺南市","高雄市","屏東縣","宜蘭縣","花蓮縣","臺東縣","澎湖縣","金門縣","連江縣","公路客運"))
+# TDX_County=arrange(TDX_County, Operator)
 # write.csv(TDX_County, "C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt", row.names=F)
 # TDX_County=read.csv("C:/Users/USER/OneDrive - The University of Sydney (Students)/Desktop/R Transportation/R Github Project/NYCU_TDX/data/tdx_county.txt")
 # usethis::use_data(TDX_County, overwrite=T)
@@ -1980,16 +1982,23 @@ Bus_RouteFare=function(access_token, county, out=F){
   cat("Please wait for a while...\n")
   if(county=="Intercity"){
     url="https://tdx.transportdata.tw/api/basic/v2/Bus/RouteFare/InterCity?&%24format=JSON"
+  }else if(county=="Tainan"){
+    url=paste0("https://tdx.transportdata.tw/api/basic/v3/Bus/RouteFare/City/", county, "?&%24format=JSON")
   }else{
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Bus/RouteFare/City/", county, "?&%24format=JSON")
   }
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   tryCatch({
-    bus_info=fromJSON(content(x, as="text"))
+    if(county=="Tainan"){
+      bus_info=fromJSON(content(x, as="text"))$RouteFares
+    }else{
+      bus_info=fromJSON(content(x, as="text"))
+    }
   }, error=function(err){
     stop(paste0("Your access token is invalid!"))
   })
+
   if("Message" %in% names(bus_info)){
     if(county %in% TDX_County$Code){
       stop(paste0("'",county, "' has no data avaliable.\n", bus_info$Message))
