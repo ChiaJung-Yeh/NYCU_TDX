@@ -3430,7 +3430,7 @@ Bus_Distance=function(access_token, county, routeid, out=F){
 
 
 #' @export
-CellularPopulation=function(district, time, out=F){
+CellularPopulation=function(district, time=NULL, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(urltools)) install.packages("urltools")
   if (!require(cli)) install.packages("cli")
@@ -3439,90 +3439,63 @@ CellularPopulation=function(district, time, out=F){
     stop("The file name must contain '.csv' or '.txt'.\n")
   }
 
-  # check if the month is valid
-  if(nchar(time)!=7 | !grepl("-", time)){
-    stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
-  }
-  if(as.numeric(substr(time, 1, regexpr("-", time)-1))<2010){
-    stop("Only year after 2010 is provided!")
-  }
-  time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
-  area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/business_area_time.csv")
+  area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/cellular_year.csv")
   area_time$TIME=factor(area_time$TIME, levels=(data.frame(TIME=unique(area_time$TIME), TIME_temp=as.numeric(gsub("Y|M", "", unique(area_time$TIME)))) %>% arrange(TIME_temp))$TIME)
 
-  space=c("\u7e23\u5e02","\u9109\u93ae\u5e02\u5340","\u6700\u5c0f\u7d71\u8a08\u5340","\u4e00\u7d1a\u767c\u5e03\u5340","\u4e8c\u7d1a\u767c\u5e03\u5340")[which(district==c("County","Town","SA0","SA1","SA2"))]
+  space=c("\u7e23\u5e02","\u9109\u93ae\u5e02\u5340")[which(district==c("County","Town"))]
   if(length(space)==1){
-    space_all=filter(area_time, UNIT==space, TIME==time_rev)
-    if(nrow(space_all)==1){
-      all_county=toupper(url_encode(unlist(strsplit(space_all$SPACE, "\\|"))))
+    # check if the month is valid
+    if(is.null(time)){
+      temp=sort(unique(filter(area_time, UNIT==space)$TIME))
+      time_rev=temp[length(temp)]
+      cat(paste0("Download the latest data ", time_rev, ".\nIf a specific time of data is required, please set the argument 'time'.\n"))
+    }else if(nchar(time)!=7 | !grepl("-", time)){
+      stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
     }else{
+      time_rev=paste0(as.numeric(substr(time, 1, regexpr("-", time)-1))-1911, "Y", substr(time, regexpr("-", time)+1, 10), "M")
+    }
+
+    space_all=filter(area_time, UNIT==space, TIME==time_rev)
+    if(nrow(space_all)!=1){
       temp=sort(unique(filter(area_time, UNIT==space)$TIME))
       stop(paste0("Data of '", time, "' is not available. Please use the following time :\n", paste(paste0(as.numeric(substr(temp, 1, regexpr("Y", temp)-1))+1911, "-", substr(temp, regexpr("Y", temp)+1, regexpr("M", temp)-1)), collapse=", ")))
     }
   }else{
-    stop("The argument of 'district' must be 'County', 'Town', 'SA0', 'SA1', or 'SA2'!\nNote that data of village is not provided!")
+    stop("The argument of 'district' must be 'County' or 'Town'!")
   }
-
 
   if(district=="County"){
-    url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file/?method=filedown.downloadproductfile&code=M9Zt6AgfXSJRSfmNKnpBNw%3d%3d&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B&TYPE=CSV")
+    url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file/?method=filedown.downloadproductfile&code=aMLV7QwPwx1LNTMGyiEaGQ%3d%3d&STTIME=", time_rev, "&STUNIT=U01CO&BOUNDARY=%E5%85%A8%E5%9C%8B")
   }else if(district=="Town"){
-    # https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=ghqVapNaCUIm4z0SkDRaUw%3d%3d&STTIME=110Y06M&STUNIT=U01TO&BOUNDARY=%E5%85%A8%E5%9C%8B&SUB_BOUNDARY=
-    url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file/?method=filedown.downloadproductfile&code=ghqVapNaCUIm4z0SkDRaUw%3d%3d&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=%E5%85%A8%E5%9C%8B&SUB_BOUNDARY=&TYPE=CSV")
-  }else if(district=="SA0"){
-    url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file/?method=filedown.downloadproductfile&code=LiQSGBXyaafwA6RVul0%2ffg%3d%3d&STTIME=", time_rev, "&STUNIT=U0200&BOUNDARY=", all_county, "&TYPE=CSV")
-  }else if(district=="SA1"){
-    url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file/?method=filedown.downloadproductfile&code=dGd0C47ZXrLBe7jLtYPbDw%3d%3d&STTIME=", time_rev, "&STUNIT=U0201&BOUNDARY=", all_county, "&TYPE=CSV")
-  }else if(district=="SA2"){
-    url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file/?method=filedown.downloadproductfile&code=K8nmVts%2fDQ4bTxFvqYf%2fTw%3d%3d&STTIME=", time_rev, "&STUNIT=U0202&BOUNDARY=", all_county, "&TYPE=CSV")
+    url=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file/?method=filedown.downloadproductfile&code=HguGfOFL5JA%2b7zqnoudkJQ%3d%3d&STTIME=", time_rev, "&STUNIT=U01TO&BOUNDARY=%E5%85%A8%E5%9C%8B&SUB_BOUNDARY=")
   }
-  business_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/business_name.csv")
 
+  unlink(list.files(tempdir(), full.names=T), recursive=T)
+  download.file(url, paste0(tempdir(), "/cellular_TDX.zip"), mode="wb", quiet=T)
+  untar(paste0(tempdir(), "/cellular_TDX.zip"), exdir=paste0(tempdir(), "/cellular_TDX"))
+  dir_file=dir(dir(paste0(tempdir(), "/cellular_TDX"), full.names=T), full.names=T)
 
-  business=data.frame()
-  cli_progress_bar(format="Downloading {pb_bar} {pb_percent} [{pb_eta}]", total=length(url_all))
-  for(url in url_all){
-    cli_progress_update()
-    unlink(list.files(tempdir(), full.names=T), recursive=T)
-    download.file(url, paste0(tempdir(), "/business_TDX.zip"), mode="wb", quiet=T)
-    untar(paste0(tempdir(), "/business_TDX.zip"), exdir=paste0(tempdir(), "/business_TDX"))
-    dir_file=dir(dir(paste0(tempdir(), "/business_TDX"), full.names=T), full.names=T)
+  dir_file=dir_file[grepl(".csv", dir_file)]
+  tryCatch({
+    cellular_pop=read.csv(dir_file)
+  }, error=function(err){
+    cellular_pop <<- read.csv(dir_file, fileEncoding="Big5")
+  })
 
-    dir_file=dir_file[grepl(".csv", dir_file)]
-    tryCatch({
-      business_temp=read.csv(dir_file)
-    }, error=function(err){
-      business_temp <<- read.csv(dir_file, fileEncoding="Big5")
-    })
+  unlink(paste0(tempdir(), "/cellular_TDX"), recursive=T)
+  file.remove(paste0(tempdir(), "/cellular_TDX.zip"))
+  cat("The column name is summarised below:\n")
+  print(t(data.frame(cellular_pop[1,], row.names="Column Name")))
 
-    business_temp=business_temp[-1, ]
-    business_temp[, grepl("CNT", colnames(business_temp))]=matrix(as.numeric(as.matrix(business_temp[, grepl("CNT", colnames(business_temp))])), nrow=nrow(business_temp))
-    colnames(business_temp)[mapply(function(x) which(business_name$ORI_NAME[x]==colnames(business_temp)), c(1:nrow(business_name)))]=business_name$NEW_NAME
-
-    unlink(paste0(tempdir(), "/business_TDX"), recursive=T)
-    file.remove(paste0(tempdir(), "/business_TDX.zip"))
-    if(nrow(business)==0){
-      business=business_temp
-    }else{
-      business=bind_rows(business, business_temp)
-    }
-    rm(business_temp)
-  }
-  cli_progress_done()
-
-  temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(business)), c(1:6)))
-  colnames(business)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
+  cellular_pop=cellular_pop[-1,]
+  temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(cellular_pop)), c(1:6)))
+  colnames(cellular_pop)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
 
   if(nchar(out)!=0 & out!=F){
-    write.csv(business, out, row.names=F)
+    write.csv(cellular_pop, out, row.names=F)
   }
-  return(business)
+
+  return(cellular_pop)
 }
-
-
-
-
-
-
 
 
