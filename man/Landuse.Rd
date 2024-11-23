@@ -8,7 +8,7 @@ Retrieve the landuse data of given month
 The function is used to download the landuse data of districts in Taiwan for the specific time, including minimum statistical area (SA0), statistical area 1 (SA1), and statistical area 2 (SA2). The data is downloaded from \href{https://segis.moi.gov.tw/STAT/Web/Portal/STAT_PortalHome.aspx}{Social Economic Geographic Information System (SEGIS)} by Ministry of the Interior. The data can be pure text or shapefile with the polygon of specific district.
 }
 \usage{
-Population(district, year, dtype="text", out=F)
+Population(district, year, out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
@@ -16,7 +16,6 @@ Population(district, year, dtype="text", out=F)
 \arguments{
   \item{district}{Please fill in the district type. The valid input includes \code{County}, \code{Town}, \code{Village}, \code{SA0} (minimum statistical area), \code{SA1} (statistical area 1), \code{SA2} (statistical area 2).}
   \item{year}{The year of the data. The format of time should be \code{YYYY}. Note that data before year 2014 is not available.}
-  \item{dtype}{The class of data, including \code{text} (data frame) and \code{sf} (simple feature). The default value is \code{text}.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data.}
 }
 \value{
