@@ -12,6 +12,7 @@ library(archive)
 library(fs)
 
 # usethis::use_package("dplyr")
+# usethis::use_package("tidyr")
 # usethis::use_package("jsonlite")
 # usethis::use_package("XML")
 # usethis::use_package("xml2")
@@ -3290,6 +3291,7 @@ Crash=function(access_token, crash, county, time, dtype="text", out=F){
 #' @export
 Bus_ScheduleEst=function(access_token, county, routename, out=F){
   if (!require(dplyr)) install.packages("dplyr")
+  if (!require(tidyr)) install.packages("tidyr")
   if (!require(data.table)) install.packages("data.table")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(httr)) install.packages("httr")
@@ -3319,7 +3321,7 @@ Bus_ScheduleEst=function(access_token, county, routename, out=F){
     x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
     tryCatch({
-      subroute_info=fromJSON(content(x, as="text"))$Schedules
+      subroute_info=data.frame(fromJSON(content(x, as="text"))$Schedules)
     }, error=function(err){
       stop(paste0("Your access token is invalid!"))
     })
@@ -3329,20 +3331,23 @@ Bus_ScheduleEst=function(access_token, county, routename, out=F){
       next
     }
 
-    subroute_info$TripID=c(1:nrow(subroute_info))
+    timetable_all=tidyr::unnest(subroute_info, cols="Timetables")
+    timetable_all$TripID=c(1:nrow(timetable_all))
+    timetable_all=tidyr::unnest(timetable_all, cols="StopTimes")
 
-    timetable_all=mapply(function(x) subroute_info$Timetables[[x]]$StopTimes, c(1:length(subroute_info$Timetables)))
-    for(i in c(1:length(timetable_all))){
-      timetable_all[[i]]$StopName=timetable_all[[i]]$StopName$Zh_tw
-    }
-    timetable_all=rbindlist(timetable_all)
-
-    rep_id=mapply(function(x) nrow(subroute_info$Timetables[[x]]$StopTimes[[1]]), c(1:length(subroute_info$Timetables)))
-    timetable_all=data.frame(timetable_all, ServiceTag=rep(mapply(function(x) subroute_info$Timetables[[x]]$ServiceDay$ServiceTag, c(1:length(subroute_info$Timetables))), times=rep_id))
-
-    timetable_all=cbind(subroute_info[rep(c(1:nrow(subroute_info)), times=rep_id), c("TripID","SubRouteUID","SubRouteID","SubRouteName","Direction")], timetable_all)
-    row.names(timetable_all)=NULL
-
+    #
+    # timetable_all=mapply(function(x) subroute_info$Timetables[[x]]$StopTimes, c(1:length(subroute_info$Timetables)))
+    # for(i in c(1:length(timetable_all))){
+    #   timetable_all[[i]]$StopName=timetable_all[[i]]$StopName$Zh_tw
+    # }
+    # timetable_all=rbindlist(timetable_all)
+    #
+    # rep_id=mapply(function(x) nrow(subroute_info$Timetables[[x]]$StopTimes[[1]]), c(1:length(subroute_info$Timetables)))
+    # timetable_all=data.frame(timetable_all, ServiceTag=rep(mapply(function(x) subroute_info$Timetables[[x]]$ServiceDay$ServiceTag, c(1:length(subroute_info$Timetables))), times=rep_id))
+    #
+    # timetable_all=cbind(subroute_info[rep(c(1:nrow(subroute_info)), times=rep_id), c("TripID","SubRouteUID","SubRouteID","SubRouteName","Direction")], timetable_all)
+    # row.names(timetable_all)=NULL
+    #
     sch_est_ALL=rbind(sch_est_ALL, timetable_all)
   }
   cli_alert_info(ifelse(num_of_nodata==0, "All Done!", paste0("All Done!\n", num_of_nodata, " RouteIDs have no data!")))

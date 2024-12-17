@@ -23,5 +23,6 @@ Imports:
     progress,
     XML,
     archive,
-    fs
+    fs,
+    tidyr
 RoxygenNote: 7.2.3
