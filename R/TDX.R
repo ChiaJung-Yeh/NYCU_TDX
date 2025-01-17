@@ -148,6 +148,13 @@ library(fs)
 # write.csv(catalog_temp, "./others/cellular_year.csv", row.names=F)
 
 
+# temp=Rail_Station(access_token, "TRA")%>%
+#   select(StationID, StationName)%>%
+#   unique()
+# write.csv(temp, "./others/tra_station.csv", row.names=F)
+
+
+
 
 #---get the token---#
 #' @export
@@ -3502,5 +3509,55 @@ CellularPopulation=function(district, time=NULL, out=F){
 
   return(cellular_pop)
 }
+
+
+
+#' @export
+Railway_Patronage=function(operator, ym, out=F){
+  if(operator=="TRA"){
+    warning("Argument 'ym' is deprecated. All data from 2005 to date are downloaded!")
+  }else{
+    if((nchar(time)!=7 | !grepl("-", time))){
+      stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+    }else{
+      YEAR=unlist(strsplit(time, "-"))[1]
+      MONTH=unlist(strsplit(time, "-"))[2]
+      if(!is.numeric(YEAR) | !is.numeric(MONTH)){
+        stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+      }
+    }
+  }
+
+  if(operator=="TRA"){
+    url_all=c("https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/8ae4cabe6924dcdb016927b0dade013a",
+              "https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/8ae4cac3799a9b6b01799d00fd37014b")
+    all_patronage
+    for(i in url_all){
+i=url_all[1]
+      download.file(i, paste0(tempdir(), "/tra_patronage.zip"), mode="wb")
+      untar(paste0(tempdir(), "/tra_patronage.zip"), exdir=paste0(tempdir(), "/tra_patronage"))
+      dir_files=dir(paste0(tempdir(), "/tra_patronage"), pattern=".csv", full.names=T)
+      dir_files=dir_files[grepl("\u6bcf\u65e5", dir_files)]
+      patronage_temp=rbindlist(lapply(dir_files, fread))
+      # patronage_temp=patronage_temp[, names(patronage_temp)!="STOP_NAME", with=F]
+      names(patronage_temp)=c("trnOpDate","staCode","gateInComingCnt","gateOutGoingCnt")
+
+      temp2=patronage_temp
+      unlink(paste0(tempdir(), "/tra_patronage"), recursive=T)
+      file.remove(paste0(tempdir(), "/tra_patronage.zip"))
+    }
+
+
+
+  }else if(operator=="TRTC"){
+
+  }else{
+    stop("This function is currently available for downloading patronage of Taiwan Railway (TRA) and Taipei MRT System (TRTC)!")
+  }
+
+
+}
+
+
 
 
