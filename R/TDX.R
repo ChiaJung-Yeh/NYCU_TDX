@@ -10,6 +10,7 @@ library(data.table)
 library(progress)
 library(archive)
 library(fs)
+library(readODS)
 
 # usethis::use_package("dplyr")
 # usethis::use_package("tidyr")
@@ -24,6 +25,7 @@ library(fs)
 # usethis::use_package("progress")
 # usethis::use_package("archive")
 # usethis::use_package("fs")
+# usethis::use_package("readODS")
 
 # TDX_County=content(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=JSON", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
 # TDX_County=data.frame(Operator=unlist(lapply(TDX_County, function(x) x$CityName)),
@@ -3514,50 +3516,88 @@ CellularPopulation=function(district, time=NULL, out=F){
 
 #' @export
 Railway_Patronage=function(operator, ym, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(httr)) install.packages("httr")
+  if (!require(rvest)) install.packages("rvest")
+  if (!require(data.table)) install.packages("data.table")
+  if (!require(jsonlite)) install.packages("jsonlite")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt'.\n")
+  }
+
   if(operator=="TRA"){
     warning("Argument 'ym' is deprecated. All data from 2005 to date are downloaded!")
   }else{
-    if((nchar(time)!=7 | !grepl("-", time))){
+    if((nchar(ym)!=7 | !grepl("-", ym))){
       stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
     }else{
-      YEAR=unlist(strsplit(time, "-"))[1]
-      MONTH=unlist(strsplit(time, "-"))[2]
-      if(!is.numeric(YEAR) | !is.numeric(MONTH)){
-        stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
-      }
+      YEAR=unlist(strsplit(ym, "-"))[1]
+      MONTH=unlist(strsplit(ym, "-"))[2]
     }
   }
 
   if(operator=="TRA"){
+    tra_station=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/refs/heads/main/others/tra_station.csv", colClasses=c("StationID"="character"))
     url_all=c("https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/8ae4cabe6924dcdb016927b0dade013a",
               "https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/8ae4cac3799a9b6b01799d00fd37014b")
-    all_patronage
+    unlink(paste0(tempdir(), "/tra_patronage"), recursive=T)
+
+    all_patronage=data.frame()
     for(i in url_all){
-i=url_all[1]
       download.file(i, paste0(tempdir(), "/tra_patronage.zip"), mode="wb")
       untar(paste0(tempdir(), "/tra_patronage.zip"), exdir=paste0(tempdir(), "/tra_patronage"))
       dir_files=dir(paste0(tempdir(), "/tra_patronage"), pattern=".csv", full.names=T)
       dir_files=dir_files[grepl("\u6bcf\u65e5", dir_files)]
       patronage_temp=rbindlist(lapply(dir_files, fread))
-      # patronage_temp=patronage_temp[, names(patronage_temp)!="STOP_NAME", with=F]
-      names(patronage_temp)=c("trnOpDate","staCode","gateInComingCnt","gateOutGoingCnt")
+      if(ncol(patronage_temp)==5){
+        names(patronage_temp)=c("trnOpDate","staCode","STOP_NAME","gateInComingCnt","gateOutGoingCnt")
+        patronage_temp$staCode=as.character(patronage_temp$staCode)
+      }else{
+        patronage_temp$staCode=ifelse(nchar(patronage_temp$staCode)==3, paste0("0", patronage_temp$staCode), patronage_temp$staCode)
+      }
+      patronage_temp$trnOpDate=as.character(patronage_temp$trnOpDate)
 
-      temp2=patronage_temp
+      all_patronage=bind_rows(all_patronage, patronage_temp)
       unlink(paste0(tempdir(), "/tra_patronage"), recursive=T)
       file.remove(paste0(tempdir(), "/tra_patronage.zip"))
     }
+    patronage_temp=fromJSON("https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/8ae4cabf6973990e0169947ed32454b9")%>%
+      mutate(gateInComingCnt=as.numeric(gateInComingCnt),
+             gateOutGoingCnt=as.numeric(gateOutGoingCnt))
+    all_patronage=bind_rows(all_patronage, patronage_temp)
 
-
+    temp=filter(all_patronage, is.na(STOP_NAME))%>%
+      dplyr::select(-STOP_NAME)%>%
+      left_join(tra_station, by=c("staCode"="StationID"))
+    all_patronage$STOP_NAME[is.na(all_patronage$STOP_NAME)]=temp$StationName
 
   }else if(operator=="TRTC"){
-
+    tryCatch({
+      download.file(paste0("https://web.metro.taipei/RidershipPerStation/", YEAR, MONTH,"_cht.ods"), paste0(tempdir(), "/trtc_patronage.ods"), mode="wb", quiet=T)
+    }, error=function(err){
+      stop(paste0("Data of ", ym, " is not available!"))
+    })
+    temp1=read_ods(paste0(tempdir(), "/trtc_patronage.ods"), sheet=1)%>%
+      data.table()
+    names(temp1)[1]="Date"
+    temp1=melt(temp1, id.vars="Date", measure.vars=2:ncol(temp1), variable.name="StationName", value.name="Patronage")%>%
+      mutate(TYPE="gateOutGoingCnt")
+    temp2=read_ods(paste0(tempdir(), "/trtc_patronage.ods"), sheet=1)%>%
+      data.table()
+    names(temp2)[1]="Date"
+    temp2=melt(temp2, id.vars="Date", measure.vars=2:ncol(temp2), variable.name="StationName", value.name="Patronage")%>%
+      mutate(TYPE="gateInComingCnt")
+    all_patronage=rbind(temp1, temp2)
+    all_patronage$Date=as.Date(all_patronage$Date)
+    all_patronage=dcast(all_patronage, Date+StationName ~ TYPE, value.var="Patronage")
   }else{
     stop("This function is currently available for downloading patronage of Taiwan Railway (TRA) and Taipei MRT System (TRTC)!")
   }
 
-
+  if(nchar(out)!=0 & out!=F){
+    write.csv(all_patronage, out, row.names=F)
+  }
+  return(all_patronage)
 }
-
-
-
 

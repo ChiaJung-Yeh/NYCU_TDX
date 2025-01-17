@@ -1,7 +1,7 @@
 Package: TDX
 Type: Package
 Title: Connecting transportation data from TDX, Taiwan.
-Version: 3.10
+Version: 3.11
 Author: Chia Jung, Yeh
 Maintainer: Chia Jung, Yeh <chia-jung.yeh@sydney.edu.au>
 Description: This package provides a neat and efficient way to connect the transportation data from TDX, Taiwan.
@@ -24,5 +24,6 @@ Imports:
     XML,
     archive,
     fs,
-    tidyr
+    tidyr,
+    readODS
 RoxygenNote: 7.2.3
