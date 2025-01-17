@@ -3515,7 +3515,7 @@ CellularPopulation=function(district, time=NULL, out=F){
 
 
 #' @export
-Railway_Patronage=function(operator, ym, out=F){
+Rail_Patronage=function(operator, ym, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(httr)) install.packages("httr")
   if (!require(rvest)) install.packages("rvest")
