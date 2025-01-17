@@ -3603,4 +3603,10 @@ CellularPopulation=function(district, time=NULL, out=F){
 }
 
 
+#' @export
+add_temp=function(x){
+  print(x)
+}
+
+
 
