@@ -3444,7 +3444,7 @@ Bus_Distance=function(access_token, county, routeid, out=F){
 
 
 #' @export
-Rail_Patronage=function(operator, ym, out=F){
+Rail_Patronage=function(operator, ym, OD, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(httr)) install.packages("httr")
   if (!require(rvest)) install.packages("rvest")
@@ -3464,6 +3464,12 @@ Rail_Patronage=function(operator, ym, out=F){
     }else{
       YEAR=unlist(strsplit(ym, "-"))[1]
       MONTH=unlist(strsplit(ym, "-"))[2]
+    }
+  }
+
+  if(OD==T){
+    if(operator!="TRTC"){
+      warning(paste0("Argument 'OD' is deprecated. OD data is not available for ", operator, "!"))
     }
   }
 
@@ -3503,24 +3509,39 @@ Rail_Patronage=function(operator, ym, out=F){
     all_patronage$STOP_NAME[is.na(all_patronage$STOP_NAME)]=temp$StationName
 
   }else if(operator=="TRTC"){
-    tryCatch({
-      download.file(paste0("https://web.metro.taipei/RidershipPerStation/", YEAR, MONTH,"_cht.ods"), paste0(tempdir(), "/trtc_patronage.ods"), mode="wb", quiet=T)
-    }, error=function(err){
-      stop(paste0("Data of ", ym, " is not available!"))
-    })
-    temp1=read_ods(paste0(tempdir(), "/trtc_patronage.ods"), sheet=1)%>%
-      data.table()
-    names(temp1)[1]="Date"
-    temp1=melt(temp1, id.vars="Date", measure.vars=2:ncol(temp1), variable.name="StationName", value.name="Patronage")%>%
-      mutate(TYPE="gateOutGoingCnt")
-    temp2=read_ods(paste0(tempdir(), "/trtc_patronage.ods"), sheet=1)%>%
-      data.table()
-    names(temp2)[1]="Date"
-    temp2=melt(temp2, id.vars="Date", measure.vars=2:ncol(temp2), variable.name="StationName", value.name="Patronage")%>%
-      mutate(TYPE="gateInComingCnt")
-    all_patronage=rbind(temp1, temp2)
-    all_patronage$Date=as.Date(all_patronage$Date)
-    all_patronage=dcast(all_patronage, Date+StationName ~ TYPE, value.var="Patronage")
+    if(OD==T){
+      download.file(paste0("https://data.taipei/api/dataset/63f31c7e-7fc3-418b-bd82-b95158755b4d/resource/eb481f58-1238-4cff-8caa-fa7bb20cb4f4/download"), paste0(tempdir(), "/taipei_mrt_data.csv"), mode="wb", quiet=T)
+      mrt_od_data=read.csv(paste0(tempdir(), "/taipei_mrt_data.csv"))
+      names(mrt_od_data)[2]="YM"
+      mrt_od_data=filter(mrt_od_data, YM==gsub("-", "", ym))
+      if(nrow(mrt_od_data)==0){
+        stop(paste0("Data of ", ym, " is not available!"))
+      }
+
+      download.file(mrt_od_data$URL, paste0(tempdir(), "/taipei_mrt_data.csv"), mode="wb", quiet=T)
+      all_patronage=fread(paste0(tempdir(), "/taipei_mrt_data.csv"))
+      names(all_patronage)=c("Date","Time","gateIn","gateOut","Patronage")
+      unlink(list.files(tempdir(), full.names=T), recursive=T)
+    }else{
+      tryCatch({
+        download.file(paste0("https://web.metro.taipei/RidershipPerStation/", YEAR, MONTH,"_cht.ods"), paste0(tempdir(), "/trtc_patronage.ods"), mode="wb", quiet=T)
+      }, error=function(err){
+        stop(paste0("Data of ", ym, " is not available!"))
+      })
+      temp1=read_ods(paste0(tempdir(), "/trtc_patronage.ods"), sheet=1)%>%
+        data.table()
+      names(temp1)[1]="Date"
+      temp1=melt(temp1, id.vars="Date", measure.vars=2:ncol(temp1), variable.name="StationName", value.name="Patronage")%>%
+        mutate(TYPE="gateOutGoingCnt")
+      temp2=read_ods(paste0(tempdir(), "/trtc_patronage.ods"), sheet=1)%>%
+        data.table()
+      names(temp2)[1]="Date"
+      temp2=melt(temp2, id.vars="Date", measure.vars=2:ncol(temp2), variable.name="StationName", value.name="Patronage")%>%
+        mutate(TYPE="gateInComingCnt")
+      all_patronage=rbind(temp1, temp2)
+      all_patronage$Date=as.Date(all_patronage$Date)
+      all_patronage=dcast(all_patronage, Date+StationName ~ TYPE, value.var="Patronage")
+    }
   }else{
     stop("This function is currently available for downloading patronage of Taiwan Railway (TRA) and Taipei MRT System (TRTC)!")
   }
