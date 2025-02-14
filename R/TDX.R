@@ -13,6 +13,7 @@ library(fs)
 library(readODS)
 library(readxl)
 library(rvest)
+library(tidyr)
 
 # usethis::use_package("dplyr")
 # usethis::use_package("tidyr")
@@ -3455,6 +3456,7 @@ Rail_Patronage=function(operator, ym=NULL, OD=F, out=F){
   if (!require(data.table)) install.packages("data.table")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(readODS)) install.packages("readODS")
+  if (!require(readxl)) install.packages("readxl")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
     stop("The file name must contain '.csv' or '.txt'.\n")
@@ -3682,6 +3684,166 @@ CellularPopulation=function(district, time=NULL, out=F){
   }
 
   return(cellular_pop)
+}
+
+
+
+#' @export
+VehicleOwn=function(ym, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(tidyr)) install.packages("tidyr")
+  if (!require(data.table)) install.packages("data.table")
+  if (!require(rvest)) install.packages("rvest")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt'.\n")
+  }
+
+  tryCatch({
+    as.Date(paste0(ym, "-01"))
+    YEAR=as.numeric(unlist(strsplit(ym, "-"))[1])
+    MONTH=unlist(strsplit(ym, "-"))[2]
+  }, error=function(err){
+    stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+  })
+
+  url=paste0("https://stat.thb.gov.tw/hb01/webMain.aspx?sys=220&ym=", YEAR-1911, MONTH, "&ymt=", YEAR-1911, MONTH, "&kind=21&type=1&funid=1110007&cycle=1&outmode=0&compmode=0&outkind=1&fldspc=3,4,8,2,11,5,17,4,22,5,28,1,33,1,&codspc0=1,400,1")
+  tryCatch({
+    html_content=read_html(url)
+  }, error=function(err){
+    stop(paste0("Data for ", ym, " is not available! Only date later than year 2016 is allowed to download."))
+  })
+  county=html_text(html_nodes(html_content, "tr+ tr .stytitle+ .stytitle"))
+  type=html_text(html_nodes(html_content, "tr:nth-child(1) .stytitle+ .stytitle"))
+  veh_own=suppressWarnings(data.frame(matrix(as.numeric(gsub(",", "", html_text(html_nodes(html_content, ".stydata")))), ncol=length(county)/length(type), byrow=T)))
+  names(veh_own)=county[1:(length(county)/length(type))]
+  veh_own$VehicleType=type
+  veh_own=melt(data.table(veh_own), id.vars="VehicleType", variable.name="TOWNNAME", value.name="VehicleCount")%>%
+    data.frame()%>%
+    mutate(TOWNNAME=as.character(TOWNNAME),
+           COUNTYNAME=ifelse(TOWNNAME %in% TDX_County$Operator, TOWNNAME, NA),
+           VehicleCount=ifelse(is.na(VehicleCount), 0, VehicleCount))%>%
+    fill(COUNTYNAME, .direction="down")%>%
+    filter(COUNTYNAME!=TOWNNAME)%>%
+    select(COUNTYNAME, TOWNNAME, VehicleType, VehicleCount)
+
+  if(nchar(out)!=0 & out!=F){
+    write.csv(veh_own, out, row.names=F)
+  }
+
+  return(veh_own)
+}
+
+
+
+#' @export
+AirPatronage=function(ym, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(tidyr)) install.packages("tidyr")
+  if (!require(data.table)) install.packages("data.table")
+  if (!require(rvest)) install.packages("rvest")
+  if (!require(readxl)) install.packages("readxl")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt'.\n")
+  }
+
+  tryCatch({
+    as.Date(paste0(ym, "-01"))
+  }, error=function(err){
+    stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
+  })
+
+  html_content=read_html("https://www.caa.gov.tw/article.aspx?a=1752&lang=1")
+  html_content=html_nodes(html_content, ".download-filebase:nth-child(1)")
+  temp=gsub("\\.\\.", "", html_attr(html_content, "href"))
+  all_url=suppressWarnings(data.frame(url=paste0("https://www.caa.gov.tw/FileAtt.ashx?", substr(temp, regexpr("lang", temp)+1, 100)),
+                                      title=gsub(".xls", "", html_attr(html_content, "title")))%>%
+                             separate(title, c("Year","Month"), sep="\u5e74|\u6708")%>%
+                             mutate(Year=as.numeric(Year)+1911,
+                                    Month=as.numeric(Month),
+                                    MON=paste0(Year, "-", ifelse(nchar(Month)==1, paste0(0, Month), Month))))%>%
+    arrange(Year, Month)
+  all_url$MON=factor(all_url$MON, levels=all_url$MON, ordered=T)
+
+  all_url_temp=filter(all_url, MON==ym)
+  if(nrow(all_url_temp)==0){
+    stop(paste0("Data for ", ym, " is not available! And note that pnly date later than year 2009 is allowed to download."))
+  }
+
+  download.file(all_url_temp$url[1], paste0(tempdir(), "/air_pat.xls"), mode="wb", quite=T)
+
+
+  if(all_url_temp$MON>factor("2015-01", levels=all_url$MON, ordered=T)){
+    all_sheet=excel_sheets(paste0(tempdir(), "/air_pat.xls"))
+    all_sheet=all_sheet[grepl("36", all_sheet)]
+    all_sheet=gsub(" ", "", all_sheet)
+    all_sheet=all_sheet[all_sheet!="36" & all_sheet!="36-0"]
+
+    air_pat_all=data.frame()
+    for(i in all_sheet){
+      air_pat=suppressMessages(read_excel(paste0(tempdir(), "/air_pat.xls"), sheet=i)%>%
+                                 data.frame())
+      names(air_pat)=c("Airport_O","Airport_D","Airline",
+                       "Flight_Total","Seat_Total","Patronage_Total","LoadFactor_Total",
+                       "Flight_Arrival","Seat_Arrival","Patronage_Arrival","LoadFactor_Arrival",
+                       "Flight_Departure","Seat_Departure","Patronage_Departure","LoadFactor_Departure")
+      airport_name=air_pat[min(which(grepl("\u886836", air_pat[,1]))), 1]
+      airport_name=substr(airport_name, regexpr("　", airport_name)+1, regexpr("\u570b\u969b\u53ca\u5169\u5cb8", airport_name)-1)
+
+      air_pat=fill(air_pat, Airport_D, .direction="down")%>%
+        filter(!is.na(Airline),
+               Airport_O!="\u5e8f\u865f",
+               Airport_D!="\u822a    \u7dda")
+      air_pat[, grepl("Total|Arrival|Departure", names(air_pat))]=matrix(as.numeric(as.matrix(air_pat[, grepl("Total|Arrival|Departure", names(air_pat))])), ncol=12)
+      air_pat$Airport_O=airport_name
+      air_pat_all=rbind(air_pat_all, air_pat)
+    }
+  }else{
+    air_pat_list=suppressMessages(read_excel(paste0(tempdir(), "/air_pat.xls"))%>%
+                                    data.frame())
+    names(air_pat_list)=c("Airport_O","Airport_D","Airline",
+                          "Flight_Total","Seat_Total","Patronage_Total","LoadFactor_Total",
+                          "Flight_Arrival","Seat_Arrival","Patronage_Arrival","LoadFactor_Arrival",
+                          "Flight_Departure","Seat_Departure","Patronage_Departure","LoadFactor_Departure")
+
+    temp=grepl("\u8868[0-9][0-9]", air_pat_list$Airport_O)
+    air_pat_list$TabID[temp]=substr(air_pat_list$Airport_O[temp], 1, regexpr("　", air_pat_list$Airport_O[temp])-1)
+    temp=unique(substr(air_pat_list$Airport_O[temp], 1, regexpr("　", air_pat_list$Airport_O[temp])-1))
+    air_pat_list=fill(air_pat_list, TabID, .direction="down")%>%
+      filter(!is.na(TabID), TabID!="")
+    air_pat_list=split(air_pat_list, air_pat_list$TabID)
+    if(length(air_pat_list)!=1){
+      air_pat_list[[1]]=NULL
+    }
+
+    air_pat_all=data.frame()
+    for(i in air_pat_list){
+      air_pat=fill(i, Airport_D, .direction="down")%>%
+        filter(!is.na(Airline),
+               Airport_O!="\u5e8f\u865f",
+               Airport_D!="\u822a    \u7dda")%>%
+        select(-TabID)
+
+      if(length(air_pat_list)==1){
+        airport_name="\u81fa\u7063\u6843\u5712\u570b\u969b\u6a5f\u5834\u6216\u9ad8\u96c4\u570b\u969b\u6a5f\u5834"
+      }else{
+        airport_name=i[min(which(grepl("\u8868", i$Airport_O))), 1]
+        airport_name=substr(airport_name, regexpr("　", airport_name)+1, regexpr("\u570b\u969b\u53ca\u5169\u5cb8|\u570b\u969b\u822a\u7dda", airport_name)-1)
+        airport_name=gsub("\u81fa\u7063\u5730\u5340|\u53f0\u7063\u5730\u5340", "", airport_name)
+      }
+
+      air_pat[, grepl("Total|Arrival|Departure", names(air_pat))]=matrix(as.numeric(as.matrix(air_pat[, grepl("Total|Arrival|Departure", names(air_pat))])), ncol=12)
+      air_pat$Airport_O=airport_name
+      air_pat_all=rbind(air_pat_all, air_pat)
+    }
+  }
+
+  if(nchar(out)!=0 & out!=F){
+    write.csv(air_pat_all, out, row.names=F)
+  }
+
+  return(air_pat_all)
 }
 
 
