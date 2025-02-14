@@ -3737,7 +3737,7 @@ VehicleOwn=function(ym, out=F){
 
 
 #' @export
-AirPatronage=function(ym, out=F){
+Air_Patronage=function(ym, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(tidyr)) install.packages("tidyr")
   if (!require(data.table)) install.packages("data.table")
