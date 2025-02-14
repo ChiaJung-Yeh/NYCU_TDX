@@ -25,5 +25,7 @@ Imports:
     archive,
     fs,
     tidyr,
-    readODS
+    readODS,
+    readxl,
+    rvest
 RoxygenNote: 7.2.3

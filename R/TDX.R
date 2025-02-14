@@ -11,6 +11,8 @@ library(progress)
 library(archive)
 library(fs)
 library(readODS)
+library(readxl)
+library(rvest)
 
 # usethis::use_package("dplyr")
 # usethis::use_package("tidyr")
@@ -26,6 +28,8 @@ library(readODS)
 # usethis::use_package("archive")
 # usethis::use_package("fs")
 # usethis::use_package("readODS")
+# usethis::use_package("readxl")
+# usethis::use_package("rvest")
 
 # TDX_County=content(GET("https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=JSON", add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token))))
 # TDX_County=data.frame(Operator=unlist(lapply(TDX_County, function(x) x$CityName)),
@@ -3444,7 +3448,7 @@ Bus_Distance=function(access_token, county, routeid, out=F){
 
 
 #' @export
-Rail_Patronage=function(operator, ym, OD, out=F){
+Rail_Patronage=function(operator, ym=NULL, OD=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(httr)) install.packages("httr")
   if (!require(rvest)) install.packages("rvest")
@@ -3457,7 +3461,11 @@ Rail_Patronage=function(operator, ym, OD, out=F){
   }
 
   if(operator=="TRA"){
-    warning("Argument 'ym' is deprecated. All data from 2005 to date are downloaded!")
+    warning("Argument 'ym' is deprecated. All data from 2005 to the latest avialable data are downloaded!")
+  }else if(operator=="THSR"){
+    warning("Argument 'ym' is deprecated. All data from 2017 to the latest avialable data are downloaded!")
+  }else if(operator=="TYMC"){
+    warning("Argument 'ym' is deprecated. All data from 2019 to the latest avialable data are downloaded!")
   }else{
     if((nchar(ym)!=7 | !grepl("-", ym))){
       stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
@@ -3468,7 +3476,7 @@ Rail_Patronage=function(operator, ym, OD, out=F){
   }
 
   if(OD==T){
-    if(operator!="TRTC"){
+    if(!operator %in% c("TRTC")){
       warning(paste0("Argument 'OD' is deprecated. OD data is not available for ", operator, "!"))
     }
   }
@@ -3487,7 +3495,7 @@ Rail_Patronage=function(operator, ym, OD, out=F){
       dir_files=dir_files[grepl("\u6bcf\u65e5", dir_files)]
       patronage_temp=rbindlist(lapply(dir_files, fread))
       if(ncol(patronage_temp)==5){
-        names(patronage_temp)=c("trnOpDate","staCode","STOP_NAME","gateInComingCnt","gateOutGoingCnt")
+        names(patronage_temp)=c("trnOpDate","staCode","STOP_NAME","gateIn","gateOut")
         patronage_temp$staCode=as.character(patronage_temp$staCode)
       }else{
         patronage_temp$staCode=ifelse(nchar(patronage_temp$staCode)==3, paste0("0", patronage_temp$staCode), patronage_temp$staCode)
@@ -3518,6 +3526,7 @@ Rail_Patronage=function(operator, ym, OD, out=F){
         stop(paste0("Data of ", ym, " is not available!"))
       }
 
+      options(timeout=1000)
       download.file(mrt_od_data$URL, paste0(tempdir(), "/taipei_mrt_data.csv"), mode="wb", quiet=T)
       all_patronage=fread(paste0(tempdir(), "/taipei_mrt_data.csv"))
       names(all_patronage)=c("Date","Time","gateIn","gateOut","Patronage")
@@ -3542,8 +3551,60 @@ Rail_Patronage=function(operator, ym, OD, out=F){
       all_patronage$Date=as.Date(all_patronage$Date)
       all_patronage=dcast(all_patronage, Date+StationName ~ TYPE, value.var="Patronage")
     }
+  }else if(operator=="KRTC"){
+    url=paste0("https://kcgdg.kcg.gov.tw/CWSSLWEB/Attachment/Download.ashx?VP_FileName=%e9%ab%98%e9%9b%84%e9%83%bd%e6%9c%83%e5%8d%80%e5%a4%a7%e7%9c%be%e6%8d%b7%e9%81%8b%e7%b3%bb%e7%b5%b1%e5%90%84%e7%ab%99%e6%97%85%e9%81%8b%e9%87%8f%e7%b5%b1%e8%a8%88%e8%a1%a8(", as.numeric(YEAR)-1911, ".", as.numeric(MONTH), ".).xlsx")
+    tryCatch({
+      download.file(url, paste0(tempdir(), "/krtc_patronage.xlsx"), mode="wb")
+      }, error=function(err){
+      stop(paste0("Data of ", ym, " is not available!"))
+    })
+    all_patronage=read_excel(paste0(tempdir(), "/krtc_patronage.xlsx"))%>%
+      data.frame()
+    temp1=all_patronage[grepl("R", all_patronage[,1]), 1:3]
+    temp2=all_patronage[grepl("O", all_patronage[,5]), 5:7]
+    names(temp1)=names(temp2)=c("Station","gateInComingCnt","gateOutGoingCnt")
+    all_patronage=rbind(temp1, temp2)%>%
+      mutate(StationID=substr(Station, 1, regexpr(" ", Station)-1),
+             StationName=substr(Station, regexpr(" ", Station)+1, 100),
+             gateInComingCnt=as.numeric(gateInComingCnt),
+             gateOutGoingCnt=as.numeric(gateOutGoingCnt))%>%
+      select(StationID, StationName, gateInComingCnt, gateOutGoingCnt)
+    unlink(list.files(tempdir(), full.names=T))
+  }else if(operator=="THSR"){
+    html_content=read_html("https://www.thsrc.com.tw/corp/9571df11-8524-4935-8a46-0d5a72e6bc7c")
+    station_name=gsub(" ", "", unlist(strsplit(html_text(html_nodes(html_content, xpath='//*[@id="fixTable01"]/thead/tr')), "\n")))
+    station_name=station_name[2:13]
+    temp1=data.frame(Month=html_text(html_nodes(html_content, ".passengers th")),
+                     lapply(2:13, function(x) as.numeric(gsub(",", "", html_text(html_nodes(html_content, paste0("#fixTable td:nth-child(", x, ")")))))))%>%
+      data.table()%>%
+      unique()
+    names(temp1)[2:ncol(temp1)]=station_name
+    temp1=melt(temp1, id.vars="Month", variable.name="StationName", value.name="gateInComingCnt")
+    temp2=data.frame(Month=html_text(html_nodes(html_content, ".passengers th")),
+                     lapply(2:13, function(x) as.numeric(gsub(",", "", html_text(html_nodes(html_content, paste0("#fixTable01 td:nth-child(", x, ")")))))))%>%
+      data.table()%>%
+      unique()
+    names(temp2)[2:ncol(temp2)]=station_name
+    temp2=melt(temp2, id.vars="Month", variable.name="StationName", value.name="gateOutGoingCnt")
+    all_patronage=left_join(temp1, temp2, by=c("StationName", "Month"))%>%
+      mutate(Patronage=gateInComingCnt+gateOutGoingCnt)%>%
+      data.frame()
+  }else if(operator=="TYMC"){
+    url=html_nodes(html_content, xpath='//*[@id="__nuxt"]/div/div[1]/main/div[3]/div[3]/div[2]/div[2]')%>%
+      html_nodes("a")%>%
+      html_attr("href")
+
+    all_patronage=data.frame()
+    for(i in url){
+      all_patronage=rbind(all_patronage, read.csv(i, fileEncoding="Big5"))
+    }
+    names(all_patronage)=c("Year","Month","Station","AveDailyPatronage")
+    all_patronage=mutate(all_patronage, Year=Year+1911)%>%
+      mutate(StationID=substr(Station, 1, regexpr(" ", Station)-1),
+             StationName=substr(Station, regexpr(" ", Station)+2, 100))%>%
+      select(Year, Month, StationID, StationName, Patronage)
   }else{
-    stop("This function is currently available for downloading patronage of Taiwan Railway (TRA) and Taipei MRT System (TRTC)!")
+    stop("This function is currently available for downloading patronage of Taiwan Railway (TRA), Taiwan High Speed Rail (THSR), Taipei MRT (TRTC), Kaoshiung MRT (KRTC), and Tayouan Airport MRT (TYMC)!")
   }
 
   if(nchar(out)!=0 & out!=F){
