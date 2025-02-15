@@ -5,16 +5,17 @@
 Retrieve the patronage of international flight
 }
 \description{
-The function is used to retrieve the patronage of international (including cross-strait) flight for each airline in Taiwan.
+The function is used to retrieve the patronage of domestic and international (including cross-strait) flight for each airline in Taiwan.
 }
 \usage{
-Air_Patronage(ym, out=F)
+Air_Patronage(ym, domestic=F, out=F)
 }
 \format{
 %%  ~~ If necessary, more details than the __description__ above ~~
 }
 \arguments{
-  \item{ym}{The time (year-month) of the data. The format of time should be \code{YYYY-MM}. The data is only available for year after 2009.}
+  \item{ym}{The time (year-month) of the data. The format of time should be \code{YYYY-MM}. The data is only available for year after 2009 for international flight, while after 2000 for domestic flight. Note that this argument will be deprecated if requesting for the international flight data (\code{domestic=F}), and all months of data in that year will be retrieved.}
+  \item{domestic}{Specify either domestic or international flight patronage data. Default to 'FALSE', which means international flight.}
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data.}
 }
 \value{
@@ -45,8 +46,12 @@ Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-# Retrieve the patronage for each airline in a specific month
+# Retrieve the patronage for international flight in a specific month
 Air_Patronage(ym="2024-12")
+
+# Retrieve the patronage for domestic flight in a specific month
+# Note that all data within 2024 will be retrieved
+Air_Patronage(ym="2024-12", domestic=T, out="Domestic_Flight_2024")
 }
 \keyword{datasets}
 

@@ -3737,7 +3737,7 @@ VehicleOwn=function(ym, out=F){
 
 
 #' @export
-Air_Patronage=function(ym, out=F){
+Air_Patronage=function(ym, domestic=F, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(tidyr)) install.packages("tidyr")
   if (!require(data.table)) install.packages("data.table")
@@ -3754,96 +3754,166 @@ Air_Patronage=function(ym, out=F){
     stop(paste0("Date format is valid! It should be 'YYYY-MM'!"))
   })
 
-  html_content=read_html("https://www.caa.gov.tw/article.aspx?a=1752&lang=1")
-  html_content=html_nodes(html_content, ".download-filebase:nth-child(1)")
-  temp=gsub("\\.\\.", "", html_attr(html_content, "href"))
-  all_url=suppressWarnings(data.frame(url=paste0("https://www.caa.gov.tw/FileAtt.ashx?", substr(temp, regexpr("lang", temp)+1, 100)),
-                                      title=gsub(".xls", "", html_attr(html_content, "title")))%>%
-                             separate(title, c("Year","Month"), sep="\u5e74|\u6708")%>%
-                             mutate(Year=as.numeric(Year)+1911,
-                                    Month=as.numeric(Month),
-                                    MON=paste0(Year, "-", ifelse(nchar(Month)==1, paste0(0, Month), Month))))%>%
-    arrange(Year, Month)
-  all_url$MON=factor(all_url$MON, levels=all_url$MON, ordered=T)
+  if(!domestic){
+    html_content=read_html("https://www.caa.gov.tw/article.aspx?a=1752&lang=1")
+    html_content=html_nodes(html_content, ".download-filebase:nth-child(1)")
+    temp=gsub("\\.\\.", "", html_attr(html_content, "href"))
+    all_url=suppressWarnings(data.frame(url=paste0("https://www.caa.gov.tw/FileAtt.ashx?", substr(temp, regexpr("lang", temp)+1, 100)),
+                                        title=gsub(".xls", "", html_attr(html_content, "title")))%>%
+                               separate(title, c("Year","Month"), sep="\u5e74|\u6708")%>%
+                               mutate(Year=as.numeric(Year)+1911,
+                                      Month=as.numeric(Month),
+                                      MON=paste0(Year, "-", ifelse(nchar(Month)==1, paste0(0, Month), Month))))%>%
+      arrange(Year, Month)
+    all_url$MON=factor(all_url$MON, levels=all_url$MON, ordered=T)
 
-  all_url_temp=filter(all_url, MON==ym)
-  if(nrow(all_url_temp)==0){
-    stop(paste0("Data for ", ym, " is not available! And note that pnly date later than year 2009 is allowed to download."))
-  }
-
-  download.file(all_url_temp$url[1], paste0(tempdir(), "/air_pat.xls"), mode="wb", quite=T)
-
-
-  if(all_url_temp$MON>factor("2015-01", levels=all_url$MON, ordered=T)){
-    all_sheet=excel_sheets(paste0(tempdir(), "/air_pat.xls"))
-    all_sheet=all_sheet[grepl("36", all_sheet)]
-    all_sheet=gsub(" ", "", all_sheet)
-    all_sheet=all_sheet[all_sheet!="36" & all_sheet!="36-0"]
-
-    air_pat_all=data.frame()
-    for(i in all_sheet){
-      air_pat=suppressMessages(read_excel(paste0(tempdir(), "/air_pat.xls"), sheet=i)%>%
-                                 data.frame())
-      names(air_pat)=c("Airport_O","Airport_D","Airline",
-                       "Flight_Total","Seat_Total","Patronage_Total","LoadFactor_Total",
-                       "Flight_Arrival","Seat_Arrival","Patronage_Arrival","LoadFactor_Arrival",
-                       "Flight_Departure","Seat_Departure","Patronage_Departure","LoadFactor_Departure")
-      airport_name=air_pat[min(which(grepl("\u886836", air_pat[,1]))), 1]
-      airport_name=substr(airport_name, regexpr("　", airport_name)+1, regexpr("\u570b\u969b\u53ca\u5169\u5cb8", airport_name)-1)
-
-      air_pat=fill(air_pat, Airport_D, .direction="down")%>%
-        filter(!is.na(Airline),
-               Airport_O!="\u5e8f\u865f",
-               Airport_D!="\u822a    \u7dda")
-      air_pat[, grepl("Total|Arrival|Departure", names(air_pat))]=matrix(as.numeric(as.matrix(air_pat[, grepl("Total|Arrival|Departure", names(air_pat))])), ncol=12)
-      air_pat$Airport_O=airport_name
-      air_pat_all=rbind(air_pat_all, air_pat)
-    }
-  }else{
-    air_pat_list=suppressMessages(read_excel(paste0(tempdir(), "/air_pat.xls"))%>%
-                                    data.frame())
-    names(air_pat_list)=c("Airport_O","Airport_D","Airline",
-                          "Flight_Total","Seat_Total","Patronage_Total","LoadFactor_Total",
-                          "Flight_Arrival","Seat_Arrival","Patronage_Arrival","LoadFactor_Arrival",
-                          "Flight_Departure","Seat_Departure","Patronage_Departure","LoadFactor_Departure")
-
-    temp=grepl("\u8868[0-9][0-9]", air_pat_list$Airport_O)
-    air_pat_list$TabID[temp]=substr(air_pat_list$Airport_O[temp], 1, regexpr("　", air_pat_list$Airport_O[temp])-1)
-    temp=unique(substr(air_pat_list$Airport_O[temp], 1, regexpr("　", air_pat_list$Airport_O[temp])-1))
-    air_pat_list=fill(air_pat_list, TabID, .direction="down")%>%
-      filter(!is.na(TabID), TabID!="")
-    air_pat_list=split(air_pat_list, air_pat_list$TabID)
-    if(length(air_pat_list)!=1){
-      air_pat_list[[1]]=NULL
+    all_url_temp=filter(all_url, MON==ym)
+    if(nrow(all_url_temp)==0){
+      stop(paste0("Data for ", ym, " is not available! And note that only date later than year 2009 is allowed to download."))
     }
 
-    air_pat_all=data.frame()
-    for(i in air_pat_list){
-      air_pat=fill(i, Airport_D, .direction="down")%>%
-        filter(!is.na(Airline),
-               Airport_O!="\u5e8f\u865f",
-               Airport_D!="\u822a    \u7dda")%>%
-        select(-TabID)
+    download.file(all_url_temp$url[1], paste0(tempdir(), "/air_pat.xls"), mode="wb", quite=T)
 
-      if(length(air_pat_list)==1){
-        airport_name="\u81fa\u7063\u6843\u5712\u570b\u969b\u6a5f\u5834\u6216\u9ad8\u96c4\u570b\u969b\u6a5f\u5834"
-      }else{
-        airport_name=i[min(which(grepl("\u8868", i$Airport_O))), 1]
-        airport_name=substr(airport_name, regexpr("　", airport_name)+1, regexpr("\u570b\u969b\u53ca\u5169\u5cb8|\u570b\u969b\u822a\u7dda", airport_name)-1)
-        airport_name=gsub("\u81fa\u7063\u5730\u5340|\u53f0\u7063\u5730\u5340", "", airport_name)
+
+    if(all_url_temp$MON>factor("2015-01", levels=all_url$MON, ordered=T)){
+      all_sheet=excel_sheets(paste0(tempdir(), "/air_pat.xls"))
+      all_sheet=all_sheet[grepl("36", all_sheet)]
+      all_sheet=gsub(" ", "", all_sheet)
+      all_sheet=all_sheet[all_sheet!="36" & all_sheet!="36-0"]
+
+      air_pat_all=data.frame()
+      for(i in all_sheet){
+        air_pat=suppressMessages(read_excel(paste0(tempdir(), "/air_pat.xls"), sheet=i)%>%
+                                   data.frame())
+        names(air_pat)=c("Airport_O","Airport_D","Airline",
+                         "Flight_Total","Seat_Total","Patronage_Total","LoadFactor_Total",
+                         "Flight_Arrival","Seat_Arrival","Patronage_Arrival","LoadFactor_Arrival",
+                         "Flight_Departure","Seat_Departure","Patronage_Departure","LoadFactor_Departure")
+        airport_name=air_pat[min(which(grepl("\u886836", air_pat[,1]))), 1]
+        airport_name=substr(airport_name, regexpr("　", airport_name)+1, regexpr("\u570b\u969b\u53ca\u5169\u5cb8", airport_name)-1)
+
+        air_pat=fill(air_pat, Airport_D, .direction="down")%>%
+          filter(!is.na(Airline),
+                 Airport_O!="\u5e8f\u865f",
+                 Airport_D!="\u822a    \u7dda")
+        air_pat[, grepl("Total|Arrival|Departure", names(air_pat))]=matrix(as.numeric(as.matrix(air_pat[, grepl("Total|Arrival|Departure", names(air_pat))])), ncol=12)
+        air_pat$Airport_O=airport_name
+        air_pat_all=rbind(air_pat_all, air_pat)
+      }
+    }else{
+      air_pat_list=suppressMessages(read_excel(paste0(tempdir(), "/air_pat.xls"))%>%
+                                      data.frame())
+      names(air_pat_list)=c("Airport_O","Airport_D","Airline",
+                            "Flight_Total","Seat_Total","Patronage_Total","LoadFactor_Total",
+                            "Flight_Arrival","Seat_Arrival","Patronage_Arrival","LoadFactor_Arrival",
+                            "Flight_Departure","Seat_Departure","Patronage_Departure","LoadFactor_Departure")
+
+      temp=grepl("\u8868[0-9][0-9]", air_pat_list$Airport_O)
+      air_pat_list$TabID[temp]=substr(air_pat_list$Airport_O[temp], 1, regexpr("　", air_pat_list$Airport_O[temp])-1)
+      temp=unique(substr(air_pat_list$Airport_O[temp], 1, regexpr("　", air_pat_list$Airport_O[temp])-1))
+      air_pat_list=fill(air_pat_list, TabID, .direction="down")%>%
+        filter(!is.na(TabID), TabID!="")
+      air_pat_list=split(air_pat_list, air_pat_list$TabID)
+      if(length(air_pat_list)!=1){
+        air_pat_list[[1]]=NULL
       }
 
-      air_pat[, grepl("Total|Arrival|Departure", names(air_pat))]=matrix(as.numeric(as.matrix(air_pat[, grepl("Total|Arrival|Departure", names(air_pat))])), ncol=12)
-      air_pat$Airport_O=airport_name
-      air_pat_all=rbind(air_pat_all, air_pat)
+      air_pat_all=data.frame()
+      for(i in air_pat_list){
+        air_pat=fill(i, Airport_D, .direction="down")%>%
+          filter(!is.na(Airline),
+                 Airport_O!="\u5e8f\u865f",
+                 Airport_D!="\u822a    \u7dda")%>%
+          select(-TabID)
+
+        if(length(air_pat_list)==1){
+          airport_name="\u81fa\u7063\u6843\u5712\u570b\u969b\u6a5f\u5834\u6216\u9ad8\u96c4\u570b\u969b\u6a5f\u5834"
+        }else{
+          airport_name=i[min(which(grepl("\u8868", i$Airport_O))), 1]
+          airport_name=substr(airport_name, regexpr("　", airport_name)+1, regexpr("\u570b\u969b\u53ca\u5169\u5cb8|\u570b\u969b\u822a\u7dda", airport_name)-1)
+          airport_name=gsub("\u81fa\u7063\u5730\u5340|\u53f0\u7063\u5730\u5340", "", airport_name)
+        }
+
+        air_pat[, grepl("Total|Arrival|Departure", names(air_pat))]=matrix(as.numeric(as.matrix(air_pat[, grepl("Total|Arrival|Departure", names(air_pat))])), ncol=12)
+        air_pat$Airport_O=airport_name
+        air_pat_all=rbind(air_pat_all, air_pat)
+      }
     }
+  }else{
+    html_content=read_html("https://www.caa.gov.tw/article.aspx?a=1739&lang=1")
+    html_content=html_nodes(html_content, ".download-filebase:nth-child(1)")
+    temp=gsub("\\.\\.", "", html_attr(html_content, "href"))
+    all_url=suppressWarnings(data.frame(url=paste0("https://www.caa.gov.tw/FileAtt.ashx?", substr(temp, regexpr("lang", temp)+1, 100)),
+                                        title=gsub(".xls", "", html_attr(html_content, "title")))%>%
+                               separate(title, c("Year","Month"), sep="\u5e74|\u6708")%>%
+                               mutate(Year=as.numeric(Year)+1911))%>%
+      arrange(Year, Month)
+
+    all_url_temp=filter(all_url, Year==substr(ym, 1, 4))
+    if(nrow(all_url_temp)==0){
+      stop(paste0("Data for ", ym, " is not available! And note that only date later than year 2000 is allowed to download."))
+    }
+    warning(paste0("All months in year ", substr(ym, 1, 4), " are extracted, please filter the data by argument 'Year' and 'Month' on you own."))
+
+    download.file(all_url_temp$url[1], paste0(tempdir(), "/air_pat.xls"), mode="wb", quite=T)
+
+    all_sheet=excel_sheets(paste0(tempdir(), "/air_pat.xls"))
+    all_sheet=all_sheet[!grepl("-|\u8f09\u5ba2\u7387", all_sheet)]
+
+    air_pat_all=data.frame()
+    for(j in all_sheet){
+      air_pat=suppressMessages(read_excel(paste0(tempdir(), "/air_pat.xls"), sheet=j)%>%
+                                 data.frame())
+
+      if(all_url_temp$Year>2002){
+        all_airline=unique(as.character(air_pat[which(air_pat[,2]=="\u822a\u7a7a\u516c\u53f8"),]))
+        all_airline=all_airline[!is.na(all_airline) & !all_airline %in% c("\u822a\u7a7a\u516c\u53f8","\u7e3d\u8a08")]
+
+        air_pat_mon=data.frame()
+        for(i in c(1:length(all_airline))){
+          air_pat_temp=air_pat[, c(1:2, (3+(i-1)*4):(6+(i-1)*4))]
+          names(air_pat_temp)=c("ID","OD","Flight","Seat","Patronage","LoadFactor")
+          air_pat_temp$Airline=all_airline[i]
+          air_pat_mon=rbind(air_pat_mon, air_pat_temp)
+        }
+        air_pat_mon=suppressWarnings(filter(air_pat_mon, !is.na(as.numeric(ID)))%>%
+                                       separate(OD, c("Airport_O","Airport_D"), sep="—"))
+        if(grepl("\u5e74|_|-", j)){
+          air_pat_mon=suppressWarnings(mutate(air_pat_mon, ym=j)%>%
+                                         separate(ym, c("Year","Month"), sep="\u5e74|\u6708|_|-")%>%
+                                         mutate(Year=as.numeric(Year)+1911, Month=as.numeric(Month)))
+        }else{
+          air_pat_mon$Year=as.numeric(substr(ym, 1, 4))
+          air_pat_mon$Month=as.numeric(gsub("[^0-9]", "", j))
+        }
+      }else{
+        air_pat_mon=air_pat[,1:6]
+        names(air_pat_mon)=c("Airline","Airport","Flight","Seat","Patronage","LoadFactor")
+        suppressWarnings({air_pat_mon$Airline[!is.na(as.numeric(air_pat_mon$Airline))]=NA})
+        air_pat_mon=suppressWarnings(fill(air_pat_mon, Airline, .direction="down")%>%
+                                       filter(grepl("—", Airport))%>%
+                                       separate(Airport, c("Airport_O","Airport_D"), sep="—")%>%
+                                       mutate(Airline=gsub(" |\u5c0f\u8a08", "", Airline)))
+        air_pat_mon$Year=as.numeric(substr(ym, 1, 4))
+        air_pat_mon$Month=as.numeric(gsub("[^0-9]", "", j))
+      }
+
+      air_pat_mon=select(air_pat_mon, Year, Month, Airline, Airport_O, Airport_D, Flight, Seat, Patronage, LoadFactor)
+      air_pat_mon[, grepl("Flight|Seat|Patronage|LoadFactor", names(air_pat_mon))]=matrix(as.numeric(as.matrix(air_pat_mon[, grepl("Flight|Seat|Patronage|LoadFactor", names(air_pat_mon))])), ncol=4)
+      air_pat_all=rbind(air_pat_all, air_pat_mon)
+    }
+
+    air_pat_all=arrange(air_pat_all, Year, Month, Airline, Airport_O, Airport_D)
   }
 
   if(nchar(out)!=0 & out!=F){
     write.csv(air_pat_all, out, row.names=F)
   }
-
   return(air_pat_all)
 }
+
+
+
+
 
 
