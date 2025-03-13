@@ -3724,8 +3724,10 @@ VehicleOwn=function(ym, out=F){
            COUNTYNAME=ifelse(TOWNNAME %in% TDX_County$Operator, TOWNNAME, NA),
            VehicleCount=ifelse(is.na(VehicleCount), 0, VehicleCount))%>%
     fill(COUNTYNAME, .direction="down")%>%
-    filter(COUNTYNAME!=TOWNNAME)%>%
+    filter(COUNTYNAME!=TOWNNAME | COUNTYNAME %in% c("\u65b0\u7af9\u5e02","\u5609\u7fa9\u5e02"))%>%
     select(COUNTYNAME, TOWNNAME, VehicleType, VehicleCount)
+
+  warning(paste0("\u65b0\u7af9\u5e02 & \u5609\u7fa9\u5e02 only have statistics in county level!"))
 
   if(nchar(out)!=0 & out!=F){
     write.csv(veh_own, out, row.names=F)
@@ -3911,9 +3913,3 @@ Air_Patronage=function(ym, domestic=F, out=F){
   }
   return(air_pat_all)
 }
-
-
-
-
-
-
