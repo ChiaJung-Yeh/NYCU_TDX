@@ -2559,7 +2559,7 @@ Freeway_History=function(file, date, out=F){
         }
       }
     }else{
-      unlink(tempdir())
+      unlink(paste0(tempdir(), "/freeway_TDX"), recursive=T)
 
       url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
       download.file(url, paste0(tempdir(), "/freeway_TDX.zip"), quiet=T)
@@ -2582,7 +2582,8 @@ Freeway_History=function(file, date, out=F){
         colnames(freeway_data)=c("TimeInterval","GantryFrom","GantryTo","VehicleType","Flow")
       }
 
-      unlink(tempdir())
+      unlink(paste0(tempdir(), "/freeway_TDX"), recursive=T)
+      file.remove(paste0(tempdir(), "/freeway_TDX.zip"))
     }
   }else if(file %in% c("M06A","M07A")){
     url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", gsub("-", "", date), "/00/TDCS_", file, "_", gsub("-", "", date), "_000000.csv")
@@ -2617,7 +2618,7 @@ Freeway_History=function(file, date, out=F){
       if(file=="M06A"){
         cat("Please wait for a while...\n")
       }
-      unlink(tempdir())
+      unlink(paste0(tempdir(), "/freeway_TDX"), recursive=T)
       options(timeout=500)
 
       url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
@@ -2638,7 +2639,8 @@ Freeway_History=function(file, date, out=F){
         colnames(freeway_data)=c("TimeInterval","GantryFrom","VehicleType","TripDistance","Flow")
       }
 
-      unlink(tempdir())
+      unlink(paste0(tempdir(), "/freeway_TDX"), recursive=T)
+      file.remove(paste0(tempdir(), "/freeway_TDX.zip"))
     }
   }else{
     stop(paste0("Please use valid `file` parameter, including 'M03A`, 'M04A`, 'M05A`, 'M06A`, 'M07A` and 'M08A`\n"))
