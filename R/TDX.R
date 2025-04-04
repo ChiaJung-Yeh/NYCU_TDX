@@ -2559,15 +2559,15 @@ Freeway_History=function(file, date, out=F){
         }
       }
     }else{
-      unlink(tempdir(), recursive=T)
+      unlink(tempdir())
 
       url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
-      download.file(url, paste0(tempdir(), "freeway_TDX.zip"), quiet=T)
-      untar(paste0(tempdir(), "freeway_TDX.zip"), exdir=paste0(tempdir(), "freeway_TDX"))
-      dir_file=dir(paste0(tempdir(), "freeway_TDX"), full.names=T, recursive=T)
+      download.file(url, paste0(tempdir(), "/freeway_TDX.zip"), quiet=T)
+      untar(paste0(tempdir(), "/freeway_TDX.zip"), exdir=paste0(tempdir(), "freeway_TDX"))
+      dir_file=dir(paste0(tempdir(), "/freeway_TDX"), full.names=T, recursive=T)
 
       if(length(dir_file)==0){
-        unlink(tempdir(), recursive=T)
+        unlink(tempdir())
         stop(paste0("Data of ", date, " is not updated to Traffic Database, Freeway Bureau, MOTC\n Or please check out if your date format is valid!"))
       }
       freeway_data=rbindlist(lapply(dir_file, fread))
@@ -2582,7 +2582,7 @@ Freeway_History=function(file, date, out=F){
         colnames(freeway_data)=c("TimeInterval","GantryFrom","GantryTo","VehicleType","Flow")
       }
 
-      unlink(tempdir(), recursive=T)
+      unlink(tempdir())
     }
   }else if(file %in% c("M06A","M07A")){
     url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", gsub("-", "", date), "/00/TDCS_", file, "_", gsub("-", "", date), "_000000.csv")
@@ -2617,15 +2617,16 @@ Freeway_History=function(file, date, out=F){
       if(file=="M06A"){
         cat("Please wait for a while...\n")
       }
-      unlink(tempdir(), recursive=T)
+      unlink(tempdir())
+      options(timeout=500)
 
       url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
-      download.file(url, paste0(tempdir(), "freeway_TDX.zip"), quiet=T)
-      untar(paste0(tempdir(), "freeway_TDX.zip"), exdir=paste0(tempdir(), "freeway_TDX"))
-      dir_file=dir(paste0(tempdir(), "freeway_TDX"), full.names=T, recursive=T)
+      download.file(url, paste0(tempdir(), "/freeway_TDX.zip"), quiet=T)
+      untar(paste0(tempdir(), "/freeway_TDX.zip"), exdir=paste0(tempdir(), "/freeway_TDX"))
+      dir_file=dir(paste0(tempdir(), "/freeway_TDX"), full.names=T, recursive=T)
 
       if(length(dir_file)==0){
-        unlink(tempdir(), recursive=T)
+        unlink(tempdir())
         stop(paste0("Data of ", date, " is not updated to Traffic Database, Freeway Bureau, MOTC\n Or please check out if your date format is valid!"))
       }
 
@@ -2637,8 +2638,7 @@ Freeway_History=function(file, date, out=F){
         colnames(freeway_data)=c("TimeInterval","GantryFrom","VehicleType","TripDistance","Flow")
       }
 
-      unlink(tempdir(), recursive=T)
-      file.remove("temp_freeway_TDX.zip")
+      unlink(tempdir())
     }
   }else{
     stop(paste0("Please use valid `file` parameter, including 'M03A`, 'M04A`, 'M05A`, 'M06A`, 'M07A` and 'M08A`\n"))
