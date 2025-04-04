@@ -2562,9 +2562,9 @@ Freeway_History=function(file, date, out=F){
       unlink(tempdir(), recursive=T)
 
       url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
-      download.file(url, paste0(tempdir(), "/freeway_TDX.zip"), quiet=T)
-      untar(paste0(tempdir(), "/freeway_TDX.zip"), exdir=paste0(tempdir(), "/freeway_TDX"))
-      dir_file=dir(paste0(tempdir(), "/freeway_TDX"), full.names=T, recursive=T)
+      download.file(url, paste0(tempdir(), "freeway_TDX.zip"), quiet=T)
+      untar(paste0(tempdir(), "freeway_TDX.zip"), exdir=paste0(tempdir(), "freeway_TDX"))
+      dir_file=dir(paste0(tempdir(), "freeway_TDX"), full.names=T, recursive=T)
 
       if(length(dir_file)==0){
         unlink(tempdir(), recursive=T)
@@ -2620,9 +2620,9 @@ Freeway_History=function(file, date, out=F){
       unlink(tempdir(), recursive=T)
 
       url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
-      download.file(url, paste0(tempdir(), "/freeway_TDX.zip"), quiet=T)
-      untar(paste0(tempdir(), "/freeway_TDX.zip"), exdir=paste0(tempdir(), "/freeway_TDX"))
-      dir_file=dir(paste0(tempdir(), "/freeway_TDX"), full.names=T, recursive=T)
+      download.file(url, paste0(tempdir(), "freeway_TDX.zip"), quiet=T)
+      untar(paste0(tempdir(), "freeway_TDX.zip"), exdir=paste0(tempdir(), "freeway_TDX"))
+      dir_file=dir(paste0(tempdir(), "freeway_TDX"), full.names=T, recursive=T)
 
       if(length(dir_file)==0){
         unlink(tempdir(), recursive=T)
