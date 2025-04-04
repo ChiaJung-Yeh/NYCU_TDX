@@ -2526,7 +2526,17 @@ Freeway_History=function(file, date, out=F){
   freeway_data=data.frame()
   if(file %in% c("M03A","M04A","M05A","M08A")){
     url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", gsub("-", "", date), "/00/TDCS_", file, "_", gsub("-", "", date), "_000000.csv")
-    if(suppressWarnings(ncol(fread(url)))!=0){
+
+    suppressWarnings({
+      tryCatch({
+        fread(url, showProgress=F)
+        ZIP<<-F
+      }, error=function(err){
+        ZIP<<-T
+      })
+    })
+
+    if(!ZIP){
       pb=progress_bar$new(format="(:spin) [:bar] :percent  ", total=24*12, clear=F, width=80)
       for(hr in c(0:23)){
         for(minu in seq(0, 55, 5)){
@@ -2549,16 +2559,15 @@ Freeway_History=function(file, date, out=F){
         }
       }
     }else{
+      unlink(tempdir(), recursive=T)
+
       url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
-      download.file(url, "./temp_freeway_TDX.zip", quiet=T)
-      untar("temp_freeway_TDX.zip", exdir="temp_freeway_TDX")
-      dir_file=paste0(dir("temp_freeway_TDX", full.names=T))
-      dir_file=dir(dir_file, full.names=T)
-      dir_file=dir(dir_file, full.names=T)
-      dir_file=dir(dir_file, full.names=T)
+      download.file(url, paste0(tempdir(), "/freeway_TDX.zip"), quiet=T)
+      untar(paste0(tempdir(), "/freeway_TDX.zip"), exdir=paste0(tempdir(), "/freeway_TDX"))
+      dir_file=dir(paste0(tempdir(), "/freeway_TDX"), full.names=T, recursive=T)
+
       if(length(dir_file)==0){
-        unlink("temp_freeway_TDX", recursive=T)
-        file.remove("temp_freeway_TDX.zip")
+        unlink(tempdir(), recursive=T)
         stop(paste0("Data of ", date, " is not updated to Traffic Database, Freeway Bureau, MOTC\n Or please check out if your date format is valid!"))
       }
       freeway_data=rbindlist(lapply(dir_file, fread))
@@ -2573,14 +2582,21 @@ Freeway_History=function(file, date, out=F){
         colnames(freeway_data)=c("TimeInterval","GantryFrom","GantryTo","VehicleType","Flow")
       }
 
-      unlink("temp_freeway_TDX", recursive=T)
-      file.remove("temp_freeway_TDX.zip")
+      unlink(tempdir(), recursive=T)
     }
   }else if(file %in% c("M06A","M07A")){
     url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", gsub("-", "", date), "/00/TDCS_", file, "_", gsub("-", "", date), "_000000.csv")
 
-    if(suppressWarnings(ncol(fread(url)))!=0){
+    suppressWarnings({
+      tryCatch({
+        fread(url, showProgress=F)
+        ZIP<<-F
+      }, error=function(err){
+        ZIP<<-T
+      })
+    })
 
+    if(!ZIP){
       pb=progress_bar$new(format="(:spin) [:bar] :percent  ", total=24, clear=F, width=80)
       for(hr in c(0:23)){
         pb$tick()
@@ -2601,16 +2617,15 @@ Freeway_History=function(file, date, out=F){
       if(file=="M06A"){
         cat("Please wait for a while...\n")
       }
+      unlink(tempdir(), recursive=T)
+
       url=paste0("https://tisvcloud.freeway.gov.tw/history/TDCS/", file, "/", file, "_", gsub("-", "", date), ".tar.gz")
-      download.file(url, "./temp_freeway_TDX.zip", quiet=T)
-      untar("temp_freeway_TDX.zip", exdir="temp_freeway_TDX")
-      dir_file=paste0(dir("temp_freeway_TDX", full.names=T))
-      dir_file=dir(dir_file, full.names=T)
-      dir_file=dir(dir_file, full.names=T)
-      dir_file=dir(dir_file, full.names=T)
+      download.file(url, paste0(tempdir(), "/freeway_TDX.zip"), quiet=T)
+      untar(paste0(tempdir(), "/freeway_TDX.zip"), exdir=paste0(tempdir(), "/freeway_TDX"))
+      dir_file=dir(paste0(tempdir(), "/freeway_TDX"), full.names=T, recursive=T)
+
       if(length(dir_file)==0){
-        unlink("temp_freeway_TDX", recursive=T)
-        file.remove("temp_freeway_TDX.zip")
+        unlink(tempdir(), recursive=T)
         stop(paste0("Data of ", date, " is not updated to Traffic Database, Freeway Bureau, MOTC\n Or please check out if your date format is valid!"))
       }
 
@@ -2622,7 +2637,7 @@ Freeway_History=function(file, date, out=F){
         colnames(freeway_data)=c("TimeInterval","GantryFrom","VehicleType","TripDistance","Flow")
       }
 
-      unlink("temp_freeway_TDX", recursive=T)
+      unlink(tempdir(), recursive=T)
       file.remove("temp_freeway_TDX.zip")
     }
   }else{
@@ -3913,3 +3928,5 @@ Air_Patronage=function(ym, domestic=F, out=F){
   }
   return(air_pat_all)
 }
+
+
