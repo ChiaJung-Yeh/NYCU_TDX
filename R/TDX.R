@@ -14,6 +14,7 @@ library(readODS)
 library(readxl)
 library(rvest)
 library(tidyr)
+library(purrr)
 
 # usethis::use_package("dplyr")
 # usethis::use_package("tidyr")
@@ -2141,11 +2142,12 @@ Bike_Remain_His=function(access_token, county, dates, out=F){
 
 
 #' @export
-Freeway_Shape=function(geotype, dtype="text", out=F){
+Freeway_Shape=function(geotype, access_token=NULL, dtype="text", out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
+  if (!require(map)) install.packages("map")
 
   if(!dtype %in% c("text","sf")){
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
@@ -2164,19 +2166,20 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
     }, error=function(err){
       stop(paste0("Original data in database contains errors!"))
     })
-    freeway_section=data.frame(SectionID=xml_text(xml_find_all(x, xpath = ".//d1:SectionID")),
-                               SubAuthorityCode=xml_text(xml_find_all(x, xpath = ".//d1:SubAuthorityCode")),
-                               SectionName=xml_text(xml_find_all(x, xpath = ".//d1:SectionName")),
-                               RoadID=xml_text(xml_find_all(x, xpath = ".//d1:RoadID")),
-                               RoadName=xml_text(xml_find_all(x, xpath = ".//d1:RoadName")),
-                               RoadClass=xml_text(xml_find_all(x, xpath = ".//d1:RoadClass")),
-                               RoadDirection=xml_text(xml_find_all(x, xpath = ".//d1:RoadDirection")),
-                               RoadSection_start=xml_text(xml_find_all(x, xpath = ".//d1:Start")),
-                               RoadSection_end=xml_text(xml_find_all(x, xpath = ".//d1:End")),
-                               SectionLength=xml_text(xml_find_all(x, xpath = ".//d1:SectionLength")),
-                               SectionMile_start=xml_text(xml_find_all(x, xpath = ".//d1:StartKM")),
-                               SectionMile_end=xml_text(xml_find_all(x, xpath = ".//d1:EndKM")),
-                               SpeedLimit=xml_text(xml_find_all(x, xpath = ".//d1:SpeedLimit")))
+
+    freeway_section=data.frame(SectionID=xml_text(xml_find_all(x, xpath = "Sections//SectionID")),
+                               SubAuthorityCode=xml_text(xml_find_all(x, xpath = "Sections//SubAuthorityCode")),
+                               SectionName=xml_text(xml_find_all(x, xpath = "Sections//SectionName")),
+                               RoadID=xml_text(xml_find_all(x, xpath = "Sections//RoadID")),
+                               RoadName=xml_text(xml_find_all(x, xpath = "Sections//RoadName")),
+                               RoadClass=xml_text(xml_find_all(x, xpath = "Sections//RoadClass")),
+                               RoadDirection=xml_text(xml_find_all(x, xpath = "Sections//RoadDirection")),
+                               RoadSection_start=xml_text(xml_find_all(x, xpath = "Sections//Start")),
+                               RoadSection_end=xml_text(xml_find_all(x, xpath = "Sections//End")),
+                               SectionLength=xml_text(xml_find_all(x, xpath = "Sections//SectionLength")),
+                               SectionMile_start=xml_text(xml_find_all(x, xpath = "Sections//StartKM")),
+                               SectionMile_end=xml_text(xml_find_all(x, xpath = "Sections//EndKM")),
+                               SpeedLimit=xml_text(xml_find_all(x, xpath = "Sections//SpeedLimit")))
 
     # SectionID shape
     tryCatch({
@@ -2185,12 +2188,12 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
       stop(paste0("Original data in database contains errors!"))
     })
     freeway_section_shape=data.frame(SectionID=xml_text(xml_find_all(x, xpath = ".//d1:SectionID")),
-                                     Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
+                                     geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
     freeway_shape=left_join(freeway_section, freeway_section_shape)%>%
-      filter(!is.na(Geometry))
+      filter(!is.na(geometry))
 
     if(dtype=="sf"){
-      freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(Geometry))%>%
+      freeway_shape=mutate(freeway_shape, geometry=st_as_sfc(geometry))%>%
         st_sf(crs=4326)
     }
 
@@ -2202,24 +2205,27 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
       stop(paste0("Original data in database contains errors!"))
     })
     freeway_shape=data.frame(SectionID=rep(xml_text(xml_find_all(x, xpath = ".//d1:SectionID")), times=xml_length(xml_find_all(x, xpath = ".//d1:LinkIDs"))),
-                             LinkID=xml_text(xml_find_all(x, xpath = ".//d1:LinkID")))
-    temp_id=paste0('"', freeway_shape$LinkID, '"')
-    temp_id=paste0("[", paste(temp_id, collapse=","), "]")
+                             LinkID=xml_text(xml_find_all(x, xpath = ".//d1:LinkID")))%>%
+      group_by(LinkID)%>%
+      slice(1)
 
     # LinkID
-    x=POST("https://link.motc.gov.tw/v2/Road/Link/Shape/Geometry/WKT?$format=JSON",
-           content_type("application/json"),
-           body=temp_id)
-    temp=content(x)
-    temp=data.frame(LinkID=do.call(rbind, lapply(c(1:length(temp)), function (i) temp[[i]]$LinkID)),
-                    Geometry=do.call(rbind, lapply(c(1:length(temp)), function (i) temp[[i]]$Geometry)))%>%
-      distinct()
-    freeway_shape=left_join(freeway_shape, temp)%>%
-      filter(!(is.na(Geometry)))
+    tryCatch({
+      x=POST("https://tdx.transportdata.tw/api/basic/v2/Road/Link/Shape/Geometry/GeoJson",
+             body=toJSON(freeway_shape$LinkID, auto_unbox=T),
+             add_headers(
+               Authorization = paste("Bearer", access_token),
+               `Content-Type` = "application/json",
+               Accept = "application/json"
+             ))
+      temp=content(x)$features
+      freeway_shape$geometry=st_sfc(lapply(temp, function(x) st_linestring(matrix(unlist(x$geometry$coordinates), ncol=2, byrow=T))))
+    }, error=function(err){
+      stop("Please provide a valid TDX access token!")
+    })
 
     if(dtype=="sf"){
-      freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(Geometry))%>%
-        st_sf(crs=4326)
+      freeway_shape=st_sf(freeway_shape, crs=4326)
     }
 
   }else if(geotype=="gantry"){
@@ -2252,11 +2258,11 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
                              Distance=xml_text(xml_find_all(x, xpath = ".//d1:Distance")),
                              StartLinkID=xml_text(xml_find_all(x, xpath = ".//d1:StartLinkID")),
                              EndLinkID=xml_text(xml_find_all(x, xpath = ".//d1:EndLinkID")),
-                             Geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
+                             geometry=xml_text(xml_find_all(x, xpath = ".//d1:Geometry")))
 
     if(dtype=="sf"){
-      freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(Geometry))%>%
-        st_sf(crs=4326)
+      freeway_shape$geometry=do.call(c, map(freeway_shape$geometry, possibly(st_as_sfc, otherwise=st_sfc(st_linestring()))))
+      freeway_shape=st_sf(freeway_shape, crs=4326)
     }
   }else if(geotype=="vd"){
     x=read_xml("https://tisvcloud.freeway.gov.tw/history/motc20/VD.xml")
@@ -2277,7 +2283,7 @@ Freeway_Shape=function(geotype, dtype="text", out=F){
     freeway_shape=dplyr::select(freeway_shape, -temp_id)
 
     if(dtype=="sf"){
-      freeway_shape=mutate(freeway_shape, Geometry=st_as_sfc(paste0("POINT(", PositionLon, " ", PositionLat, ")")))%>%
+      freeway_shape=mutate(freeway_shape, geometry=st_as_sfc(paste0("POINT(", PositionLon, " ", PositionLat, ")")))%>%
         st_sf(crs=4326)
     }
   }else{

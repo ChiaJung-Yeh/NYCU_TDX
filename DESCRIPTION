@@ -27,5 +27,6 @@ Imports:
     tidyr,
     readODS,
     readxl,
-    rvest
+    rvest,
+    purrr
 RoxygenNote: 7.3.2
