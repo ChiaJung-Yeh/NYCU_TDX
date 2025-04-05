@@ -2147,7 +2147,7 @@ Freeway_Shape=function(geotype, access_token=NULL, dtype="text", out=F){
   if (!require(xml2)) install.packages("xml2")
   if (!require(httr)) install.packages("httr")
   if (!require(sf)) install.packages("sf")
-  if (!require(map)) install.packages("map")
+  if (!require(purrr)) install.packages("purrr")
 
   if(!dtype %in% c("text","sf")){
     stop(paste0(dtype, " is not valid format. Please use 'text' or 'sf'.\n"))
