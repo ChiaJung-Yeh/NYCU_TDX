@@ -587,7 +587,7 @@ Bus_Schedule=function(access_token, county, dates=F, out=F){
     bus_time=mapply(function(x) list(retrieve_first(bus_info$Timetables[[x]]$StopTimes)), which(num_of_time!=0))
     bus_time=do.call(bind_rows, bus_time)%>%
       data.frame()
-    bus_time=select(bus_time, -X5)
+    bus_time=dplyr::select(bus_time, -X5)
     colnames(bus_time)=c("StopSequence","StopUID","StopID","StopName","ArrivalTime","DepartureTime")
     day_oper=mapply(function(x) list(bus_info$Timetables[[x]]$ServiceDay), c(1:nrow(bus_info))) %>% do.call(rbind, .)
     if(!is.null(day_oper)){
