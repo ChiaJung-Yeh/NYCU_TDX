@@ -1183,7 +1183,7 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
       url="https://tdx.transportdata.tw/api/basic/v3/Rail/TRA/GeneralStationTimetable?&$format=JSON"
     }else if (operator=="THSR"){
       stop("THSR does not provide 'station' time table up to now! Please use 'general' time table.")
-    }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
+    }else if (operator %in% c("TRTC","KRTC","TYMC","NTALRT","NTDLRT","KLRT")){
       url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationTimeTable/", operator, "?&%24format=JSON")
     }else if (operator %in% c("TMRT","AFR")){
       stop(paste0(operator, " does not provide 'station' time table up to now! Please check out other rail system."))
