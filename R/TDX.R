@@ -1217,7 +1217,7 @@ Rail_TimeTable=function(access_token, operator, record, out=F){
                                      TrainTypeName=unlist(mapply(function(x) data_all$Timetables[[x]]$TrainTypeName$Zh_tw, c(1:nrow(data_all)))),
                                      ArrivalTime=unlist(mapply(function(x) data_all$Timetables[[x]]$ArrivalTime, c(1:nrow(data_all)))),
                                      DepartureTime=unlist(mapply(function(x) data_all$Timetables[[x]]$DepartureTime, c(1:nrow(data_all)))))
-    }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","KLRT")){
+    }else if (operator %in% c("TRTC","KRTC","TYMC","NTDLRT","NTALRT","KLRT")){
       data_all$StationName=data_all$StationName$Zh_tw
       data_all$DestinationStationName=data_all$DestinationStationName$Zh_tw
       station=data_all[, c("RouteID","LineID","StationID","StationName","Direction","DestinationStaionID","DestinationStationName")]%>%
