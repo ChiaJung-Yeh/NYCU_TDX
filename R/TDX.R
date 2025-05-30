@@ -599,7 +599,11 @@ Bus_Schedule=function(access_token, county, dates=F, out=F){
     bus_time=do.call(bind_rows, bus_time)%>%
       data.frame()
     bus_time=dplyr::select(bus_time, -X5)
-    colnames(bus_time)=c("StopSequence","StopUID","StopID","StopName","ArrivalTime","DepartureTime")
+    if(ncol(bus_time)==6){
+      colnames(bus_time)=c("StopSequence","StopUID","StopID","StopName","ArrivalTime","DepartureTime")
+    }else{
+      colnames(bus_time)=c("StopSequence","StopUID","StopID","StopName","ArrivalTime")
+    }
 
     day_oper=rbindlist(mapply(function(x){
       temp=bus_info$Timetables[[x]]$ServiceDay
