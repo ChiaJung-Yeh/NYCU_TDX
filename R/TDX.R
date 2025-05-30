@@ -608,11 +608,12 @@ Bus_Schedule=function(access_token, county, dates=F, out=F){
     day_oper=rbindlist(mapply(function(x){
       temp=bus_info$Timetables[[x]]$ServiceDay
       if(num_of_time[x]!=0 & is.null(temp)){
-        day_add[rep(1, num_of_time[x]),]
+        list(day_add[rep(1, num_of_time[x]),])
       }else{
-        bus_info$Timetables[[x]]$ServiceDay
+        list(data.frame(bus_info$Timetables[[x]]$ServiceDay))
       }
     }, c(1:nrow(bus_info))))
+
 
     if(!is.null(day_oper)){
       bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
