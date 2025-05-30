@@ -577,11 +577,21 @@ Bus_Schedule=function(access_token, county, dates=F, out=F){
     num_of_freq=unlist(mapply(function(x) ifelse(is.null(nrow(bus_info$Frequencys[[x]])), 0, nrow(bus_info$Frequencys[[x]])), c(1:nrow(bus_info))))
     num_of_time=unlist(mapply(function(x) ifelse(is.null(nrow(bus_info$Timetables[[x]])), 0, nrow(bus_info$Timetables[[x]])), c(1:nrow(bus_info))))
 
+    day_add=data.frame(Sunday=0, Monday=0, Tuesday=0, Wednesday=0, Thursday=0, Friday=0, Saturday=0)
+    temp=rbindlist(mapply(function(x){
+      temp=bus_info$Frequencys[[x]]$ServiceDay
+      if(num_of_freq[x]!=0 & is.null(temp)){
+        day_add[rep(1, num_of_freq[x]),]
+      }else{
+        bus_info$Frequencys[[x]]$ServiceDay
+      }
+    }, c(1:nrow(bus_info))))
+
     bus_freq=data.frame(StartTime=unlist(mapply(function(x) bus_info$Frequencys[[x]]$StartTime, c(1:nrow(bus_info)))),
                         EndTime=unlist(mapply(function(x) bus_info$Frequencys[[x]]$EndTime, c(1:nrow(bus_info)))),
                         MinHeadwayMins=unlist(mapply(function(x) bus_info$Frequencys[[x]]$MinHeadwayMins, c(1:nrow(bus_info)))),
                         MaxHeadwayMins=unlist(mapply(function(x) bus_info$Frequencys[[x]]$MaxHeadwayMins, c(1:nrow(bus_info)))),
-                        rbindlist(mapply(function(x) bus_info$Frequencys[[x]]$ServiceDay, c(1:nrow(bus_info)))))
+                        temp)
     bus_freq=cbind(bus_route[rep(c(1:nrow(bus_route)), times=num_of_freq),], bus_freq)
 
     bus_time=mapply(function(x) list(retrieve_first(bus_info$Timetables[[x]]$StopTimes)), which(num_of_time!=0))
