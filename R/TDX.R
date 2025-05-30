@@ -594,16 +594,25 @@ Bus_Schedule=function(access_token, county, dates=F, out=F){
                         temp)
     bus_freq=cbind(bus_route[rep(c(1:nrow(bus_route)), times=num_of_freq),], bus_freq)
 
+
     bus_time=mapply(function(x) list(retrieve_first(bus_info$Timetables[[x]]$StopTimes)), which(num_of_time!=0))
     bus_time=do.call(bind_rows, bus_time)%>%
       data.frame()
     bus_time=dplyr::select(bus_time, -X5)
     colnames(bus_time)=c("StopSequence","StopUID","StopID","StopName","ArrivalTime","DepartureTime")
-    day_oper=mapply(function(x) list(bus_info$Timetables[[x]]$ServiceDay), c(1:nrow(bus_info))) %>% do.call(rbind, .)
+
+    day_oper=rbindlist(mapply(function(x){
+      temp=bus_info$Timetables[[x]]$ServiceDay
+      if(num_of_time[x]!=0 & is.null(temp)){
+        day_add[rep(1, num_of_time[x]),]
+      }else{
+        bus_info$Timetables[[x]]$ServiceDay
+      }
+    }, c(1:nrow(bus_info))))
+
     if(!is.null(day_oper)){
       bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
-                          bus_time,
-                          day_oper)
+                          bus_time, day_oper)
     }else{
       bus_time=data.frame(TripID=unlist(mapply(function(x) ifelse(is.null(bus_info$Timetables[[x]]$TripID), list(rep(NA, num_of_time[x])), list(bus_info$Timetables[[x]]$TripID)), c(1:nrow(bus_info)))),
                           bus_time)
