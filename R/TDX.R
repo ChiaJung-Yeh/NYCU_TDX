@@ -1400,7 +1400,7 @@ Rail_StationExit=function(access_token, operator, dtype="text", out=F){
     stop("The file name must contain '.csv' or '.txt' when exporting text.\n")
   }
 
-  if(operator %in% c("TRTC","KRTC","TYMC","NTDLRT","TMRT","KLRT")){
+  if(operator %in% c("TRTC","KRTC","TYMC","TRTCMG","TMRT","KLRT","NTMC")){
     url=paste0("https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/StationExit/", operator, "?%24format=JSON")
   }else if(operator=="TRA"){
     url=paste0("https://tdx.transportdata.tw/api/basic/v3/Rail/", operator, "/StationExit/?%24format=JSON")
