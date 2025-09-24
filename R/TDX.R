@@ -3962,3 +3962,159 @@ Air_Patronage=function(ym, domestic=F, out=F){
 }
 
 
+
+#' @export
+Travel_Survey=function(dtname=c("ModeShare","TripPurpose","OutTrip"), out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(data.table)) install.packages("data.table")
+  if (!require(rvest)) install.packages("rvest")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt'.\n")
+  }
+
+  temp=data.frame(Data=c("ModeShare","TripPurpose","OutTrip"),
+                  Description=c("Mode share of each county.",
+                                "Proportion of each purpose in each county.",
+                                "Proportion of trips (versus staying at home) in each county."))
+
+  if(sum(!dtname %in% temp$Data)!=0){
+    print(temp)
+    stop(paste0("Argument '", paste(dtname[!dtname %in% temp$Argument], collapse="', '"), "' is not valid. Please provide a valid data name listed below:\n", paste(capture.output(print(temp)), collapse = "\n")))
+  }
+
+  TravelSurvey=list()
+  for(i in dtname){
+    if(i=="ModeShare"){
+      survey_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=800&Start=100-00-00&End=150-00-00&ShowYear=true&ShowMonth=false&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=18fidz5benz&ColumnValues=9223_9224_9225_9226_10375_9231_9778_10694_9235_9236_9782_10697_9238_9239_9240&CodeListValues=11548_11549_11550_11551_11552_11553_11554_11555_11556_11557_11558_11559_11560_11561_11562_11563_11564_11565_11566_11567_11568_11569_11570")
+    }else if(i=="TripPurpose"){
+      survey_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=795&Start=100-00-00&End=150-00-00&ShowYear=true&ShowMonth=false&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=18fidz5benz&ColumnValues=9341_9344_9345_9346_9355_9358&CodeListValues=12036_12037_12038_12039_12040_12041_12042_12043_12044_12045_12046_12047_12048_12049_12050_12051_12052_12053_12054_12055_12056_12057_12058")
+    }else if(i=="OutTrip"){
+      survey_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=793&Start=100-00-00&End=150-00-00&ShowYear=true&ShowMonth=false&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=18fidz5benz&ColumnValues=8336_8337&CodeListValues=11977_11978_11979_11980_11981_11982_11983_11984_11985_11986_11987_11988_11989_11990_11991_11992_11993_11994_11995_11996_11997_11998_11999")
+    }
+
+    survey_data=data.table(survey_info$data)%>%
+      melt(id.vars="date", value.name="Proportion")%>%
+      mutate(Year=as.numeric(substr(date, 1, regexpr("-", date)-1))+1911)
+
+    temp_id=grep("\u7e23\u5e02", unlist(lapply(survey_info$nameMapping$codeListMappings, function(x) x$name)))
+    county_dataid=names(survey_info$nameMapping$codeListMappings[temp_id])
+    county_name_id=survey_info$nameMapping$codeListMappings[[temp_id]]$nameMappings
+    county_name_id=data.frame(COUNTYID=names(county_name_id),
+                              COUNTYNAME=unlist(county_name_id))
+
+    temp=lapply(as.character(survey_data$variable), function(x) strsplit(x, "_")[[1]])
+    temp_id=grep(county_dataid, temp[[1]])
+    survey_data$COUNTYID=gsub(paste0(county_dataid, "."), "", unlist(lapply(temp, function(x) x[temp_id])))
+
+    suppressWarnings({
+      survey_data=mutate(survey_data, Proportion=as.numeric(Proportion))%>%
+        left_join(rename(survey_info$columns, variable=key, !!sym(i):=value), by=c("variable"))%>%
+        left_join(county_name_id, by="COUNTYID")%>%
+        mutate(COUNTYNAME=factor(COUNTYNAME, levels=c("\u7e3d\u8a08", TDX::TDX_County$Operator[1:22])))%>%
+        select(Year, COUNTYNAME, !!sym(i), Proportion)%>%
+        arrange(Year, COUNTYNAME)
+    })
+    TravelSurvey[[i]]=survey_data
+    message(paste0("Data '",  i, "' of ", paste(range(survey_data$Year), collapse=" ~ "), " are collected!"))
+  }
+
+  if(nchar(out)!=0 & out!=F){
+    for(i in dtname){
+      write.csv(TravelSurvey[[i]], gsub(".csv", paste0("_", i, ".csv"), out), row.names=F)
+    }
+  }
+  return(TravelSurvey)
+}
+
+
+
+#' @export
+Bus_OperationKPI=function(dtname, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(data.table)) install.packages("data.table")
+  if (!require(rvest)) install.packages("rvest")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt'.\n")
+  }
+
+  temp=data.frame(Data=c("Overall","CityBus"),
+                  Description=c("Overall bus operation KPI for city buses (\u5e02\u5340\u5ba2\u904b), intercity buses(\u516c\u8def\u5ba2\u904b), and both of them (\u6c7d\u8eca\u5ba2\u904b).",
+                                "The operation of all city buses in each county."))
+  if(sum(!dtname %in% temp$Data)!=0){
+    stop(paste0("Argument '", dtname, "' is not valid. Please provide a valid data name listed below:\n", paste(capture.output(print(temp)), collapse = "\n")))
+  }
+
+
+  if(dtname=="Overall"){
+    all_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=920&Start=080-01-00&End=150-12-00&ShowYear=false&ShowMonth=true&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=-_-_-_-_-_-_-_-_18ce53uy9rz&ColumnValues=10042_10043_10044_10045_10046_10047_10048_10049_10050_10052_9991_9992_9993_9994_10139_10130_10014_17494_17491_17492_10018_10010_10022_10023_10024_10025_10026_10128_10036_10062_10037_10054")
+
+    suppressWarnings({
+      all_data=data.table(all_info$data)%>%
+        melt(id.vars="date", value.name="Value", variable.name="key")%>%
+        mutate(Year=as.numeric(substr(date, 1, regexpr("-", date)-1))+1911,
+               Month=as.numeric(substr(date, regexpr("-", date)+1, regexpr("-", date)+2)),
+               Value=as.numeric(gsub(",", "", Value)))%>%
+        left_join(rename(all_info$columns, Variable=value), by=c("key"))%>%
+        select(Year, Month, Variable, Value)
+    })
+  }else if(dtname=="CityBus"){
+    all_data=data.frame()
+    url_all=c("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=79&Start=100-01-00&End=113-03-00&ShowYear=false&ShowMonth=true&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=-_-_-_18cekw3jh1b&ColumnValues=532_533_534_535_536_537_538_539_540_541_542_543_544_545_546_547_548_549_550_551_552",
+              "https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=78&Start=100-01-00&End=113-03-00&ShowYear=false&ShowMonth=true&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=-_-_-_18cekw3jh1b&ColumnValues=524_525_526_527_528_529_530_531&CodeListValues=612_614_615_616_617_618_619_620_621_622_623_624_625_626_627_628_629_630_631_632_633_635_636",
+              "https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=80&Start=113-04-00&End=150-12-00&ShowYear=false&ShowMonth=true&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=18cekw3jh1b&ColumnValues=553_554_555_8785_8786_10101_10102_8789_8790_8791_8792_8793_8794&CodeListValues=11787_11788_11789_11790_11791_11792_11793_11794_11795_11796_11797_11798_11799_11800_11801_11802_11803_11804_11805_11806_11807_11808_11809")
+
+    for(url in url_all){
+      all_info=fromJSON(url)
+      suppressWarnings({
+        all_data_temp=data.table(all_info$data)%>%
+          melt(id.vars="date", value.name="Value", variable.name="key")%>%
+          mutate(Year=as.numeric(substr(date, 1, regexpr("-", date)-1))+1911,
+                 Month=as.numeric(substr(date, regexpr("-", date)+1, regexpr("-", date)+2)),
+                 Value=as.numeric(gsub(",", "", Value)))%>%
+          left_join(rename(all_info$columns, Variable=value), by=c("key"))
+      })
+
+      if(url %in% url_all[2:3]){
+        temp_id=grep("\u5730\u5340", unlist(lapply(all_info$nameMapping$codeListMappings, function(x) x$name)))
+        county_dataid=names(all_info$nameMapping$codeListMappings[temp_id])
+        county_name_id=all_info$nameMapping$codeListMappings[[temp_id]]$nameMappings
+        county_name_id=data.frame(COUNTYID=names(county_name_id),
+                                  COUNTYNAME=unlist(county_name_id))
+
+        temp=lapply(as.character(all_data_temp$key), function(x) strsplit(x, "_")[[1]])
+        temp_id=grep(county_dataid, temp[[1]])
+        all_data_temp$COUNTYID=gsub(paste0(county_dataid, "."), "", unlist(lapply(temp, function(x) x[temp_id])))
+
+        suppressWarnings({
+          all_data_temp=left_join(all_data_temp, county_name_id, by="COUNTYID")%>%
+            mutate(COUNTYNAME=factor(COUNTYNAME, levels=c("\u7e3d\u8a08", TDX::TDX_County$Operator[1:22])))%>%
+            select(Year, Month, COUNTYNAME, Variable, Value)%>%
+            arrange(Year, Month, COUNTYNAME)
+        })
+      }else{
+        all_data_temp=mutate(all_data_temp, COUNTYNAME=ifelse(grepl("\u5e02|\u5730\u5340", Variable), Variable, "總計"),
+                             Variable=ifelse(grepl("\u5e02|\u5730\u5340", Variable), NA, Variable))%>%
+          tidyr::fill("Variable", .direction="down")%>%
+          select(Year, Month, COUNTYNAME, Variable, Value)%>%
+          arrange(Year, Month, COUNTYNAME)
+      }
+
+      all_data=rbind(all_data, all_data_temp)
+    }
+
+    all_data=mutate(all_data, COUNTYNAME=factor(COUNTYNAME, levels=c("\u7e3d\u8a08", TDX::TDX_County$Operator[1:22], "\u5176\u4ed6\u5730\u5340")))%>%
+      arrange(Year, Month, COUNTYNAME, Variable)
+  }
+
+  message(paste0("Operational data '",  dtname, "' of ", paste(range(paste0(all_data$Year, "-", ifelse(nchar(all_data$Month)==1, paste0("0", all_data$Month), all_data$Month))), collapse=" ~ "), " are collected!"))
+
+  if(nchar(out)!=0 & out!=F){
+    write.csv(all_data, out, row.names=F)
+  }
+  return(all_data)
+}
+
+
+
