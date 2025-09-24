@@ -3968,6 +3968,7 @@ Travel_Survey=function(dtname=c("ModeShare","TripPurpose","OutTrip"), out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(data.table)) install.packages("data.table")
   if (!require(rvest)) install.packages("rvest")
+  if (!require(jsonlite)) install.packages("jsonlite")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
     stop("The file name must contain '.csv' or '.txt'.\n")
@@ -4034,6 +4035,7 @@ Bus_OperationKPI=function(dtname, out=F){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(data.table)) install.packages("data.table")
   if (!require(rvest)) install.packages("rvest")
+  if (!require(jsonlite)) install.packages("jsonlite")
 
   if(!(grepl(".csv|.txt", out)) & out!=F){
     stop("The file name must contain '.csv' or '.txt'.\n")
