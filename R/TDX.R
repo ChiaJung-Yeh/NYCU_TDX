@@ -3620,24 +3620,21 @@ Rail_Patronage=function(operator, ym=NULL, OD=F, out=F){
       select(StationID, StationName, gateInComingCnt, gateOutGoingCnt)
     unlink(list.files(tempdir(), full.names=T))
   }else if(operator=="THSR"){
-    html_content=read_html("https://www.thsrc.com.tw/corp/9571df11-8524-4935-8a46-0d5a72e6bc7c")
-    station_name=gsub(" ", "", unlist(strsplit(html_text(html_nodes(html_content, xpath='//*[@id="fixTable01"]/thead/tr')), "\n")))
-    station_name=station_name[2:13]
-    temp1=data.frame(Month=html_text(html_nodes(html_content, ".passengers th")),
-                     lapply(2:13, function(x) as.numeric(gsub(",", "", html_text(html_nodes(html_content, paste0("#fixTable td:nth-child(", x, ")")))))))%>%
-      data.table()%>%
-      unique()
-    names(temp1)[2:ncol(temp1)]=station_name
-    temp1=melt(temp1, id.vars="Month", variable.name="StationName", value.name="gateInComingCnt")
-    temp2=data.frame(Month=html_text(html_nodes(html_content, ".passengers th")),
-                     lapply(2:13, function(x) as.numeric(gsub(",", "", html_text(html_nodes(html_content, paste0("#fixTable01 td:nth-child(", x, ")")))))))%>%
-      data.table()%>%
-      unique()
-    names(temp2)[2:ncol(temp2)]=station_name
-    temp2=melt(temp2, id.vars="Month", variable.name="StationName", value.name="gateOutGoingCnt")
-    all_patronage=left_join(temp1, temp2, by=c("StationName", "Month"))%>%
-      mutate(Patronage=gateInComingCnt+gateOutGoingCnt)%>%
-      data.frame()
+    all_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=61&Start=096-01-00&End=150-12-00&ShowYear=false&ShowMonth=true&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=-_-_-_-_18ce53upudb&ColumnValues=360_361&CodeListValues=551_552_553_554_555_556_557_558_559_560_561_562_563")
+    suppressWarnings({
+      all_patronage=melt(data.table(all_info$data), id="date")%>%
+        left_join(rename(all_info$columns, variable=key, Type=value), by="variable")%>%
+        mutate(StationID=substr(variable, regexpr("\\.", variable)+1, 100),
+               value=as.numeric(gsub(",", "", value)),
+               Month=paste0(as.numeric(substr(date, 1, 3))+1911, "-", substr(date, 5, 6)),
+               Type=ifelse(Type=="\u9032\u7ad9", "gateInComingCnt", "gateOutGoingCnt"))%>%
+        left_join(data.frame(StationID=names(all_info$nameMapping$codeListMappings[[1]]$nameMappings),
+                             StationName=unlist(all_info$nameMapping$codeListMappings[[1]]$nameMappings)), by="StationID")%>%
+        dcast(Month+StationName ~ Type , value.var="value")%>%
+        mutate(StationName=factor(StationName, levels=unlist(all_info$nameMapping$codeListMappings[[1]]$nameMappings)))%>%
+        arrange(Month, StationName)%>%
+        mutate(Patronage=gateInComingCnt+gateOutGoingCnt)
+    })
   }else if(operator=="TYMC"){
     url=html_nodes(html_content, xpath='//*[@id="__nuxt"]/div/div[1]/main/div[3]/div[3]/div[2]/div[2]')%>%
       html_nodes("a")%>%
@@ -4118,5 +4115,67 @@ Bus_OperationKPI=function(dtname, out=F){
   return(all_data)
 }
 
+
+
+#' @export
+Visitor_Foreign=function(age=F, purpose=F, gender=F, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(data.table)) install.packages("data.table")
+  if (!require(rvest)) install.packages("rvest")
+  if (!require(jsonlite)) install.packages("jsonlite")
+
+  if(age+purpose+gender>1){
+    stop("At most one attribute ('age', 'purpose', and 'gender') can be selected.")
+  }
+
+  if(age+purpose+gender==1){
+    if(age){
+      all_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=294&Start=090-01-00&End=150-12-00&ShowYear=false&ShowMonth=true&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=-_-_-_-_-_-_18immufzs3j&ColumnValues=3998_3999_4000_4001_4002_4003_4004_4005_4006_4007_4008_4009_4010_4011_4012_4013_4014_4015_4016_4017_4018_4019_4020_4021_4022_4023&CodeListValues=5314_5315_5316_5317_5318_5319_5320_5321")
+      TYPE="Age"
+    }else if(purpose){
+      all_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=309&Start=090-01-00&End=150-12-00&ShowYear=false&ShowMonth=true&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=-_-_-_-_-_-_18immufzs3j&ColumnValues=4245_4246_4247_4248_4249_4250_4251_4252_4253_4254_4255_4256_4257_4258_4259_4260_4261_4262_4263_4264_4265_4266_4267_4268_4269_4270&CodeListValues=5595_5596_5597_5598_5599_5600_5601_5602_5603_5604")
+      TYPE="Purpose"
+    }else if(gender){
+      all_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=848&Start=101-00-00&End=113-00-00&ShowYear=true&ShowMonth=false&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=18cl5nt222n&ColumnValues=8639_8640_8641_8642_8643_8644_8645_8646_8647_8648_8649_8650_8651_8652_8653_8654_8655_8656_8657_8658&CodeListValues=11177_11178_11179")
+      TYPE="Gender"
+    }
+
+    suppressWarnings({
+      all_data=melt(data.table(all_info$data), id.vars="date", value.name="Visitors")%>%
+        mutate(code=substr(variable, regexpr("\\.", variable)+1, 100),
+               Visitors=as.numeric(gsub(",", "", Visitors)),
+               Month=paste0(as.numeric(substr(date, 1, 3))+1911, "-", substr(date, 5, 6)))%>%
+        left_join(rename(all_info$columns, variable=key, Country=value), by="variable")%>%
+        left_join(data.frame(code=names(all_info$nameMapping$codeListMappings[[1]]$nameMappings),
+                             codeName=unlist(all_info$nameMapping$codeListMappings[[1]]$nameMappings)), by="code")%>%
+        select(Month, Country, codeName, Visitors)%>%
+        rename(!!sym(TYPE):=codeName)
+    })
+
+    if(gender){
+      all_data=rename(all_data, Year=Month)%>%
+        mutate(Year=as.numeric(substr(Year, 1, 4)))
+    }
+
+  }else{
+    all_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=293&Start=090-01-00&End=150-12-00&ShowYear=false&ShowMonth=true&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=-_-_-_-_-_-_18immufzs3j&ColumnValues=3969_3970_3971_3972_3973_3974_3975_3976_3977_3978_3979_3980_3981_3982_3983_3984_3985_3986_3987_3988_3989_3990_3991_3992_3993_3994")
+    suppressWarnings({
+      all_data=melt(data.table(all_info$data), id.vars="date", value.name="Visitors")%>%
+        mutate(Visitors=as.numeric(gsub(",", "", Visitors)),
+               Month=paste0(as.numeric(substr(date, 1, 3))+1911, "-", substr(date, 5, 6)))%>%
+        left_join(rename(all_info$columns, variable=key, Country=value), by="variable")%>%
+        select(Month, Country, Visitors)
+    })
+  }
+
+  temp=c("age", "trip purpose", "gender")[c(age, purpose, gender)]
+  tt=ifelse(gender, paste(range(all_data$Year), collapse=" ~ "), paste(range(all_data$Month), collapse=" ~ "))
+  message(paste0("International visitors data ", ifelse(length(temp)==0, "", paste0("by ", temp, " ")),  "in ", tt, " are collected!"))
+
+  if(nchar(out)!=0 & out!=F){
+    write.csv(all_data, out, row.names=F)
+  }
+  return(all_data)
+}
 
 
