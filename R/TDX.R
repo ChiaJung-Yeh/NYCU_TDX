@@ -89,7 +89,9 @@ library(purrr)
 # catalog=readxl::read_xlsx(paste0(tempdir(), "./STATCatalog.xlsx"), sheet=1, skip=1)
 # colnames(catalog)=c("TYPE1","TYPE2","DATANAME","TIME","SPACE","UNIT","COLUMN")
 # catalog_temp=filter(catalog, DATANAME %in% c("\u884c\u653f\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08",
-#                                         "\u7d71\u8a08\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08"), !TIME %in% c("97Y","98Y"))%>%
+#                                         "\u7d71\u8a08\u5340\u91ab\u7642\u9662\u6240\u7d71\u8a08",
+#                                         "\u91ab\u7642\u9662\u6240\u5206\u5e03\u5716"), !TIME %in% c("97Y","98Y"))%>%
+#   mutate(UNIT=ifelse(is.na(UNIT), "\u91ab\u7642\u9662\u6240", UNIT))%>%
 #   group_by(DATANAME, UNIT, TIME)%>%
 #   summarise(SPACE=paste(SPACE, collapse="|"))
 # write.csv(catalog_temp, "./others/hospital_area_time.csv", row.names=F)
@@ -3116,7 +3118,7 @@ Hospital=function(district, time, out=F){
       stop(paste0("Data of '", time, "' is not available. Please use the following time :\n", paste(paste0(as.numeric(substr(temp, 1, regexpr("Y", temp)-1))+1911, "-", substr(temp, regexpr("Y", temp)+1, regexpr("M", temp)-1)), collapse=", ")))
     }
   }else{
-    stop("The argument of 'district' must be 'County', 'Town', 'SA0', 'SA1', or 'SA2'!\nNote that data of village is not provided!")
+    stop("The argument of 'district' must be 'Location', 'County', 'Town', 'SA0', 'SA1', or 'SA2'!\nNote that data of village is not provided!")
   }
 
   if(district=="County"){
@@ -3129,6 +3131,8 @@ Hospital=function(district, time, out=F){
     url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=YsLzSADPZw3vdiKpnjHHjw%3d%3d&STTIME=", time_rev, "&STUNIT=U0201&BOUNDARY=", all_county)
   }else if(district=="SA2"){
     url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=POZ16XysLPo2L69on07AvQ%3d%3d&STTIME=", time_rev, "&STUNIT=U0202&BOUNDARY=", all_county)
+  }else if(district=="Location"){
+    url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=HORMJGwl3T%2ftZCjnaGJRVQ%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
   }
 
   hospital=data.frame()
