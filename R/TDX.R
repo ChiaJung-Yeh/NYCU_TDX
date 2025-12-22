@@ -2142,7 +2142,7 @@ Bike_Remain_His=function(access_token, county, dates, out=F){
   x=GET(url, add_headers(Accept="application/+json", Authorization=paste("Bearer", access_token)))
 
   if(content(x, "text", encoding="UTF-8")==""){
-    stop(paste0("'",county, "' has no bike sharing system or data is not avaliable.\n", bike_station$Message))
+    stop(paste0("'",county, "' has no bike sharing system or data is not avaliable."))
   }
   bike_remain=read.csv(textConnection(content(x, "text", encoding="UTF-8")), header=T)
 
@@ -3108,7 +3108,7 @@ Hospital=function(district, time, out=F){
   area_time=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/hospital_area_time.csv")
   area_time$TIME=factor(area_time$TIME, levels=(data.frame(TIME=unique(area_time$TIME), TIME_temp=as.numeric(gsub("Y|M", "", unique(area_time$TIME)))) %>% arrange(TIME_temp))$TIME)
 
-  space=c("\u7e23\u5e02","\u9109\u93ae\u5e02\u5340","\u6700\u5c0f\u7d71\u8a08\u5340","\u4e00\u7d1a\u767c\u5e03\u5340","\u4e8c\u7d1a\u767c\u5e03\u5340")[which(district==c("County","Town","SA0","SA1","SA2"))]
+  space=c("\u7e23\u5e02","\u9109\u93ae\u5e02\u5340","\u6700\u5c0f\u7d71\u8a08\u5340","\u4e00\u7d1a\u767c\u5e03\u5340","\u4e8c\u7d1a\u767c\u5e03\u5340","\u91ab\u7642\u9662\u6240")[which(district==c("County","Town","SA0","SA1","SA2","Location"))]
   if(length(space)==1){
     space_all=filter(area_time, UNIT==space, TIME==time_rev)
     if(nrow(space_all)==1){
@@ -3132,7 +3132,7 @@ Hospital=function(district, time, out=F){
   }else if(district=="SA2"){
     url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=POZ16XysLPo2L69on07AvQ%3d%3d&STTIME=", time_rev, "&STUNIT=U0202&BOUNDARY=", all_county)
   }else if(district=="Location"){
-    url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=HORMJGwl3T%2ftZCjnaGJRVQ%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
+    url_all=paste0("https://segis.moi.gov.tw/STATCloud/reqcontroller.file?method=filedown.downloadproductfile&code=1onlUzzUA3EV8EK06HWDZA%3d%3d&STTIME=", time_rev, "&STUNIT=null&BOUNDARY=%E5%85%A8%E5%9C%8B")
   }
 
   hospital=data.frame()
@@ -3144,28 +3144,47 @@ Hospital=function(district, time, out=F){
     untar(paste0(tempdir(), "/hospital_TDX.zip"), exdir=paste0(tempdir(), "/hospital_TDX"))
     dir_file=dir(dir(paste0(tempdir(), "/hospital_TDX"), full.names=T), full.names=T)
 
-    dir_file=dir_file[grepl(".csv", dir_file)]
-    tryCatch({
-      hospital_temp=read.csv(dir_file)
-    }, error=function(err){
-      hospital_temp <<- read.csv(dir_file, fileEncoding="Big5")
-    })
-    hospital_temp=hospital_temp[-1, ]
-    hospital_temp[, grepl("CNT|BED|SRVP|SRVB", colnames(hospital_temp))]=matrix(as.numeric(as.matrix(hospital_temp[, grepl("CNT|BED|SRVP|SRVB", colnames(hospital_temp))])), nrow=nrow(hospital_temp))
-
-    unlink(paste0(tempdir(), "/hospital_TDX"), recursive=T)
-    file.remove(paste0(tempdir(), "/hospital_TDX.zip"))
-    if(nrow(hospital)==0){
-      hospital=hospital_temp
+    if(district=="Location"){
+      stop("Not Supported Now!!")
+      # dir_file=dir(paste0(tempdir(), "/hospital_TDX"), recursive=T, full.names=T, pattern="zip")
+      # unlink(paste0(getwd(), "/hospital_TDX"), recursive=T)
+      # dir_copy(paste0(tempdir(), "/hospital_TDX"), getwd())
+      #
+      #
+      # dir(paste0(getwd(), "/hospital_TDX"), recursive=T, pattern="shp", full.names=T)
+      # dir_file=dir(paste0(getwd(), "/hospital_TDX"), recursive=T, pattern="zip", full.names=T)
+      # untar(dir_file, exdir=paste0(getwd(), "/hospital_TDX"))
+      # hospital=read_sf(dir(paste0(getwd(), "/hospital_TDX"), full.names=T, pattern="shp"))%>%
+      #   st_transform(crs=4326)%>%
+      #   cbind(st_coordinates(.))%>%
+      #   st_drop_geometry()
+      # names(hospital)=c("Name","COUNTYNAME","TOWNNAME","Address","Phone","Lon","Lat")
+      # unlink(paste0(tempdir(), "/hospital_TDX"), recursive=T)
+      # unlink(paste0(getwd(), "/hospital_TDX"), recursive=T)
     }else{
-      hospital=bind_rows(hospital, hospital_temp)
+      dir_file=dir_file[grepl(".csv", dir_file)]
+      tryCatch({
+        hospital_temp=read.csv(dir_file)
+      }, error=function(err){
+        hospital_temp <<- read.csv(dir_file, fileEncoding="Big5")
+      })
+      hospital_temp=hospital_temp[-1, ]
+      hospital_temp[, grepl("CNT|BED|SRVP|SRVB", colnames(hospital_temp))]=matrix(as.numeric(as.matrix(hospital_temp[, grepl("CNT|BED|SRVP|SRVB", colnames(hospital_temp))])), nrow=nrow(hospital_temp))
+
+      unlink(paste0(tempdir(), "/hospital_TDX"), recursive=T)
+      file.remove(paste0(tempdir(), "/hospital_TDX.zip"))
+      if(nrow(hospital)==0){
+        hospital=hospital_temp
+      }else{
+        hospital=bind_rows(hospital, hospital_temp)
+      }
+      rm(hospital_temp)
     }
-    rm(hospital_temp)
+    temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(hospital)), c(1:6)))
+    colnames(hospital)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
   }
   cli_progress_done()
 
-  temp_id=as.numeric(mapply(function(x) which(c("COUNTY_ID","COUNTY","TOWN_ID","TOWN","VILLAGE","V_ID")[x]==colnames(hospital)), c(1:6)))
-  colnames(hospital)[temp_id[!is.na(temp_id)]]=c("COUNTYCODE","COUNTYNAME","TOWNCODE","TOWNNAME","VILLNAME","VILLCODE")[!is.na(temp_id)]
 
   if(nchar(out)!=0 & out!=F){
     write.csv(hospital, out, row.names=F)
@@ -3173,6 +3192,7 @@ Hospital=function(district, time, out=F){
   return(hospital)
 }
 
+Hospital("Location", "2023-07")
 
 
 #' @export
