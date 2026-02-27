@@ -2733,12 +2733,13 @@ Income=function(year, out=F){
   }
 
   tryCatch({
-    url=paste0("https://eip.fia.gov.tw/data/ias/ias", year-1911, "/", year-1911, "_165-9.csv")
+    # url=paste0("https://eip.fia.gov.tw/data/ias/ias", year-1911, "/", year-1911, "_165-9.csv")
+    url=paste0("https://raw.githubusercontent.com/kiang/salary/refs/heads/gh-pages/data/csv/", year, ".csv")
     income=read.csv(url)
   }, error=function(err){
-    stop(paste0("Data of year '", year, "' is not provided!"))
+    stop(paste0("Data of year '", year, "' is not available!"))
   })
-  colnames(income)=c("CountyTown","Village","Houses","Amount","MEAN","MED","Q1","Q3","SD","CV")
+  colnames(income)=c("COUNTYNAME","TOWNNAME","VILLNAME","Houses","Amount","MEAN","MED","Q1","Q3","SD","CV")
 
   if (nchar(out)!=0 & out!=F){
     write.csv(income, out, row.names=F)
