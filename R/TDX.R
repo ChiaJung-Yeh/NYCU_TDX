@@ -3193,7 +3193,7 @@ Hospital=function(district, time, out=F){
   return(hospital)
 }
 
-Hospital("Location", "2023-07")
+
 
 
 #' @export
