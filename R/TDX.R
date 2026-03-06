@@ -2979,86 +2979,69 @@ Landuse=function(district, year, out=F){
 #'   return(house_price)
 #' }
 
-#'
-#' #' @export
-#' House_Price=function(year, season, out=F){
-#'   if (!require(dplyr)) install.packages("dplyr")
-#'   if (!require(data.table)) install.packages("data.table")
-#'
-#'   if(!(grepl(".csv|.txt", out)) & out!=F){
-#'     stop("The file name must contain '.csv' or '.txt'.\n")
-#'   }
-#'   if(year<2012){
-#'     stop("Year is invalid. The data is available from year 2012!")
-#'   }else{
-#'     if(season %in% c(1:4)){
-#'       year_sea=paste0(year-1911, "S", season)
-#'     }else{
-#'       stop("Season is invalid. It should be 1, 2, 3, or 4!")
-#'     }
-#'   }
-#'
-#'   url=paste0("https://plvr.land.moi.gov.tw//DownloadSeason?season=", year_sea, "&type=zip&fileName=lvr_landcsv.zip")
-#'   unlink(list.files(tempdir(), full.names=T), recursive=T)
-#'   download.file(url, paste0(tempdir(), "/house_price_tdx.zip"), mode="wb", quiet=T)
-#'   untar(paste0(tempdir(), "/house_price_tdx.zip"), exdir=paste0(tempdir(), "/house_price_tdx"))
-#'   dir_file=dir(paste0(tempdir(), "/house_price_tdx"), full.names=T)
-#'   manifest=read.csv(dir_file[grepl("manifest", dir_file)])%>%
-#'     mutate(name=substr(name, regexpr("lvr_", name)+4, regexpr("\\.", name)-1),
-#'            schema=paste0("houseprice_", gsub("schema-|.csv", "", schema)),
-#'            schema=gsub("-", "_", schema),
-#'            description=substr(description, regexpr("縣|市", description)+1, 100))%>%
-#'     distinct()%>%
-#'     filter(!grepl("time", schema))
-#'   dir_file=dir_file[grepl(".csv", dir_file) & !grepl("schema|manifest", dir_file)]
-#'   all_file=data.frame(path=dir_file)%>%
-#'     mutate(name=substr(path, regexpr("lvr_", path)+4, regexpr("\\.", path)-1))%>%
-#'     left_join(manifest)
-#'
-#'   for(i in unique(all_file$description)){
-#'     all_file_temp=filter(all_file, description==i)
-#'     doc=rbindlist(lapply(all_file_temp$path, function(x){
-#'       temp=fread(x)
-#'       temp=temp[-1,]
-#'     }))
-#'
-#'     houseprice_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/houseprice_name.csv")
-#'     colnames(house_price_temp)=mapply(function(x) houseprice_name$COL_NAME[which(colnames(house_price_temp)[x]==houseprice_name$ORI_NAME)], c(1:ncol(house_price_temp)))
-#'
-#'
-#'   }
-#'
-#'
-#'   houseprice_name=read.csv("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/houseprice_name.csv")
-#'   house_price=data.frame()
-#'   for(i in dir_file){
-#'     house_price_temp=read.csv(i)
-#'     colnames(house_price_temp)=gsub("\\.", "", colnames(house_price_temp))
-#'     colnames(house_price_temp)=mapply(function(x) houseprice_name$COL_NAME[which(colnames(house_price_temp)[x]==houseprice_name$ORI_NAME)], c(1:ncol(house_price_temp)))
-#'     house_price_temp=house_price_temp[-1,]
-#'     house_price=bind_rows(house_price, house_price_temp)
-#'   }
-#'
-#'   temp=c("LAND_AREA","ROOM","HALL","BATH","BUILD_TOTAL_AREA","TOTAL_PRICE","UNIT_PRICE","PARKING_AREA","PARKING_PRICE","BUILD_AREA_MAIN","BUILD_AREA_AUX","BALCONY_AREA","PARKING_UNIT_PRICE")
-#'   temp=temp[temp %in% colnames(house_price)]
-#'   house_price[, temp]=matrix(as.numeric(unlist(house_price[, temp])), nrow(house_price))
-#'
-#'   # house_price=mutate(house_price, TRANSACTION_DATE=case_when(
-#'   #   nchar(TRANSACTION_DATE)==6 ~ as.Date(paste0(as.numeric(substr(TRANSACTION_DATE, 1, 2))+1911, "-", substr(TRANSACTION_DATE, 3, 4), "-", substr(TRANSACTION_DATE, 5, 6))),
-#'   #   nchar(TRANSACTION_DATE)==7 ~ as.Date(paste0(as.numeric(substr(TRANSACTION_DATE, 1, 3))+1911, "-", substr(TRANSACTION_DATE, 4, 5), "-", substr(TRANSACTION_DATE, 6, 7))),
-#'   #   TRUE ~ NA
-#'   # ), CONSTRUCTION_DATE=case_when(
-#'   #   nchar(CONSTRUCTION_DATE)==6 ~ as.Date(paste0(as.numeric(substr(CONSTRUCTION_DATE, 1, 2))+1911, "-", substr(CONSTRUCTION_DATE, 3, 4), "-", substr(CONSTRUCTION_DATE, 5, 6))),
-#'   #   nchar(CONSTRUCTION_DATE)==7 ~ as.Date(paste0(as.numeric(substr(CONSTRUCTION_DATE, 1, 3))+1911, "-", substr(CONSTRUCTION_DATE, 4, 5), "-", substr(CONSTRUCTION_DATE, 6, 7))),
-#'   #   TRUE ~ NA
-#'   # ))
-#'
-#'   if(nchar(out)!=0 & out!=F){
-#'     write.csv(house_price, out, row.names=F)
-#'   }
-#'   return(house_price)
-#' }
-#'
+
+#' @export
+House_Price=function(year, season, out=F){
+  if (!require(dplyr)) install.packages("dplyr")
+  if (!require(data.table)) install.packages("data.table")
+
+  if(!(grepl(".csv|.txt", out)) & out!=F){
+    stop("The file name must contain '.csv' or '.txt'.\n")
+  }
+  if(year<2012){
+    stop("Year is invalid. The data is available from year 2012!")
+  }else{
+    if(season %in% c(1:4)){
+      year_sea=paste0(year-1911, "S", season)
+    }else{
+      stop("Season is invalid. It should be 1, 2, 3, or 4!")
+    }
+  }
+
+  url=paste0("https://plvr.land.moi.gov.tw//DownloadSeason?season=", year_sea, "&type=zip&fileName=lvr_landcsv.zip")
+  unlink(list.files(tempdir(), full.names=T), recursive=T)
+  download.file(url, paste0(tempdir(), "/house_price_tdx.zip"), mode="wb", quiet=T)
+  untar(paste0(tempdir(), "/house_price_tdx.zip"), exdir=paste0(tempdir(), "/house_price_tdx"))
+  dir_file=dir(paste0(tempdir(), "/house_price_tdx"), full.names=T)
+  manifest=read.csv(dir_file[grepl("manifest", dir_file)])%>%
+    mutate(name=substr(name, regexpr("lvr_", name)+4, regexpr("\\.", name)-1),
+           schema=paste0("houseprice_", gsub("schema-|.csv", "", schema)),
+           schema=gsub("-", "_", schema),
+           description=substr(description, regexpr("縣|市", description)+1, 100))%>%
+    distinct()%>%
+    filter(!grepl("time", schema))
+  dir_file=dir_file[grepl(".csv", dir_file) & !grepl("schema|manifest", dir_file)]
+  all_file=data.frame(path=dir_file)%>%
+    mutate(name=substr(path, regexpr("lvr_", path)+4, regexpr("\\.", path)-1))%>%
+    left_join(manifest)
+
+  house_price=list()
+  for(i in unique(all_file$description)){
+    all_file_temp=filter(all_file, description==i)
+    house_price_temp=rbindlist(lapply(all_file_temp$path, function(x){
+      temp=fread(x)
+      temp=temp[-1,]
+    }))%>%
+      data.frame()
+
+    houseprice_name=read.csv(paste0("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/", all_file_temp$schema[1], ".csv"))
+    colnames(house_price_temp)=mapply(function(x) houseprice_name$COL_NAME[which(colnames(house_price_temp)[x]==houseprice_name$ORI_NAME)], c(1:ncol(house_price_temp)))
+
+    temp=c("LAND_AREA","ROOM","HALL","BATH","BUILD_TOTAL_AREA","TOTAL_PRICE","UNIT_PRICE","PARKING_AREA","PARKING_PRICE","BUILD_AREA_MAIN","BUILD_AREA_AUX","BALCONY_AREA","PARKING_UNIT_PRICE")
+    temp=temp[temp %in% colnames(house_price_temp)]
+    house_price_temp[, temp]=matrix(as.numeric(unlist(house_price_temp[, temp])), nrow(house_price_temp))
+
+    house_price[[all_file_temp$description[1]]]=house_price_temp
+  }
+
+  if(nchar(out)!=0 & out!=F){
+    for(i in unique(all_file$description)){
+      write.csv(house_price[[i]], gsub(".csv", paste0("_", i, ".csv"), out), row.names=F)
+    }
+  }
+  return(house_price)
+}
+
 
 
 #' @export
