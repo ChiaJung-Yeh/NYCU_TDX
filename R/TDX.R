@@ -3023,10 +3023,9 @@ House_Price=function(year, season, out=F){
   for(i in unique(all_file$description)){
     all_file_temp=filter(all_file, description==i)
     house_price_temp=rbindlist(lapply(c(1:nrow(all_file_temp)), function(x){
-      temp=cbind(COUNTYNAME=all_file_temp$COUNTYNAME[x], fread(all_file_temp$path[x]))
+      temp=cbind(COUNTYNAME=all_file_temp$COUNTYNAME[x], read.csv(all_file_temp$path[x]))
       temp=temp[-1,]
-    }))%>%
-      data.frame()
+    }))
 
     houseprice_name=read.csv(paste0("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/", all_file_temp$schema[1], ".csv"))
     lookup=setNames(houseprice_name$COL_NAME, houseprice_name$ORI_NAME)
