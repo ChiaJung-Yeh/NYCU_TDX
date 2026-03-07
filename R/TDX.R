@@ -1006,7 +1006,7 @@ Bike_Station=function(access_token, county, dates=F, dtype="text", out=F){
 
 
 #' @export
-Geocoding=function(access_token, address, dtype="text", out=F){
+Geocoding=function(access_token, address, dtype="text", out=F, message=T){
   if (!require(dplyr)) install.packages("dplyr")
   if (!require(jsonlite)) install.packages("jsonlite")
   if (!require(sf)) install.packages("sf")
@@ -1075,12 +1075,15 @@ Geocoding=function(access_token, address, dtype="text", out=F){
   address_record=distinct(address_record)
   datanum_rev=nrow(address_record)
 
-  cat("Geocoding Summary",
-      paste0("Total:      ", length(address)),
-      paste0("Success:    ", datanum_rev),
-      paste0("Duplicated: ", datanum_ori-datanum_rev),
-      paste0("Fail:       ", length(record_fail)),
-      sep="\n")
+  if(!message){
+    cat("Geocoding Summary",
+        paste0("Total:      ", length(address)),
+        paste0("Success:    ", datanum_rev),
+        paste0("Duplicated: ", datanum_ori-datanum_rev),
+        paste0("Fail:       ", length(record_fail)),
+        sep="\n")
+  }
+
 
   if (dtype=="text"){
     if (nchar(out)!=0 & out!=F){
