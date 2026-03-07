@@ -32,3 +32,6 @@
 陽台面積,BALCONY_AREA
 電梯,ELEVATOR
 移轉編號,TRANSACTION_ID
+建物現況格局.房,ROOM
+建物現況格局.廳,HALL
+建物現況格局.衛,BATH
