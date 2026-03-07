@@ -3004,28 +3004,30 @@ House_Price=function(year, season, out=F){
   untar(paste0(tempdir(), "/house_price_tdx.zip"), exdir=paste0(tempdir(), "/house_price_tdx"))
   dir_file=dir(paste0(tempdir(), "/house_price_tdx"), full.names=T)
   manifest=read.csv(dir_file[grepl("manifest", dir_file)])%>%
-    mutate(name=substr(name, regexpr("lvr_", name)+4, regexpr("\\.", name)-1),
+    mutate(datatype=substr(name, regexpr("lvr_", name)+4, regexpr("\\.", name)-1),
            schema=paste0("houseprice_", gsub("schema-|.csv", "", schema)),
            schema=gsub("-", "_", schema),
+           COUNTYNAME=substr(description, 1, regexpr("縣|市", description)),
            description=substr(description, regexpr("縣|市", description)+1, 100))%>%
-    distinct()%>%
     filter(!grepl("time", schema))
   dir_file=dir_file[grepl(".csv", dir_file) & !grepl("schema|manifest", dir_file)]
-  all_file=data.frame(path=dir_file)%>%
-    mutate(name=substr(path, regexpr("lvr_", path)+4, regexpr("\\.", path)-1))%>%
+  all_file=data.frame(path=dir_file,
+                      name=unlist(lapply(strsplit(dir_file, "/"), function(x) tail(x, 1))))%>%
     left_join(manifest, by="name")
+
 
   house_price=list()
   for(i in unique(all_file$description)){
     all_file_temp=filter(all_file, description==i)
-    house_price_temp=rbindlist(lapply(all_file_temp$path, function(x){
-      temp=fread(x)
+    house_price_temp=rbindlist(lapply(c(1:nrow(all_file_temp)), function(x){
+      temp=cbind(COUNTYNAME=all_file_temp$COUNTYNAME[x], fread(all_file_temp$path[x]))
       temp=temp[-1,]
     }))%>%
       data.frame()
 
     houseprice_name=read.csv(paste0("https://raw.githubusercontent.com/ChiaJung-Yeh/NYCU_TDX/main/others/", all_file_temp$schema[1], ".csv"))
-    colnames(house_price_temp)=mapply(function(x) houseprice_name$COL_NAME[which(colnames(house_price_temp)[x]==houseprice_name$ORI_NAME)], c(1:ncol(house_price_temp)))
+    lookup=setNames(houseprice_name$COL_NAME, houseprice_name$ORI_NAME)
+    house_price_temp=rename_with(house_price_temp, ~ ifelse(.x %in% names(lookup), lookup[.x], .x))
 
     temp=c("LAND_AREA","ROOM","HALL","BATH","BUILD_TOTAL_AREA","TOTAL_PRICE","UNIT_PRICE","PARKING_AREA","PARKING_PRICE","BUILD_AREA_MAIN","BUILD_AREA_AUX","BALCONY_AREA","PARKING_UNIT_PRICE")
     temp=temp[temp %in% colnames(house_price_temp)]

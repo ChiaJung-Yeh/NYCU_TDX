@@ -19,7 +19,7 @@ House_Price(year, season, out=F)
   \item{out}{If the result should be exported to the local, please fill in the directory. The default value is FALSE, which does not export the data.}
 }
 \value{
-Columns definition are summarized \href{https://chiajung-yeh.github.io/TDX_Guide/houseprice_name.pdf}{here}.
+Columns definition of each table are summarised \href{https://chiajung-yeh.github.io/TDX_Guide/houseprice_name.pdf}{here}.
 }
 \author{
 Maintainer: Chia Jung, Yeh  \email{chia-jung.yeh@sydney.edu.au}
