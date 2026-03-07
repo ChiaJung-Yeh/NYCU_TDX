@@ -1075,7 +1075,7 @@ Geocoding=function(access_token, address, dtype="text", out=F, message=T){
   address_record=distinct(address_record)
   datanum_rev=nrow(address_record)
 
-  if(!message){
+  if(message){
     cat("Geocoding Summary",
         paste0("Total:      ", length(address)),
         paste0("Success:    ", datanum_rev),
