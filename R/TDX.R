@@ -3013,7 +3013,7 @@ House_Price=function(year, season, out=F){
   dir_file=dir_file[grepl(".csv", dir_file) & !grepl("schema|manifest", dir_file)]
   all_file=data.frame(path=dir_file)%>%
     mutate(name=substr(path, regexpr("lvr_", path)+4, regexpr("\\.", path)-1))%>%
-    left_join(manifest)
+    left_join(manifest, by="name")
 
   house_price=list()
   for(i in unique(all_file$description)){
@@ -3029,8 +3029,11 @@ House_Price=function(year, season, out=F){
 
     temp=c("LAND_AREA","ROOM","HALL","BATH","BUILD_TOTAL_AREA","TOTAL_PRICE","UNIT_PRICE","PARKING_AREA","PARKING_PRICE","BUILD_AREA_MAIN","BUILD_AREA_AUX","BALCONY_AREA","PARKING_UNIT_PRICE")
     temp=temp[temp %in% colnames(house_price_temp)]
-    house_price_temp[, temp]=matrix(as.numeric(unlist(house_price_temp[, temp])), nrow(house_price_temp))
-
+    if(length(temp)!=0){
+      for(j in temp){
+        house_price_temp[[j]]=as.numeric(house_price_temp[[j]])
+      }
+    }
     house_price[[all_file_temp$description[1]]]=house_price_temp
   }
 
