@@ -4078,7 +4078,8 @@ Travel_Survey=function(dtname=c("ModeShare","TripPurpose","OutTrip"), out=F){
   TravelSurvey=list()
   for(i in dtname){
     if(i=="ModeShare"){
-      survey_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=800&Start=100-00-00&End=150-00-00&ShowYear=true&ShowMonth=false&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=18fidz5benz&ColumnValues=9223_9224_9225_9226_10375_9231_9778_10694_9235_9236_9782_10697_9238_9239_9240&CodeListValues=11548_11549_11550_11551_11552_11553_11554_11555_11556_11557_11558_11559_11560_11561_11562_11563_11564_11565_11566_11567_11568_11569_11570")
+      survey_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=800&Start=109-00-00&End=113-00-00&ShowYear=true&ShowMonth=false&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=18fidz5benz&ColumnValues=9223_9224_9225_9226_10375_9231_9778_9234_9235_9236_9782_9237_9238_9239_9240&CodeListValues=11548_11549_11550_11551_11552_11559_11563_11567")
+      # survey_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=800&Start=100-00-00&End=150-00-00&ShowYear=true&ShowMonth=false&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=18fidz5benz&ColumnValues=9223_9224_9225_9226_10375_9231_9778_10694_9235_9236_9782_10697_9238_9239_9240&CodeListValues=11548_11549_11550_11551_11552_11553_11554_11555_11556_11557_11558_11559_11560_11561_11562_11563_11564_11565_11566_11567_11568_11569_11570")
     }else if(i=="TripPurpose"){
       survey_info=fromJSON("https://statis.motc.gov.tw/motc/Statistics/Display.json?Seq=795&Start=100-00-00&End=150-00-00&ShowYear=true&ShowMonth=false&ShowQuarter=false&ShowHalfYear=false&Mode=0&Periods=18fidz5benz&ColumnValues=9341_9344_9345_9346_9355_9358&CodeListValues=12036_12037_12038_12039_12040_12041_12042_12043_12044_12045_12046_12047_12048_12049_12050_12051_12052_12053_12054_12055_12056_12057_12058")
     }else if(i=="OutTrip"){
