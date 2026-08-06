@@ -2,30 +2,46 @@ library(dplyr)
 library(jsonlite)
 
 # Internal package environment.
-# This prevents repeated checks within the same R session.
+# This prevents repeated version checks within the same R session.
 .tdx_state <- new.env(parent = emptyenv())
 
 .tdx_state$version_checked <- FALSE
 
 
-#' Package startup hook
-#'
-#' This function runs automatically when users call library(TDX).
-#'
-#' @param libname Path to the R library containing the package.
-#' @param pkgname Package name.
-#'
-#' @keywords internal
+# Package startup hook -----------------------------------------------------
+
 .onAttach <- function(libname, pkgname) {
 
-  # Users can disable the version check with:
+  # Show the welcome message whenever TDX is attached.
+  packageStartupMessage(
+    paste0(
+      "\n",
+      "=====================================================\n",
+      "              Welcome to TDX 🚍\n",
+      "-----------------------------------------------------\n",
+      "TDX: A toolkit for accessing and processing\n",
+      "Taiwan MOTC TDX transportation data.\n",
+      "\n",
+      "Documentation:\n",
+      "  https://github.com/ChiaJung-Yeh/NYCU_TDX\n",
+      "\n",
+      "Report issues:\n",
+      "  https://github.com/ChiaJung-Yeh/NYCU_TDX/issues\n",
+      "=====================================================\n"
+    )
+  )
+
+  # Users can disable update checking with:
+  #
   # options(TDX.check_updates = FALSE)
   check_enabled <- isTRUE(
     getOption("TDX.check_updates", TRUE)
   )
 
-  # Do not make internet requests in non-interactive sessions,
-  # during automated checks, or more than once per R session.
+  # Only check for updates:
+  # 1. in an interactive R session;
+  # 2. when update checking is enabled;
+  # 3. once per R session.
   if (
     interactive() &&
     check_enabled &&
@@ -38,30 +54,22 @@ library(jsonlite)
       pkgname = pkgname
     )
   }
+
+  invisible(NULL)
 }
 
 
-#' Check for a newer TDX version on GitHub
-#'
-#' This internal function compares the installed package version with
-#' the latest published GitHub Release.
-#'
-#' @param libname Path to the R library containing the package.
-#' @param pkgname Package name.
-#'
-#' @return Invisibly returns TRUE when an update is available;
-#' otherwise returns FALSE.
-#'
-#' @keywords internal
+# GitHub version checker ---------------------------------------------------
+
 check_tdx_version <- function(
     libname = NULL,
     pkgname = "TDX"
 ) {
 
   github_owner <- "ChiaJung-Yeh"
-  github_repo  <- "NYCU_TDX"
+  github_repo <- "NYCU_TDX"
 
-  # Obtain the currently installed version.
+  # Get the currently installed package version.
   current_version <- tryCatch(
     {
       if (is.null(libname)) {
@@ -80,13 +88,14 @@ check_tdx_version <- function(
     return(invisible(FALSE))
   }
 
+  # GitHub API endpoint for the latest published release.
   api_url <- sprintf(
     "https://api.github.com/repos/%s/%s/releases/latest",
     github_owner,
     github_repo
   )
 
-  # Retrieve information about the latest published release.
+  # Retrieve the latest release information.
   response_text <- tryCatch(
     {
       connection <- url(
@@ -117,7 +126,8 @@ check_tdx_version <- function(
     warning = function(w) NULL
   )
 
-  # Silently stop when offline or GitHub is unavailable.
+  # Fail silently if there is no internet connection
+  # or GitHub is temporarily unavailable.
   if (
     is.null(response_text) ||
     !nzchar(response_text)
@@ -141,13 +151,7 @@ check_tdx_version <- function(
 
   release_tag <- release_information$tag_name
 
-  # Convert tags such as:
-  # v1.2.0
-  # V1.2.0
-  # 1.2.0
-  #
-  # into:
-  # 1.2.0
+  # Convert tags such as v1.2.0 or V1.2.0 to 1.2.0.
   latest_version_text <- sub(
     pattern = "^[vV]",
     replacement = "",
@@ -169,13 +173,16 @@ check_tdx_version <- function(
     packageStartupMessage(
       sprintf(
         paste0(
+          "\n",
           "A newer version of TDX is available on GitHub.\n",
+          "\n",
           "  Installed version: %s\n",
           "  Latest version:    %s\n",
+          "\n",
           "Update it with:\n",
           "  remotes::install_github(",
           "\"ChiaJung-Yeh/NYCU_TDX\"",
-          ")"
+          ")\n"
         ),
         as.character(current_version),
         as.character(latest_version)
@@ -185,5 +192,3 @@ check_tdx_version <- function(
 
   invisible(update_available)
 }
-
-
