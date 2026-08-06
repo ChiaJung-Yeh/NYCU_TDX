@@ -20,13 +20,13 @@ library(jsonlite)
       "              Welcome to TDX 🚍\n",
       "-----------------------------------------------------\n",
       "TDX: A toolkit for accessing and processing\n",
-      "Taiwan MOTC TDX transportation data.\n",
+      "Taiwan TDX transport and sociodemographic data.\n",
       "\n",
       "Documentation:\n",
-      "  https://github.com/ChiaJung-Yeh/NYCU_TDX\n",
+      "  https://bookdown.org/chiajungyeh/TDX_Guide/\n",
       "\n",
       "Report issues:\n",
-      "  https://github.com/ChiaJung-Yeh/NYCU_TDX/issues\n",
+      "  chia-jung.yeh@sydney.edu.au\n",
       "=====================================================\n"
     )
   )
