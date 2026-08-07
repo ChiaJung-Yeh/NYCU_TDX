@@ -3636,7 +3636,13 @@ Rail_Patronage=function(operator, ym=NULL, OD=F, out=F){
       untar(paste0(tempdir(), "/tra_patronage.zip"), exdir=paste0(tempdir(), "/tra_patronage"))
       dir_files=dir(paste0(tempdir(), "/tra_patronage"), pattern=".csv", full.names=T)
       dir_files=dir_files[grepl("\u6bcf\u65e5", dir_files)]
-      patronage_temp=rbindlist(lapply(dir_files, fread))
+      patronage_temp=rbindlist(lapply(dir_files, function(x){
+        temp=fread(x)
+        if(ncol(temp)==4){
+          names(temp)=c("trnOpDate","staCode","gateIn","gateOut")
+        }
+        return(temp)
+      }))
       if(ncol(patronage_temp)==5){
         names(patronage_temp)=c("trnOpDate","staCode","STOP_NAME","gateIn","gateOut")
         patronage_temp$staCode=as.character(patronage_temp$staCode)
@@ -3650,8 +3656,9 @@ Rail_Patronage=function(operator, ym=NULL, OD=F, out=F){
       file.remove(paste0(tempdir(), "/tra_patronage.zip"))
     }
     patronage_temp=fromJSON("https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/8ae4cabf6973990e0169947ed32454b9")%>%
-      mutate(gateInComingCnt=as.numeric(gateInComingCnt),
-             gateOutGoingCnt=as.numeric(gateOutGoingCnt))
+      mutate(gateIn=as.numeric(gateInComingCnt),
+             gateOut=as.numeric(gateOutGoingCnt))%>%
+      select(-gateInComingCnt, -gateOutGoingCnt)
     all_patronage=bind_rows(all_patronage, patronage_temp)
 
     temp=filter(all_patronage, is.na(STOP_NAME))%>%
